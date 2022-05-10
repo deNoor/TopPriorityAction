@@ -1,0 +1,21 @@
+## Interface: 90200
+
+## Author: deNoor
+## Notes: Proposes the next spell to use in combat. No gui, library code only.
+## Title: TopPriorityAction
+## DefaultState: Enabled
+## Version: 1
+
+## SavedVariables: TopPriorityActionSettings
+
+Code\_Initializer.lua
+Code\EventTracker.lua
+Code\Player.lua
+Code\SavedSettings.lua
+Code\SharedData.lua
+Code\Spell.lua
+
+Rotations\_WowClass.lua
+Rotations\DruidFeral.lua
+
+TopPriorityAction.lua
