@@ -95,11 +95,13 @@ local feralRotation = {
     Timestamp = 0, -- updated by framework on Pulse call.
     EmptySpell = nil, -- updated by framework on init.
     Player = addon.Player, -- updated by framework on init.
+    Settings = addon.SavedSettings.Instance, -- updated by framework on addon load.
+    Pause = 0,
 }
 
 function feralRotation:Pulse()
     self:Refresh()
-    
+    print("running feral")
     return self.EmptySpell
 end
 
