@@ -29,12 +29,12 @@ end
 
 ---@param eventArgs any[]
 function EventTracker.Handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
-    addon.Player:DetectRotation()
+    addon:DetectRotation()
     EventTracker:UnRegisterEvent(event)
 end
 
 function EventTracker.Handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
-    addon.Player:DetectRotation()
+    addon:DetectRotation()
 end
 
 function EventTracker:RegisterEvents()

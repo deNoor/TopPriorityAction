@@ -16,13 +16,11 @@ local WowClass = {
     },
 }
 
-local emptySpell = { Id = -1, Key = "", }
 function WowClass:AddRotation(class, spec, spells, rotation)
     for name, spell in pairs(spells) do
         addon.Initializer.NewSpell(spell)
     end
     rotation = rotation or addon.Helper:Throw({ "attempt to add nil rotation for", class, spec })
-    rotation.EmptySpell = emptySpell
     WowClass[class] = { [spec] = rotation }
 end
 

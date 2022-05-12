@@ -91,12 +91,25 @@ local spells = {
 }
 
 ---@type Rotation
-local rotation = {
-    Timestamp = 0,
+local feralRotation = {
+    Timestamp = 0, -- updated by framework on Pulse call.
+    EmptySpell = nil, -- updated by framework on init.
+    Player = addon.Player, -- updated by framework on init.
 }
 
-function rotation:Pulse()
-    return { Id = -1, Key = "", }
+function feralRotation:Pulse()
+    self:Refresh()
+    
+    return self.EmptySpell
+end
+
+function feralRotation:Refresh()
+    local player = self.Player
+    local timestamp = self.Timestamp
+    player.Buffs:Refresh(timestamp)
+    player.Debuffs:Refresh(timestamp)
+    player.Target.Buffs:Refresh(timestamp)
+    player.Target.Debuffs:Refresh(timestamp)
 end
 
 addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
@@ -104,4 +117,4 @@ addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
 addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
 addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
 
-addon.WowClass:AddRotation("DRUID", 2, spells, rotation)
+addon.WowClass:AddRotation("DRUID", 2, spells, feralRotation)

@@ -9,6 +9,8 @@ local addon = TopPriorityAction
 ---@field Shared SharedData
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
+---@field Rotation Rotation
+---@field DetectRotation fun(self:TopPriorityAction)
 ---@field Player Player
 ---@field EventTracker EventTracker
 
@@ -21,15 +23,15 @@ function Program:RegisterActionUpdater()
     local frameCount = 0
     local updateLimit = self.UpdateEveryFrameCount
     local getTime = GetTime
-    local player = addon.Player
-    local currentAction = addon.Shared.CurrentAction
+    local addon = addon
+    local shared = addon.Shared
     self.Frame:SetScript("OnEvent", function()
         frameCount = frameCount + 1
         if (frameCount % updateLimit == 0) then
             frameCount = 0
-            local rotation = player.Rotation
+            local rotation = addon.Rotation
             rotation.Timestamp = getTime()
-            currentAction.Key = rotation.Pulse().Key
+            shared.CurrentAction = rotation.Pulse()
         end
     end)
     return self

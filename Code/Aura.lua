@@ -17,10 +17,10 @@ local emptyAura = {
     Stacks = 0,
 }
 
-local function UpdateAuras(table, unit, filter, timestamp)
+local function UpdateAuras(auras, unit, filter, timestamp)
     AuraUtil.ForEachAura(unit, filter, nil, function(name, _, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossDebuff, castByPlayer, ...)
         local now = timestamp or getTime()
-        local entry = table[spellId] or {
+        local entry = auras[spellId] or {
             Remains = nil,
             Stacks = nil,
         }
