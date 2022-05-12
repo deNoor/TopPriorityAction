@@ -99,4 +99,9 @@ function rotation:Pulse()
     return { Id = -1, Key = "", }
 end
 
+addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
+addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
+addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
+addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
+
 addon.WowClass:AddRotation("DRUID", 2, spells, rotation)

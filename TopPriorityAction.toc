@@ -9,6 +9,7 @@
 ## SavedVariables: TopPriorityActionSettings
 
 Code\_Initializer.lua
+Core\Aura.lua
 Code\EventTracker.lua
 Code\Player.lua
 Code\SavedSettings.lua

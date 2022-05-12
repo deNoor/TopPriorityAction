@@ -37,10 +37,12 @@ addon.Helper = Helper
 
 ---@class Initializer
 ---@field NewSpell fun(spell:Spell):Spell
+---@field NewAuraCollection fun(unit:string,filter:string):AuraCollection
 
 ---@type Initializer
 local Initializer = {
     NewSpell = nil,
+    NewAuraCollection = nil,
 }
 
 addon.Initializer = Initializer

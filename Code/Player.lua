@@ -6,17 +6,37 @@ local addon = TopPriorityAction
 ---@class Player
 ---@field Rotation Rotation
 ---@field DetectRotation fun():Player
+---@field Buffs AuraCollection
+---@field Debuffs AuraCollection
+---@field Target Target
+
+---@class Target
+---@field Buffs AuraCollection
+---@field Debuffs AuraCollection
 
 ---@type Player
 local Player = {
     Rotation = nil,
+    Buffs = nil,
+    Debuffs = nil,
+    Target = {
+        Buffs = nil,
+        Debuffs = nil,
+    },
 }
 
+---@class Rotation
+---@field Timestamp number
+---@field Pulse fun():Spell
+---@field EmptySpell Spell
+
 ---@type Rotation
+local emptySpell = { Id = -1, Key = "", }
 local empryRotation = {
     Pulse = function()
         return { Id = -1, Key = "", }
-    end
+    end,
+    EmptySpell = emptySpell,
 }
 function Player:DetectRotation()
     local class = UnitClassBase("player")
@@ -32,7 +52,3 @@ function Player:DetectRotation()
 end
 
 addon.Player = Player
-
----@class Rotation
----@field Timestamp number
----@field Pulse fun():Spell
