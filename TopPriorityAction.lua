@@ -15,7 +15,7 @@ local addon = TopPriorityAction
 ---@field EventTracker EventTracker
 
 local Program = {
-    UpdateEveryFrameCount = 240,
+    UpdateEveryFrameCount = 2,
     Frame = CreateFrame("Frame"),
 }
 
@@ -31,7 +31,7 @@ function Program:RegisterActionUpdater()
             frameCount = 0
             local rotation = addon.Rotation
             rotation.Timestamp = getTime()
-            shared.CurrentAction = rotation:Pulse()
+            shared.CurrentAction = rotation:Pulse() or rotation.EmptySpell
         end
     end)
     return self

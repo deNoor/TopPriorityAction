@@ -11,10 +11,10 @@ local addon = TopPriorityAction
 ---@field NoGCD boolean
 ---@field HardCast boolean
 ---@field Empty Spell
+---@field ReadyIn fun(self:Spell):number
 
 ---@type Spell
-local Spell = {
-}
+local Spell = {}
 
 ---@param spell Spell
 ---@return Spell
@@ -24,6 +24,15 @@ local function NewSpell(spell)
         o[name] = func
     end
     return o
+end
+
+local GetSpellCooldown, max = GetSpellCooldown, max
+function Spell:ReadyIn()
+    local now = addon.Rotation.Timestamp
+    local start, duration = GetSpellCooldown(self.Id)
+    if start then
+        return max(0, start + duration - now)
+    end
 end
 
 function Spell:Report()

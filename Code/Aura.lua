@@ -10,10 +10,12 @@ local addon = TopPriorityAction
 ---@class AuraCollection
 ---@field Refresh fun(self:AuraCollection, timestamp?:number)
 ---@field Find fun(self:AuraCollection, spellId:integer):Aura
+---@field Applied fun(self:AuraCollection, spellId:integer):boolean
+---@field Remains fun(self:AuraCollection, spellId:integer):number
 
 local getTime = GetTime
 local emptyAura = {
-    Remains = 0,
+    Remains = -1,
     Stacks = 0,
 }
 
@@ -21,11 +23,13 @@ local function UpdateAuras(auras, unit, filter, timestamp)
     AuraUtil.ForEachAura(unit, filter, nil, function(name, _, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossDebuff, castByPlayer, ...)
         local now = timestamp or getTime()
         local entry = auras[spellId] or {
-            Remains = nil,
             Stacks = nil,
+            FullDuration = nil,
+            Remains = nil,
         }
-        entry.Remains = expirationTimestamp - now
+        entry.Remains = expirationTimestamp > 0 and expirationTimestamp - now or 999999 -- exp is zero for endless aura
         entry.Stacks = stacks
+        entry.FullDuration = duration
     end)
 end
 
@@ -38,13 +42,20 @@ local function NewAuraCollection(unit, filter)
         Refresh = function(collection, timestamp)
             local auras = collection.Auras
             for spellId, aura in pairs(auras) do
-                aura.Remains = 0
+                auras[spellId] = nil
             end
             UpdateAuras(auras, unit, filter, timestamp)
         end,
         Find = function(collection, spellId)
-            return collection.Auras[spellId] or emptyAura
-        end
+            return collection.Auras[spellId]
+        end,
+        Applied = function(collection, spellId)
+            return collection.Auras[spellId] ~= nil
+        end,
+        Remains = function (collection, spellId)
+            local aura = collection.Auras[spellId] or emptyAura
+            return aura.Remains
+        end,
     }
     return newCollection
 end

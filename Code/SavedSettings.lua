@@ -11,10 +11,12 @@ local addon = TopPriorityAction
 ---@field Enabled boolean
 ---@field Burst boolean
 ---@field AOE boolean
+---@field SpellQueueWindow integer
 
 local SavedSettings = { Instance = nil }
 function SavedSettings:Load()
     TopPriorityActionSettings = TopPriorityActionSettings or {} -- saved variable from .toc file
+    TopPriorityActionSettings.SpellQueueWindow = (C_CVar.GetCVar("SpellQueueWindow") / 1000)
     self.Instance = TopPriorityActionSettings
 end
 

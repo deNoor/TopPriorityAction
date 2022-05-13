@@ -1,0 +1,7 @@
+{
+    "Lua.diagnostics.globals": [
+        "ACTIVE_CHAT_EDIT_BOX",
+        "MAX_TALENT_TIERS",
+        "NUM_TALENT_COLUMNS"
+    ]
+}

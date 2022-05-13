@@ -7,7 +7,7 @@ local addon = TopPriorityAction
 
 ---@class EventTracker
 ---@field private Frame Frame
----@field private Handlers table<string, EventHandler>
+---@field Handlers table<string, EventHandler>
 ---@field Timestamp number
 ---@field private RegisterEvents fun(self:EventTracker)
 ---@field UnRegisterEvent fun(self:EventTracker, event:string)
@@ -59,7 +59,6 @@ end
 local handlers = {}
 
 ---loads saved setting
----@param eventArgs any[]
 function handlers.ADDON_LOADED(event, eventArgs)
     local name = eventArgs[1]
     if name == "TopPriorityAction" then
@@ -68,7 +67,6 @@ function handlers.ADDON_LOADED(event, eventArgs)
     end
 end
 
----@param eventArgs any[]
 function handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
     addon:DetectRotation()
     addon.EventTracker:UnRegisterEvent(event)
@@ -76,6 +74,22 @@ end
 
 function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
     addon:DetectRotation()
+end
+
+function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
+    if(eventArgs[1] == "RCTRL") then
+        local rotation = addon.Rotation
+        if(eventArgs[2] == 1) then
+            rotation.IsPauseKeyDown = true
+            rotation.PauseTimestamp = rotation.Timestamp + rotation.AddedPauseOnKey
+        elseif (eventArgs[2] == 0) then
+            rotation.IsPauseKeyDown = false
+        end
+    end
+end
+
+function handlers:PLAYER_TALENT_UPDATE(event, eventArgs)
+    addon.Player:DetectTalents()
 end
 
 -- attach to addon

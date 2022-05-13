@@ -14,6 +14,7 @@ TpaKeys = {}
 function TpaKeys.Toggle(toggle)
     addon.SavedSettings.Instance[toggle] = not addon.SavedSettings.Instance[toggle]
 end
+
 --------------------------------------
 
 -- slash commands --------------------
@@ -41,6 +42,9 @@ local cmdHandlers = {
         if seconds then
             addon.Rotation.PauseTimestamp = addon.Rotation.Timestamp + seconds
         end
+    end,
+    sqw = function(...)
+        addon.SavedSettings.Instance.SpellQueueWindow = (C_CVar.GetCVar("SpellQueueWindow") / 1000)
     end,
 }
 local toLower = strlower
@@ -91,7 +95,7 @@ addon.Helper = Helper
 ---@class Initializer
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewAuraCollection fun(unit:string,filter:string):AuraCollection
----@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
+---@field NewEventTracker fun(handlers?:table<string, EventHandler>):EventTracker
 
 ---@type Initializer
 local Initializer = {
