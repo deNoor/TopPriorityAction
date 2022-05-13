@@ -40,7 +40,7 @@ local IsSpellKnownOrOverridesKnown = IsSpellKnownOrOverridesKnown
 function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for name, spell in pairs(spells) do
-        spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
+        spell.Known = spell.Id > 0 and IsSpellKnownOrOverridesKnown(spell.Id)
     end
 end
 

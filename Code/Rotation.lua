@@ -5,6 +5,7 @@ local addon = TopPriorityAction
 
 ---@class Rotation
 ---@field Spells table<string, Spell>
+---@field Talents integer[]
 ---@field Timestamp number               @updated by framework on Pulse call.
 ---@field Settings Settings              @updated by framework on rotation load.
 ---@field EmptySpell Spell               @updated by framework on init.
@@ -25,6 +26,7 @@ local emptyRotation = {
     Dispose = function(_) end,
     EmptySpell = emptySpell,
     Spells = {},
+    Talents = {},
     Timestamp = 0,
     PauseTimestamp = 0,
     IsPauseKeyDown = false,
@@ -50,6 +52,8 @@ local IsPauseKeyDown = IsRightControlKeyDown
 ---@param rotation Rotation
 local function SetDefaults(rotation)
     rotation.EmptySpell = emptySpell
+    rotation.Spells = {}
+    rotation.Talents = {}
     rotation.Timestamp = 0
     rotation.PauseTimestamp = 0
     rotation.IsPauseKeyDown = IsPauseKeyDown()
@@ -84,6 +88,27 @@ function addon:DetectRotation()
         knownRotation:Activate()
     end
     addon.Rotation = knownRotation
+end
+
+local GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs = GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs
+function addon:UpdateTalents()
+    local rotation = self.Rotation
+    if(rotation == emptyRotation) then
+        return
+    end
+    wipe(rotation.Talents)
+    local specGroupIndex = GetActiveSpecGroup()
+    for tier = 1, MAX_TALENT_TIERS do
+        for column = 1, NUM_TALENT_COLUMNS do
+            local talentID, name, texture, selected, available, spellID = GetTalentInfo(tier, column, specGroupIndex)
+            if (selected) then
+                rotation.Talents[talentID] = true
+            end
+        end
+    end
+    for slotN, talentID in ipairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs()) do
+        rotation.Talents[talentID] = true
+    end
 end
 
 addon.Rotation = emptyRotation

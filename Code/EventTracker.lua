@@ -90,6 +90,7 @@ end
 
 function handlers:SPELLS_CHANGED(event, eventArgs)
     addon:UpdateKnownSpells()
+    addon:UpdateTalents()
 end
 
 -- attach to addon
