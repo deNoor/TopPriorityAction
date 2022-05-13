@@ -13,30 +13,29 @@ local cmdHandlers = {
     switch = function(...)
         addon.SavedSettings.Instance.Enabled = not addon.SavedSettings.Instance.Enabled
     end,
-    start =function(...)
+    start = function(...)
         addon.SavedSettings.Instance.Enabled = true
     end,
-    stop =function(...)
+    stop = function(...)
         addon.SavedSettings.Instance.Enabled = false
     end,
-    aoe = function (...)
+    aoe = function(...)
         addon.SavedSettings.Instance.AOE = not addon.SavedSettings.Instance.AOE
     end,
-    burst = function (...)
+    burst = function(...)
         addon.SavedSettings.Instance.Burst = not addon.SavedSettings.Instance.Burst
     end,
-    pause = function (arg, ...)
+    pause = function(arg, ...)
         local seconds = tonumber(arg)
         if seconds then
-            addon.Rotation.Pause = addon.Rotation.Timestamp + seconds
+            addon.Rotation.PauseTimestamp = addon.Rotation.Timestamp + seconds
         end
-        addon.Helper:Print({seconds, addon.Rotation.Pause})
-    end
+    end,
 }
 local toLower = strlower
 SlashCmdList.TPrioS = function(msg, editBox)
-    local args = {strsplit(" ", msg)}
-    if(#args <= 0) then
+    local args = { strsplit(" ", msg) }
+    if (#args <= 0) then
         return
     end
     local handler = cmdHandlers[toLower(args[1])]
@@ -55,8 +54,8 @@ end
 local Helper = {}
 local concat = table.concat
 local function prepare(table)
-    if(type(table) ~= "table")then
-        table = {table}
+    if (type(table) ~= "table") then
+        table = { table }
     end
     tinsert(table, "")
     for i = 1, #table do
@@ -82,11 +81,13 @@ addon.Helper = Helper
 ---@class Initializer
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewAuraCollection fun(unit:string,filter:string):AuraCollection
+---@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
 
 ---@type Initializer
 local Initializer = {
     NewSpell = nil,
     NewAuraCollection = nil,
+    NewEventTracker = nil,
 }
 
 addon.Initializer = Initializer

@@ -20,8 +20,8 @@ local Spell = {
 ---@return Spell
 local function NewSpell(spell)
     local o = spell or addon.Helper:Throw({ "attempt to initialize empty player spell" })
-    for key, value in pairs(Spell) do -- add functions directly, direct lookup might be faster than metatable lookup
-        o[key] = value
+    for name, func in pairs(Spell) do -- add functions directly, direct lookup might be faster than metatable lookup
+        o[name] = func
     end
     return o
 end

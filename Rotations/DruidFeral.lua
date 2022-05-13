@@ -92,15 +92,27 @@ local spells = {
 
 ---@type Rotation
 local feralRotation = {
-    Timestamp = 0, -- updated by framework on Pulse call.
-    EmptySpell = nil, -- updated by framework on init.
-    Player = addon.Player, -- updated by framework on init.
-    Settings = addon.SavedSettings.Instance, -- updated by framework on addon load.
-    Pause = 0,
+    -- framework dependencies
+    Timestamp = 0,
+    Settings = nil,
+    EmptySpell = nil,
+    Player = addon.Player,
+    PauseTimestamp = 0,
+
+    -- instance fields
+    LocalEvents = addon.Initializer.NewEventTracker({}),
 }
+
+function feralRotation:StoppedByUser()
+    return not self.Settings.Enabled or self.PauseTimestamp - self.Timestamp > 0
+end
 
 function feralRotation:Pulse()
     self:Refresh()
+    if not self:StoppedByUser() then
+        return self.EmptySpell
+    end
+
     print("running feral")
     return self.EmptySpell
 end
@@ -112,6 +124,14 @@ function feralRotation:Refresh()
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
+end
+
+function feralRotation:Dispose()
+    self.LocalEvents:Dispose()
+end
+
+function feralRotation:Activate()
+
 end
 
 addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
