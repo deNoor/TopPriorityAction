@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="SWITCH" header="TPRIOACTION" category="Top Priority Action">TpaKeys.Toggle("Enabled")</Binding>
+  <Binding name="BURST" category="Top Priority Action">TpaKeys.Toggle("Burst")</Binding>
+  <Binding name="AOE" category="Top Priority Action">TpaKeys.Toggle("AOE")</Binding>
+</Bindings>

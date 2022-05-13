@@ -5,7 +5,18 @@ local addon = TopPriorityAction
 
 -- need to be loaded first. Use to initialize addon-wide data.
 
--- slash commands ------------------
+-- keybinds --------------------------
+BINDING_HEADER_TPRIOACTION = "Top priority action"
+BINDING_NAME_SWITCH = "Switch"
+BINDING_NAME_BURST = "Burst"
+BINDING_NAME_AOE = "AoE"
+TpaKeys = {}
+function TpaKeys.Toggle(toggle)
+    addon.SavedSettings.Instance[toggle] = not addon.SavedSettings.Instance[toggle]
+end
+--------------------------------------
+
+-- slash commands --------------------
 SLASH_TPrioS1 = "/tpa"
 local tonumber = tonumber
 ---@type table<string,fun()>
@@ -43,10 +54,9 @@ SlashCmdList.TPrioS = function(msg, editBox)
         handler(select(1, unpack(args, 2)))
     end
 end
-------------------------------------
+--------------------------------------
 
 -- helper functions ------------------
-
 ---@class Helper
 ---@field Print fun(self:Helper, params:string[])
 ---@field Throw fun(self:Helper, params:string[])
@@ -76,7 +86,7 @@ function Helper:Error(params)
 end
 
 addon.Helper = Helper
--------------------------------------
+--------------------------------------
 
 ---@class Initializer
 ---@field NewSpell fun(spell:Spell):Spell
