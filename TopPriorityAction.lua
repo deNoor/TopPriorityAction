@@ -11,6 +11,7 @@ local addon = TopPriorityAction
 ---@field WowClass WowClass
 ---@field Rotation Rotation
 ---@field DetectRotation fun(self:TopPriorityAction)
+---@field UpdateKnownSpells fun(self:TopPriorityAction)
 ---@field Player Player
 ---@field EventTracker EventTracker
 

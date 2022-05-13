@@ -15,10 +15,12 @@ local WowClass = {
 }
 
 function WowClass:AddRotation(class, spec, spells, rotation)
+    rotation = rotation or addon.Helper:Throw({ "attempt to add nil rotation for", class, spec })
+    spells = spells or addon.Helper:Throw({ "attempt to add nil spells for", class, spec })
     for name, spell in pairs(spells) do
         addon.Initializer.NewSpell(spell)
     end
-    rotation = rotation or addon.Helper:Throw({ "attempt to add nil rotation for", class, spec })
+    rotation.Spells = spells
     WowClass[class] = { [spec] = rotation }
 end
 

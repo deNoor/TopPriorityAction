@@ -88,8 +88,8 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
     end
 end
 
-function handlers:PLAYER_TALENT_UPDATE(event, eventArgs)
-    addon.Player:DetectTalents()
+function handlers:SPELLS_CHANGED(event, eventArgs)
+    addon:UpdateKnownSpells()
 end
 
 -- attach to addon

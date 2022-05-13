@@ -4,6 +4,7 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class Rotation
+---@field Spells table<string, Spell>
 ---@field Timestamp number               @updated by framework on Pulse call.
 ---@field Settings Settings              @updated by framework on rotation load.
 ---@field EmptySpell Spell               @updated by framework on init.
@@ -23,6 +24,7 @@ local emptyRotation = {
     Activate = function(_) end,
     Dispose = function(_) end,
     EmptySpell = emptySpell,
+    Spells = {},
     Timestamp = 0,
     PauseTimestamp = 0,
     IsPauseKeyDown = false,
@@ -61,19 +63,27 @@ function addon:DetectRotation()
     local specIndex = GetSpecialization()
     local knownClass = addon.WowClass[class]
     local knownRotation = knownClass[specIndex] ---@type Rotation
-    if (not knownRotation) then
-        addon.Helper:Print({ "unknown spec", class, specIndex, })
-    end
+
     local currentRotation = addon.Rotation or emptyRotation
     if (currentRotation.Dispose) then
         currentRotation:Dispose()
     end
-    local newRotation = knownRotation or emptyRotation
-    SetDefaults(newRotation)
-    if (newRotation.Activate) then
-        newRotation:Activate()
+
+    if (not knownRotation) then
+        addon.Helper:Print({ "unknown spec", class, specIndex, })
+        addon.Rotation = emptyRotation
+        return
     end
-    addon.Rotation = newRotation
+
+    if(addon.Rotation == knownRotation) then
+        return
+    end
+
+    SetDefaults(knownRotation)
+    if (knownRotation.Activate) then
+        knownRotation:Activate()
+    end
+    addon.Rotation = knownRotation
 end
 
 addon.Rotation = emptyRotation

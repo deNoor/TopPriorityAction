@@ -114,6 +114,17 @@ local feralRotation = {
     CanDot = false,
 }
 
+---@param list fun():Spell
+---@return Spell
+function feralRotation:RunPriorityList(list)
+
+    for _, func in ipairs(list) do
+        local action = func()
+
+    end
+    return self.EmptySpell
+end
+
 local IsSpellInRange = IsSpellInRange
 function feralRotation:CheckInRange()
     self.InRange = (IsSpellInRange(self.RangeChecker, "target")) or false
@@ -149,9 +160,15 @@ function feralRotation:Pulse()
 end
 
 function feralRotation:StealthOpener()
-    if(self.Stealhed) then
-        -- return spells.Rake
-    end
+    return {
+        function ()
+            if(self.Stealhed) then
+                return spells.Rake
+            end
+        end,
+    }
+    
+
 end
 
 function feralRotation:SingleTarget()
