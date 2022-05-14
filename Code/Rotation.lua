@@ -9,6 +9,7 @@ local addon = TopPriorityAction
 ---@field Timestamp number               @updated by framework on Pulse call.
 ---@field Settings Settings              @updated by framework on rotation load.
 ---@field EmptySpell Spell               @updated by framework on init.
+---@field GCDSpell Spell               @updated by framework on init.
 ---@field PauseTimestamp number          @updated by framework on events outside rotation.
 ---@field IsPauseKeyDown boolean         @updated by framework on events outside rotation, MODIFIER_STATE_CHANGED
 ---@field AddedPauseOnKey integer
@@ -17,14 +18,16 @@ local addon = TopPriorityAction
 ---@field Activate fun(self:Rotation)
 ---@field Dispose fun(self:Rotation)
 
----@type Rotation
+---@type Spell
 local emptySpell = { Id = -1, Key = "", }
+---@type Rotation
 local emptyRotation = {
     Pulse = function(rotation) return rotation.EmptySpell end,
     ShouldNotRun = function(_) return true end,
     Activate = function(_) end,
     Dispose = function(_) end,
     EmptySpell = emptySpell,
+    GCDSpell = nil,
     Spells = {},
     Talents = {},
     Timestamp = 0,
@@ -52,6 +55,7 @@ local IsPauseKeyDown = IsRightControlKeyDown
 ---@param rotation Rotation
 local function SetDefaults(rotation)
     rotation.EmptySpell = emptySpell
+    rotation.GCDSpell = addon.Initializer.NewSpell({ Id = 61304, })
     rotation.Spells = {}
     rotation.Talents = {}
     rotation.Timestamp = 0
@@ -59,7 +63,17 @@ local function SetDefaults(rotation)
     rotation.IsPauseKeyDown = IsPauseKeyDown()
     rotation.AddedPauseOnKey = 2
     rotation.ShouldNotRun = ShouldNotRun
-    rotation.Settings = addon.SavedSettings.Instance
+end
+
+function addon:AddRotation(class, spec, spells, rotation)
+    rotation = rotation or addon.Helper:Throw({ "attempt to add nil rotation for", class, spec })
+    SetDefaults(rotation)
+    spells = spells or addon.Helper:Throw({ "attempt to add nil spells for", class, spec })
+    for name, spell in pairs(spells) do
+        addon.Initializer.NewSpell(spell)
+    end
+    rotation.Spells = spells
+    self.WowClass[class] = { [spec] = rotation }
 end
 
 function addon:DetectRotation()
@@ -79,11 +93,7 @@ function addon:DetectRotation()
         return
     end
 
-    if(addon.Rotation == knownRotation) then
-        return
-    end
-
-    SetDefaults(knownRotation)
+    knownRotation.Settings = addon.SavedSettings.Instance -- runtime value, cannot be set statically
     if (knownRotation.Activate) then
         knownRotation:Activate()
     end
@@ -93,7 +103,7 @@ end
 local GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs = GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs
 function addon:UpdateTalents()
     local rotation = self.Rotation
-    if(rotation == emptyRotation) then
+    if (rotation == emptyRotation) then
         return
     end
     wipe(rotation.Talents)

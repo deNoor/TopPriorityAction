@@ -49,7 +49,9 @@ local function NewEventTracker(handlers)
         Timestamp = 0,
     }
     for name, func in pairs(EventTracker) do -- add functions directly, direct lookup might be faster than metatable lookup
-        eventTracker[name] = func
+        if(type(func) == "function") then
+            eventTracker[name] = func
+        end
     end
     eventTracker:RegisterEvents()
     return eventTracker
@@ -88,6 +90,7 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
     end
 end
 
+-- fured after spec change, talent change, spellbook change
 function handlers:SPELLS_CHANGED(event, eventArgs)
     addon:UpdateKnownSpells()
     addon:UpdateTalents()

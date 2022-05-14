@@ -17,6 +17,7 @@ local getTime = GetTime
 local emptyAura = {
     Remains = -1,
     Stacks = 0,
+    FullDuration = 0,
 }
 
 local function UpdateAuras(auras, unit, filter, timestamp)

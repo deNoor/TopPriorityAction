@@ -10,6 +10,7 @@ local addon = TopPriorityAction
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
 ---@field Rotation Rotation
+---@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, spells:table<string,Spell>, rotation:Rotation)
 ---@field DetectRotation fun(self:TopPriorityAction)
 ---@field UpdateTalents fun(self:TopPriorityAction)
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
@@ -17,7 +18,7 @@ local addon = TopPriorityAction
 ---@field EventTracker EventTracker
 
 local Program = {
-    UpdateEveryFrameCount = 2,
+    UpdateEveryFrameCount = 240,
     Frame = CreateFrame("Frame"),
 }
 

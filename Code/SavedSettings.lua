@@ -16,7 +16,7 @@ local addon = TopPriorityAction
 local SavedSettings = { Instance = nil }
 function SavedSettings:Load()
     TopPriorityActionSettings = TopPriorityActionSettings or {} -- saved variable from .toc file
-    TopPriorityActionSettings.SpellQueueWindow = (C_CVar.GetCVar("SpellQueueWindow") / 1000)
+    TopPriorityActionSettings.SpellQueueWindow = TopPriorityActionSettings.SpellQueueWindow or (GetSpellQueueWindow() / 1000)
     self.Instance = TopPriorityActionSettings
 end
 

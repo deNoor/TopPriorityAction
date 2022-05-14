@@ -3,13 +3,11 @@ local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
 
----@type table<string, Spell>
 local spells = {
     TigersFury = {
         Key = "1",
         Id = 5217,
         Buff = 5217,
-        NoGCD = true,
     },
     Rake = {
         Key = "2",
@@ -46,11 +44,11 @@ local spells = {
     -- talents
     BrutalSlash = {
         Key = "0",
-        Id = 0,
+        Id = 202028,
     },
     PrimalWrath = {
         Key = "0",
-        Id = 0,
+        Id = 285381,
     },
     -- defensives
     Barkskin = {
@@ -89,6 +87,7 @@ local spells = {
         Buff = 135700,
     },
 }
+
 ---@type Rotation
 local feralRotation = {
     -- framework dependencies
@@ -98,37 +97,39 @@ local feralRotation = {
     Player = addon.Player,
     PauseTimestamp = 0,
 
-    -- instance fields
-    LocalEvents = addon.Initializer.NewEventTracker(),
-    RangeChecker = (GetSpellInfo(spells.Rake.Id)),
+    -- instance fields, init in Activate
+    LocalEvents = nil, ---@type EventTracker
+    RangeChecker = nil, ---@type Spell
 
     -- locals
     Stealhed = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     WowClass = addon.WowClass,
     InRange = false,
+    Energy  = 0,
+    EnergyDeficit = 0,
+    Combo = 0,
+    ComboDeficit = 0,
     GcdReadyIn = 0,
+    CastingEndsIn = 0,
+    CCUnlockIn = 0,
     SpellQueueWindow = 0,
     InInstance = false,
-    InCombat = false,
-    CanFight = false,
-    CanDot = false,
+    InCombatWithTarget = false,
+    CanAttackTarget = false,
+    CanDotTarget = false,
 }
 
----@param list fun():Spell
----@return Spell
+---@param list (fun():Spell)[]
+---@return Spell?
 function feralRotation:RunPriorityList(list)
-
     for _, func in ipairs(list) do
+        ---@type Spell
         local action = func()
-
+        if(action and action == self.EmptySpell or (action:IsKnown() and action:IsUsableNow())) then
+            return action
+        end
     end
-    return self.EmptySpell
-end
-
-local IsSpellInRange = IsSpellInRange
-function feralRotation:CheckInRange()
-    self.InRange = (IsSpellInRange(self.RangeChecker, "target")) or false
-    return self.InRange
+    return nil
 end
 
 function feralRotation:Pulse()
@@ -144,27 +145,27 @@ function feralRotation:Pulse()
     local targetDebuffs = self.Player.Target.Debuffs
     if (playerBuffs:Applied(spells.CatForm)
         and self.InRange
-        and self.CanFight
-        and (not self.InInstance or self.InCombat)
-        and self.GcdReadyIn < self.SpellQueueWindow)
+        and self.CanAttackTarget
+        and (not self.InInstance or self.InCombatWithTarget)
+        and self.GcdReadyIn <= self.SpellQueueWindow
+        and self.CastingEndsIn <= self.SpellQueueWindow
+    )
     then
         if (not self.Settings.AOE) then
-            selectedAction = self:StealthOpener() or self:SingleTarget()
+            selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
         else
-            selectedAction = self:Aoe()
+            selectedAction = self:Aoe():RunPriorityList()
         end
     end
 
     -- print("running feral")
+    -- consider using CanCast or Empty here to counter most failed spams with a cheap check.
     return selectedAction or self.EmptySpell
 end
 
 function feralRotation:StealthOpener()
     return {
-        function ()
-            if(self.Stealhed) then
-                return spells.Rake
-            end
+        function () return spells.Rake
         end,
     }
     
@@ -172,18 +173,34 @@ function feralRotation:StealthOpener()
 end
 
 function feralRotation:SingleTarget()
-    if (self.GcdReadyIn < self.SpellQueueWindow) then
-
-    end
+    local burst = self.Settings.Burst
+    local aoe = self.Settings.AOE
+    local player = self.Player
+    local target = self.Player.Target
+    return {
+        function () if (self.EnergyDeficit > 55) then return spells.TigersFury end
+        end,
+        function () if(burst) then return spells.Berserk end
+        end,
+        function () if(self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+        end,
+        function () if(self.Combo > 4) then return spells.FerociousBite end
+        end,
+        function () if(self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
+        end,
+        function () return spells.BrutalSlash
+        end,
+        function () if(aoe and target.Debuffs:Remains(spells.Thrash.Debuff) < 3) then return spells.Thrash end
+        end,
+        function () if (not aoe) then return spells.Shred else return spells.Swipe end
+        end,
+    }
 end
 
 function feralRotation:Aoe()
 
 end
 
-local IsSpellInRange, GetInstanceInfo, UnitAffectingCombat, UnitCanAttack, UnitClassification, UnitIsDead = IsSpellInRange, GetInstanceInfo, UnitAffectingCombat, UnitCanAttack, UnitClassification, UnitIsDead
-local instanceTypes = { "raid", "party", "pvp", "arena", }
-local goodUnitClassifications = { "worldboss", "rareelite", "elite", "rare", "normal", }
 function feralRotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -192,13 +209,16 @@ function feralRotation:Refresh()
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
 
-    self.InRange = IsSpellInRange(self.RangeChecker, "target") or false
-    self.GcdReadyIn = self.WowClass:GCDReadyIn()
+    self.InRange = self.RangeChecker:IsInRange()
+    self.Energy, self.EnergyDeficit = player:Resource(3)
+    self.Combo, self.ComboDeficit = player:Resource(4)
+    self.GcdReadyIn = player:GCDReadyIn()
+    self.CastingEndsIn = player:CastingEndsIn()
     self.SpellQueueWindow = addon.SavedSettings.Instance.SpellQueueWindow
-    self.InInstance = instanceTypes[(select(2, GetInstanceInfo()))] ~= nil
-    self.InCombat = (UnitAffectingCombat("player") or UnitAffectingCombat("target"))
-    self.CanFight = UnitCanAttack("player", "target") and not UnitIsDead("target")
-    self.CanDot = goodUnitClassifications[UnitClassification("target")] ~= nil
+    self.InInstance = player:InInstance()
+    self.InCombatWithTarget = player:InCombatWithTarget()
+    self.CanAttackTarget = player:CanAttackTarget()
+    self.CanDotTarget = player:CanDotTarget()
 end
 
 function feralRotation:Dispose()
@@ -206,18 +226,19 @@ function feralRotation:Dispose()
 end
 
 function feralRotation:Activate()
-    local handlers = self.LocalEvents.Handlers
+    addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
+    addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
+    addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
+    addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
+    
+    local handlers = {}
     local IsStealthed = IsStealthed
     function handlers.UPDATE_STEALTH(event, eventArgs)
         self.Stealhed = IsStealthed()
     end
 
-    self.LocalEvents:RegisterEvents()
+    self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
+    self.RangeChecker = spells.Rake
 end
 
-addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
-addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
-addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
-addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
-
-addon.WowClass:AddRotation("DRUID", 2, spells, feralRotation)
+addon:AddRotation("DRUID", 2, spells, feralRotation)
