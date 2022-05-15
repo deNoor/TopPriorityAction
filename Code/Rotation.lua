@@ -41,7 +41,7 @@ local emptyRotation = {
 
 ---@param self Rotation
 ---@return boolean
-local SpellIsTargeting, IsMounted, UnitIsDeadOrGhost = SpellIsTargeting, IsMounted, UnitIsDeadOrGhost
+local SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitUsingVehicle = SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitUsingVehicle
 local function ShouldNotRun(self)
     return not self.Settings.Enabled
         or not self.RangeChecker.Name
@@ -50,7 +50,9 @@ local function ShouldNotRun(self)
         or UnitIsDeadOrGhost("player")
         or UnitIsPossessed("player")
         or SpellIsTargeting()
+        or GetCursorInfo()
         or IsMounted()
+        or UnitUsingVehicle("player")
         or ACTIVE_CHAT_EDIT_BOX
 end
 
