@@ -45,6 +45,7 @@ local spells = {
     BrutalSlash = {
         Key = "9",
         Id = 202028,
+        TalentId = 21711,
     },
     PrimalWrath = {
         Key = "0",
@@ -104,7 +105,6 @@ local feralRotation = {
     -- locals
     CurrentPriorityList = nil, ---@type (fun():Spell)[]
     Stealhed            = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
-    WowClass            = addon.WowClass,
     InRange             = false,
     Energy              = 0,
     EnergyDeficit       = 0,
@@ -198,7 +198,7 @@ function feralRotation:SingleTarget()
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
-            function() return spells.BrutalSlash
+            function() if ((self.Talents[spells.BrutalSlash.TalentId])) then return spells.BrutalSlash end
             end,
             function() return spells.Shred
             end,
@@ -224,7 +224,7 @@ function feralRotation:Aoe()
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
-            function() return spells.BrutalSlash
+            function() if (self.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end
             end,
             function() if (target.Debuffs:Remains(spells.Thrash.Debuff) < 4.5) then return spells.Thrash end
             end,

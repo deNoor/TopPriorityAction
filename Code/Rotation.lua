@@ -104,24 +104,25 @@ function addon:DetectRotation()
     addon.Rotation = knownRotation
 end
 
-local GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs = GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs
+local GetActiveSpecGroup, GetTalentInfo, GetAllSelectedPvpTalentIDs = GetActiveSpecGroup, GetTalentInfo, C_SpecializationInfo.GetAllSelectedPvpTalentIDs
 function addon:UpdateTalents()
     local rotation = self.Rotation
     if (rotation == emptyRotation) then
         return
     end
-    wipe(rotation.Talents)
+    local talents = rotation.Talents
+    wipe(talents)
     local specGroupIndex = GetActiveSpecGroup()
     for tier = 1, MAX_TALENT_TIERS do
         for column = 1, NUM_TALENT_COLUMNS do
             local talentID, name, texture, selected, available, spellID = GetTalentInfo(tier, column, specGroupIndex)
             if (selected) then
-                rotation.Talents[talentID] = true
+                talents[talentID] = true
             end
         end
     end
-    for slotN, talentID in ipairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs()) do
-        rotation.Talents[talentID] = true
+    for slotN, talentID in ipairs(GetAllSelectedPvpTalentIDs()) do
+        talents[talentID] = true
     end
 end
 

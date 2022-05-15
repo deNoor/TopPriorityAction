@@ -46,14 +46,14 @@ function Spell:ReadyIn()
     end
 end
 
-local GetSpellInfo, IsSpellKnown, GetSpellBaseCooldown = GetSpellInfo, IsSpellKnown, GetSpellBaseCooldown
+local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown
 function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
         local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
         spell.Name = name
         spell.HardCast = castTime > 0
-        spell.Known = IsSpellKnown(spell.Id)
+        spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
         local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
         spell.NoGCD = gcdMS == 0
         spell.HasCD = cooldownMS > 0
