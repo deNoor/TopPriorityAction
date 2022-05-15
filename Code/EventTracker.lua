@@ -78,6 +78,10 @@ function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
     addon:DetectRotation()
 end
 
+function handlers.PLAYER_TALENT_UPDATE(event, eventArgs)
+    addon:UpdateTalents()
+end
+
 function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
     if (eventArgs[1] == "RCTRL") then
         local rotation = addon.Rotation
@@ -91,9 +95,8 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
 end
 
 -- fured after spec change, talent change, spellbook change
-function handlers:SPELLS_CHANGED(event, eventArgs)
+function handlers.SPELLS_CHANGED(event, eventArgs)
     addon:UpdateKnownSpells()
-    addon:UpdateTalents()
 end
 
 -- attach to addon

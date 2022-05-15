@@ -30,7 +30,7 @@ function Program:RegisterActionUpdater()
     local shared = addon.Shared
     self.Frame:SetScript("OnUpdate", function()
         local now = getTime()
-        if (now - lastUpdate > updateLimit) then
+        if (now - lastUpdate >= updateLimit) then
             lastUpdate = now
             local rotation = addon.Rotation
             rotation.Timestamp = now
