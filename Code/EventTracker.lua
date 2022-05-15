@@ -49,7 +49,7 @@ local function NewEventTracker(handlers)
         Timestamp = 0,
     }
     for name, func in pairs(EventTracker) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if(type(func) == "function") then
+        if (type(func) == "function") then
             eventTracker[name] = func
         end
     end
@@ -79,9 +79,9 @@ function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
 end
 
 function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
-    if(eventArgs[1] == "RCTRL") then
+    if (eventArgs[1] == "RCTRL") then
         local rotation = addon.Rotation
-        if(eventArgs[2] == 1) then
+        if (eventArgs[2] == 1) then
             rotation.IsPauseKeyDown = true
             rotation.PauseTimestamp = rotation.Timestamp + rotation.AddedPauseOnKey
         elseif (eventArgs[2] == 0) then

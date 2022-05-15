@@ -43,7 +43,7 @@ local spells = {
     },
     -- talents
     BrutalSlash = {
-        Key = "0",
+        Key = "9",
         Id = 202028,
     },
     PrimalWrath = {
@@ -102,30 +102,30 @@ local feralRotation = {
     RangeChecker = nil, ---@type Spell
 
     -- locals
-    Stealhed = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
-    WowClass = addon.WowClass,
-    InRange = false,
-    Energy  = 0,
-    EnergyDeficit = 0,
-    Combo = 0,
-    ComboDeficit = 0,
-    GcdReadyIn = 0,
-    CastingEndsIn = 0,
-    CCUnlockIn = 0,
-    SpellQueueWindow = 0,
-    InInstance = false,
-    InCombatWithTarget = false,
-    CanAttackTarget = false,
-    CanDotTarget = false,
+    CurrentPriorityList = nil, ---@type (fun():Spell)[]
+    Stealhed            = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
+    WowClass            = addon.WowClass,
+    InRange             = false,
+    Energy              = 0,
+    EnergyDeficit       = 0,
+    Combo               = 0,
+    ComboDeficit        = 0,
+    GcdReadyIn          = 0,
+    CastingEndsIn       = 0,
+    CCUnlockIn          = 0,
+    SpellQueueWindow    = 0,
+    InInstance          = false,
+    InCombatWithTarget  = false,
+    CanAttackTarget     = false,
+    CanDotTarget        = false,
 }
 
----@param list (fun():Spell)[]
 ---@return Spell?
-function feralRotation:RunPriorityList(list)
-    for _, func in ipairs(list) do
+function feralRotation:RunPriorityList()
+    for i, func in ipairs(self.CurrentPriorityList) do
         ---@type Spell
         local action = func()
-        if(action and action == self.EmptySpell or (action:IsKnown() and action:IsUsableNow())) then
+        if (action and (action == self.EmptySpell or (action:IsKnown() and action:IsUsableNow()))) then
             return action
         end
     end
@@ -143,13 +143,13 @@ function feralRotation:Pulse()
     local now = self.Timestamp
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (playerBuffs:Applied(spells.CatForm)
+    if (playerBuffs:Applied(spells.CatForm.Buff)
         and self.InRange
         and self.CanAttackTarget
         and (not self.InInstance or self.InCombatWithTarget)
         and self.GcdReadyIn <= self.SpellQueueWindow
         and self.CastingEndsIn <= self.SpellQueueWindow
-    )
+        )
     then
         if (not self.Settings.AOE) then
             selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
@@ -158,47 +158,55 @@ function feralRotation:Pulse()
         end
     end
 
-    -- print("running feral")
-    -- consider using CanCast or Empty here to counter most failed spams with a cheap check.
     return selectedAction or self.EmptySpell
 end
 
+local stealthOpenerList
 function feralRotation:StealthOpener()
-    return {
-        function () return spells.Rake
-        end,
-    }
-    
-
+    stealthOpenerList = stealthOpenerList or
+        {
+            function() return spells.Rake
+            end,
+        }
+    self.CurrentPriorityList = stealthOpenerList
+    return self
 end
 
+local singleTargetList
 function feralRotation:SingleTarget()
     local burst = self.Settings.Burst
     local aoe = self.Settings.AOE
     local player = self.Player
     local target = self.Player.Target
-    return {
-        function () if (self.EnergyDeficit > 55) then return spells.TigersFury end
-        end,
-        function () if(burst) then return spells.Berserk end
-        end,
-        function () if(self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
-        end,
-        function () if(self.Combo > 4) then return spells.FerociousBite end
-        end,
-        function () if(self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
-        end,
-        function () return spells.BrutalSlash
-        end,
-        function () if(aoe and target.Debuffs:Remains(spells.Thrash.Debuff) < 3) then return spells.Thrash end
-        end,
-        function () if (not aoe) then return spells.Shred else return spells.Swipe end
-        end,
-    }
+    singleTargetList = singleTargetList or
+        {
+            function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
+            end,
+            function() if (burst) then return spells.Berserk end
+            end,
+            function() if (self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+            end,
+            function() if (self.Combo > 4) then return spells.FerociousBite end
+            end,
+            function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
+            end,
+            function() return spells.BrutalSlash
+            end,
+            function() if (aoe and target.Debuffs:Remains(spells.Thrash.Debuff) < 3) then return spells.Thrash end
+            end,
+            function() if (not aoe) then return spells.Shred else return spells.Swipe end
+            end,
+        }
+    self.CurrentPriorityList = singleTargetList
+    return self
 end
 
+local aoeList
 function feralRotation:Aoe()
-
+    aoeList = aoeList or
+        {}
+    self.CurrentPriorityList = aoeList
+    return self
 end
 
 function feralRotation:Refresh()
@@ -230,7 +238,7 @@ function feralRotation:Activate()
     addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
     addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
     addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
-    
+
     local handlers = {}
     local IsStealthed = IsStealthed
     function handlers.UPDATE_STEALTH(event, eventArgs)
@@ -239,6 +247,7 @@ function feralRotation:Activate()
 
     self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
     self.RangeChecker = spells.Rake
+    addon.Shared.RangeCheckSpell = self.RangeChecker
 end
 
 addon:AddRotation("DRUID", 2, spells, feralRotation)

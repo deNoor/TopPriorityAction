@@ -18,7 +18,7 @@ local addon = TopPriorityAction
 ---@field EventTracker EventTracker
 
 local Program = {
-    UpdateEveryFrameCount = 240,
+    UpdateEveryFrameCount = 2,
     Frame = CreateFrame("Frame"),
 }
 

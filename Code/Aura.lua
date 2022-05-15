@@ -31,6 +31,7 @@ local function UpdateAuras(auras, unit, filter, timestamp)
         entry.Remains = expirationTimestamp > 0 and expirationTimestamp - now or 999999 -- exp is zero for endless aura
         entry.Stacks = stacks
         entry.FullDuration = duration
+        auras[spellId] = entry
     end)
 end
 
@@ -53,7 +54,7 @@ local function NewAuraCollection(unit, filter)
         Applied = function(collection, spellId)
             return collection.Auras[spellId] ~= nil
         end,
-        Remains = function (collection, spellId)
+        Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
             return aura.Remains
         end,

@@ -4,17 +4,23 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class PlayerAction
+---@field Id integer
+---@field Name string
 ---@field Key string
 
 ---@class SharedData
 ---@field CurrentAction PlayerAction
+---@field RangeCheckSpell Spell
 
 -- shared by name with other addonds. Need to be global
 ---@type SharedData
 TopPriorityActionSharedData = {
     CurrentAction = {
-        Key = ""
-    }
+        Id = 0,
+        Key = "",
+        Name = "Empty",
+    },
+    RangeCheckSpell = {},
 }
 
 -- attach to addon

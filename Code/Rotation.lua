@@ -9,32 +9,34 @@ local addon = TopPriorityAction
 ---@field Timestamp number               @updated by framework on Pulse call.
 ---@field Settings Settings              @updated by framework on rotation load.
 ---@field EmptySpell Spell               @updated by framework on init.
----@field GCDSpell Spell               @updated by framework on init.
+---@field GCDSpell Spell                 @updated by framework on init.
 ---@field PauseTimestamp number          @updated by framework on events outside rotation.
 ---@field IsPauseKeyDown boolean         @updated by framework on events outside rotation, MODIFIER_STATE_CHANGED
 ---@field AddedPauseOnKey integer
+---@field RangeChecker Spell
 ---@field Pulse fun(self:Rotation):Spell
 ---@field ShouldNotRun fun(self:Rotation):boolean
 ---@field Activate fun(self:Rotation)
 ---@field Dispose fun(self:Rotation)
 
 ---@type Spell
-local emptySpell = { Id = -1, Key = "", }
+local emptySpell = { Id = -1, Name = "Empty", Key = "", }
 ---@type Rotation
 local emptyRotation = {
     Pulse = function(rotation) return rotation.EmptySpell end,
     ShouldNotRun = function(_) return true end,
     Activate = function(_) end,
     Dispose = function(_) end,
-    EmptySpell = emptySpell,
-    GCDSpell = nil,
     Spells = {},
     Talents = {},
     Timestamp = 0,
+    Settings = nil,
+    EmptySpell = emptySpell,
+    GCDSpell = nil,
     PauseTimestamp = 0,
     IsPauseKeyDown = false,
     AddedPauseOnKey = 0,
-    Settings = nil,
+    RangeChecker = emptySpell,
 }
 
 ---@param self Rotation
@@ -90,6 +92,7 @@ function addon:DetectRotation()
     if (not knownRotation) then
         addon.Helper:Print({ "unknown spec", class, specIndex, })
         addon.Rotation = emptyRotation
+        addon.Shared.RangeCheckSpell = emptySpell
         return
     end
 

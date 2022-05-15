@@ -13,7 +13,6 @@ local addon = TopPriorityAction
 ---@field HasCD boolean
 ---@field HardCast boolean
 ---@field Known boolean
----@field Empty Spell
 ---@field ReadyIn fun(self:Spell):number
 ---@field IsUsableNow fun(self:Spell):boolean
 ---@field IsKnown fun(self:Spell):boolean
@@ -47,14 +46,14 @@ function Spell:ReadyIn()
     end
 end
 
-local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown
+local GetSpellInfo, IsSpellKnown, GetSpellBaseCooldown = GetSpellInfo, IsSpellKnown, GetSpellBaseCooldown
 function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
         local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
         spell.Name = name
         spell.HardCast = castTime > 0
-        spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
+        spell.Known = IsSpellKnown(spell.Id)
         local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
         spell.NoGCD = gcdMS == 0
         spell.HasCD = cooldownMS > 0
@@ -74,7 +73,7 @@ end
 
 local IsSpellInRange = IsSpellInRange
 function Spell:IsInRange()
-    return IsSpellInRange(self.Name, "target") or false
+    return (IsSpellInRange(self.Name, "target") or 0) == 1
 end
 
 local GetSpellLossOfControlCooldown = GetSpellLossOfControlCooldown
@@ -87,7 +86,7 @@ function Spell:CCUnlockIn()
 end
 
 function Spell:Report()
-    addon.Helper:Print({ "Id", self.Id, "Key", self.Key })
+    addon.Helper:Print({ "Id", self.Id, "Name", self.Name, "Key", self.Key })
 end
 
 addon.Initializer.NewSpell = NewSpell

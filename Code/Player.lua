@@ -37,7 +37,7 @@ end
 
 local UnitPowerType, max, GetHaste = UnitPowerType, max, GetHaste
 function Player:FullGCDTime()
-    return (UnitPowerType("player") == 3 and 1 or max(0.75, 1.5 * 100 / (100+GetHaste())))
+    return (UnitPowerType("player") == 3 and 1 or max(0.75, 1.5 * 100 / (100 + GetHaste())))
 end
 
 local function SecFromNow(endTimeMS)
@@ -47,7 +47,7 @@ end
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
 function Player:CastingEndsIn()
     local name, text, texture, startTimeMS, endTimeMS, _, _, notInterruptible, spellId = UnitCastingInfo("player")
-    if(not name) then
+    if (not name) then
         name, text, texture, startTimeMS, endTimeMS, _, notInterruptible, spellId = UnitChannelInfo("player")
     end
     return name and SecFromNow(endTimeMS) or 0
@@ -64,7 +64,7 @@ function Player:Resource(index)
 end
 
 local select, GetInstanceInfo = select, GetInstanceInfo
-local instanceTypes = { "raid", "party", "pvp", "arena", }
+local instanceTypes = { ["raid"] = true, ["party"] = true, ["pvp"] = true, ["arena"] = true, }
 function Player:InInstance()
     return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil
 end
@@ -79,7 +79,7 @@ function Player:CanAttackTarget()
     return UnitCanAttack("player", "target") and not UnitIsDead("target")
 end
 
-local goodUnitClassifications = { "worldboss", "rareelite", "elite", "rare", "normal", }
+local goodUnitClassifications = { ["worldboss"] = true, ["rareelite"] = true, ["elite"] = true, ["rare"] = true, ["normal"] = true, }
 function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil
 end
