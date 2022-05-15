@@ -71,11 +71,14 @@ end
 
 function handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
     addon:DetectRotation()
+    addon:UpdateKnownSpells()
+    addon:UpdateTalents()
     addon.EventTracker:UnRegisterEvent(event)
 end
 
 function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
     addon:DetectRotation()
+    addon:UpdateTalents()
 end
 
 function handlers.PLAYER_TALENT_UPDATE(event, eventArgs)
@@ -94,7 +97,7 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
     end
 end
 
--- fured after spec change, talent change, spellbook change
+-- fired after spec change, talent change, spellbook change
 function handlers.SPELLS_CHANGED(event, eventArgs)
     addon:UpdateKnownSpells()
 end

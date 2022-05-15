@@ -11,6 +11,7 @@ local addon = TopPriorityAction
 ---@field Debuff integer
 ---@field NoGCD boolean
 ---@field HasCD boolean
+---@field ChangesBased boolean
 ---@field HardCast boolean
 ---@field Known boolean
 ---@field ReadyIn fun(self:Spell):number
@@ -46,7 +47,7 @@ function Spell:ReadyIn()
     end
 end
 
-local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown
+local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges
 function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
@@ -57,6 +58,7 @@ function addon:UpdateKnownSpells()
         local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
         spell.NoGCD = gcdMS == 0
         spell.HasCD = cooldownMS > 0
+        spell.ChangesBased = (GetSpellCharges(spell.Id)) ~= nil
     end
 end
 
@@ -64,9 +66,15 @@ function Spell:IsKnown()
     return self.Known
 end
 
-local IsUsableSpell = IsUsableSpell
+local IsUsableSpell, GetSpellCharges = IsUsableSpell, GetSpellCharges
 function Spell:IsUsableNow()
-    local onCD = self.NoGCD and self.HasCD and self:ReadyIn() > addon.Rotation.Settings.SpellQueueWindow
+    local onCD = true
+    if(self.ChangesBased) then
+        local currentCharges, maxCharges, lastChargeCooldownStart, chargeCooldownDuration = GetSpellCharges(self.Id)
+        onCD = currentCharges < 1 and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
+    else
+        onCD = self.NoGCD and self.HasCD and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
+    end
     local usable, noMana = IsUsableSpell(self.Id)
     return not onCD and usable, noMana
 end

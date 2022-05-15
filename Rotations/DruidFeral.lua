@@ -50,6 +50,7 @@ local spells = {
     PrimalWrath = {
         Key = "0",
         Id = 285381,
+        TalentId = 22370,
     },
     -- defensives
     Barkskin = {
@@ -101,6 +102,7 @@ local feralRotation = {
     -- instance fields, init in Activate
     LocalEvents = nil, ---@type EventTracker
     RangeChecker = nil, ---@type Spell
+    ComboCap = 4,
 
     -- locals
     CurrentPriorityList = nil, ---@type (fun():Spell)[]
@@ -190,15 +192,15 @@ function feralRotation:SingleTarget()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function() if (self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+            function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
-            function() if (self.Combo > 4) then return spells.FerociousBite end
+            function() if (self.Combo >= self.ComboCap) then if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end end
             end,
             function() if (player.Buffs:Applied(spells.ClearCasting.Buff)) then return spells.Shred end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
-            function() if ((self.Talents[spells.BrutalSlash.TalentId])) then return spells.BrutalSlash end
+            function() if (self.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end
             end,
             function() return spells.Shred
             end,
@@ -218,17 +220,19 @@ function feralRotation:Aoe()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function() if (self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+            function () if (self.Talents[spells.PrimalWrath.TalentId] and self.Combo >= self.ComboCap) then return spells.PrimalWrath end
             end,
-            function() if (self.Combo > 4) then return spells.FerociousBite end
+            function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+            end,
+            function() if (self.Combo >= self.ComboCap) then if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
-            function() if (self.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end
-            end,
             function() if (target.Debuffs:Remains(spells.Thrash.Debuff) < 4.5) then return spells.Thrash end
             end,
-            function() return spells.Swipe
+            function() if (self.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash else return spells.Swipe end
+            end,
+            function() return spells.Thrash -- dump energy when Slash is out ouf charges
             end,
         }
     self.CurrentPriorityList = aoeList
@@ -270,7 +274,6 @@ function feralRotation:Activate()
     function handlers.UPDATE_STEALTH(event, eventArgs)
         self.Stealhed = IsStealthed()
     end
-
     self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
     self.RangeChecker = spells.Rake
     addon.Shared.RangeCheckSpell = self.RangeChecker
