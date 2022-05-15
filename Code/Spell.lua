@@ -14,7 +14,7 @@ local addon = TopPriorityAction
 ---@field HardCast boolean
 ---@field Known boolean
 ---@field ReadyIn fun(self:Spell):number
----@field IsUsableNow fun(self:Spell):boolean
+---@field IsUsableNow fun(self:Spell):boolean,boolean
 ---@field IsKnown fun(self:Spell):boolean
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field IsInRange fun(self:Spell):boolean
@@ -68,7 +68,7 @@ local IsUsableSpell = IsUsableSpell
 function Spell:IsUsableNow()
     local onCD = self.NoGCD and self.HasCD and self:ReadyIn() > addon.Rotation.Settings.SpellQueueWindow
     local usable, noMana = IsUsableSpell(self.Id)
-    return not onCD and (usable or noMana)
+    return not onCD and usable, noMana
 end
 
 local IsSpellInRange = IsSpellInRange

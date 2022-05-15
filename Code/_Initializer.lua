@@ -73,7 +73,8 @@ local function prepare(table)
     end
     tinsert(table, "")
     for i = 1, #table do
-        local value = table[i] or "nil"
+        local value = table[i]
+        value = value == nil and "nil" or value
         table[i] = tostring(value)
     end
     return table

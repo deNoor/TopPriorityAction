@@ -34,12 +34,12 @@ local spells = {
     },
     Thrash = {
         Key = "8",
-        Id = 106830,
+        Id = 106832,
         Debuff = 106830,
     },
     Swipe = {
         Key = "9",
-        Id = 106785,
+        Id = 213764,
     },
     -- talents
     BrutalSlash = {
@@ -125,15 +125,23 @@ function feralRotation:RunPriorityList()
     for i, func in ipairs(self.CurrentPriorityList) do
         ---@type Spell
         local action = func()
-        if (action and (action == self.EmptySpell or (action:IsKnown() and action:IsUsableNow()))) then
-            return action
+        if (action) then
+            if (action == self.EmptySpell) then
+                return action
+            end
+            if (action:IsKnown()) then
+                local usable, noMana = action:IsUsableNow()
+                if (usable or noMana) then
+                    return noMana and self.EmptySpell or action
+                end
+            end
         end
     end
     return nil
 end
 
 function feralRotation:Pulse()
-    if self:ShouldNotRun() then
+    if not self.RangeChecker.Name or self:ShouldNotRun() then
         return self.EmptySpell
     end
 
@@ -154,10 +162,9 @@ function feralRotation:Pulse()
         if (not self.Settings.AOE) then
             selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
         else
-            selectedAction = self:Aoe():RunPriorityList()
+            selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:Aoe():RunPriorityList()
         end
     end
-
     return selectedAction or self.EmptySpell
 end
 
@@ -174,15 +181,42 @@ end
 
 local singleTargetList
 function feralRotation:SingleTarget()
-    local burst = self.Settings.Burst
-    local aoe = self.Settings.AOE
+    local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
     singleTargetList = singleTargetList or
         {
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
             end,
-            function() if (burst) then return spells.Berserk end
+            function() if (settings.Burst) then return spells.Berserk end
+            end,
+            function() if (self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
+            end,
+            function() if (self.Combo > 4) then return spells.FerociousBite end
+            end,
+            function() if (player.Buffs:Applied(spells.ClearCasting.Buff)) then return spells.Shred end
+            end,
+            function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
+            end,
+            function() return spells.BrutalSlash
+            end,
+            function() return spells.Shred
+            end,
+        }
+    self.CurrentPriorityList = singleTargetList
+    return self
+end
+
+local aoeList
+function feralRotation:Aoe()
+    local settings = self.Settings
+    local player = self.Player
+    local target = self.Player.Target
+    aoeList = aoeList or
+        {
+            function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
+            end,
+            function() if (settings.Burst) then return spells.Berserk end
             end,
             function() if (self.CanDotTarget and self.Combo > 4 and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
@@ -192,19 +226,11 @@ function feralRotation:SingleTarget()
             end,
             function() return spells.BrutalSlash
             end,
-            function() if (aoe and target.Debuffs:Remains(spells.Thrash.Debuff) < 3) then return spells.Thrash end
+            function() if (target.Debuffs:Remains(spells.Thrash.Debuff) < 4.5) then return spells.Thrash end
             end,
-            function() if (not aoe) then return spells.Shred else return spells.Swipe end
+            function() return spells.Swipe
             end,
         }
-    self.CurrentPriorityList = singleTargetList
-    return self
-end
-
-local aoeList
-function feralRotation:Aoe()
-    aoeList = aoeList or
-        {}
     self.CurrentPriorityList = aoeList
     return self
 end

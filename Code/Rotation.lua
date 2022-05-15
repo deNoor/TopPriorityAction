@@ -44,6 +44,7 @@ local emptyRotation = {
 local SpellIsTargeting, IsMounted, UnitIsDeadOrGhost = SpellIsTargeting, IsMounted, UnitIsDeadOrGhost
 local function ShouldNotRun(self)
     return not self.Settings.Enabled
+        or not self.RangeChecker.Name
         or self.IsPauseKeyDown
         or self.PauseTimestamp - self.Timestamp > 0
         or UnitIsDeadOrGhost("player")
