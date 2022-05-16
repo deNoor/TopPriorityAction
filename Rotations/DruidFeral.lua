@@ -61,6 +61,10 @@ local spells = {
         Id = 61336,
         Buff = 61336,
     },
+    Regrowth = {
+        Key = "-",
+        Id = 8936,
+    },
     -- CC and utility spells
     Maim = {
         Id = 22570,
@@ -84,9 +88,13 @@ local spells = {
         Buff = 197625,
     },
     -- Procs
-    ClearCasting = {
-        Id = 135700,
-        Buff = 135700,
+    OmenOfClarity = {
+        Id = 16864,
+        Buff = 135700, -- Clear casting
+    },
+    PredatorySwiftness = {
+        Id = 16974,
+        Buff = 69369,
     },
 }
 
@@ -105,41 +113,50 @@ local feralRotation = {
     ComboCap = 4,
 
     -- locals
-    CurrentPriorityList = nil, ---@type (fun():Spell)[]
-    Stealhed            = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
-    InRange             = false,
-    Energy              = 0,
-    EnergyDeficit       = 0,
-    Combo               = 0,
-    ComboDeficit        = 0,
-    GcdReadyIn          = 0,
-    CastingEndsIn       = 0,
-    CCUnlockIn          = 0,
-    SpellQueueWindow    = 0,
-    InInstance          = false,
-    InCombatWithTarget  = false,
-    CanAttackTarget     = false,
-    CanDotTarget        = false,
+    SelectedAction         = nil,
+    CurrentPriorityList    = nil, ---@type (fun():Spell)[]
+    Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
+    InRange                = false,
+    Energy                 = 0,
+    EnergyDeficit          = 0,
+    Combo                  = 0,
+    ComboDeficit           = 0,
+    GcdReadyIn             = 0,
+    CastingEndsIn          = 0,
+    CCUnlockIn             = 0,
+    SpellQueueWindow       = 0,
+    MyHealthPercent        = 0,
+    MyHealthPercentDeficit = 0,
+    InInstance             = false,
+    InCombatWithTarget     = false,
+    CanAttackTarget        = false,
+    CanDotTarget           = false,
+    RegrowthLastSent       = 0,
+    LastCastSent           = 0,
 }
 
 ---@return Spell?
 function feralRotation:RunPriorityList()
+    if (self.SelectedAction) then
+        return
+    end
     for i, func in ipairs(self.CurrentPriorityList) do
         ---@type Spell
         local action = func()
         if (action) then
             if (action == self.EmptySpell) then
-                return action
+                self.SelectedAction = action
+                return
             end
             if (action:IsKnown()) then
                 local usable, noMana = action:IsUsableNow()
                 if (usable or noMana) then
-                    return noMana and self.EmptySpell or action
+                    self.SelectedAction = noMana and self.EmptySpell or action
+                    return
                 end
             end
         end
     end
-    return nil
 end
 
 function feralRotation:Pulse()
@@ -147,8 +164,7 @@ function feralRotation:Pulse()
         return self.EmptySpell
     end
 
-    local selectedAction = nil
-
+    self.SelectedAction = nil
     self:Refresh()
     local now = self.Timestamp
     local playerBuffs = self.Player.Buffs
@@ -161,13 +177,25 @@ function feralRotation:Pulse()
         and self.CastingEndsIn <= self.SpellQueueWindow
         )
     then
-        if (not self.Settings.AOE) then
-            selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
-        else
-            selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:Aoe():RunPriorityList()
+        self:Utility():RunPriorityList()
+        if (self.Stealhed) then
+            self:StealthOpener():RunPriorityList()
         end
+        if (not self.Settings.AOE) then
+            self:SingleTarget():RunPriorityList()
+        else
+            self:Aoe():RunPriorityList()
+        end
+        -- if (not self.Settings.AOE) then
+        --     selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
+        -- else
+        --     selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:Aoe():RunPriorityList()
+        -- end
+        -- if (not selectedAction or selectedAction == self.EmptySpell) then
+        -- end
     end
-    return selectedAction or self.EmptySpell
+    self.SelectedAction = self.SelectedAction or self.EmptySpell
+    return self.SelectedAction
 end
 
 local stealthOpenerList
@@ -196,7 +224,7 @@ function feralRotation:SingleTarget()
             end,
             function() if (self.Combo >= self.ComboCap) then if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end end
             end,
-            function() if (player.Buffs:Applied(spells.ClearCasting.Buff)) then return spells.Shred end
+            function() if (player.Buffs:Applied(spells.OmenOfClarity.Buff)) then return spells.Shred end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
@@ -220,7 +248,7 @@ function feralRotation:Aoe()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function () if (self.Talents[spells.PrimalWrath.TalentId] and self.Combo >= self.ComboCap) then return spells.PrimalWrath end
+            function() if (self.Talents[spells.PrimalWrath.TalentId] and self.Combo >= self.ComboCap) then return spells.PrimalWrath end
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
@@ -239,6 +267,19 @@ function feralRotation:Aoe()
     return self
 end
 
+local utilityList
+function feralRotation:Utility()
+    local player = self.Player
+    local target = self.Player.Target
+    utilityList = utilityList or
+        {
+            function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn and self.Timestamp - self.RegrowthLastSent > 2.5) then return spells.Regrowth end
+            end
+        }
+    self.CurrentPriorityList = utilityList
+    return self
+end
+
 function feralRotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -250,6 +291,7 @@ function feralRotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(3)
     self.Combo, self.ComboDeficit = player:Resource(4)
+    self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.GcdReadyIn = player:GCDReadyIn()
     self.CastingEndsIn = player:CastingEndsIn()
     self.SpellQueueWindow = addon.SavedSettings.Instance.SpellQueueWindow
@@ -274,6 +316,15 @@ function feralRotation:Activate()
     function handlers.UPDATE_STEALTH(event, eventArgs)
         self.Stealhed = IsStealthed()
     end
+
+    function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
+        -- instant regrowth has 0.5 gcd which causes double casts with 400 queue window
+        if (eventArgs[1] == "player" and eventArgs[4] == spells.Regrowth.Id) then
+            self.RegrowthLastSent = self.Timestamp
+        end
+        self.LastCastSent = self.Timestamp
+    end
+
     self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
     self.RangeChecker = spells.Rake
     addon.Shared.RangeCheckSpell = self.RangeChecker
