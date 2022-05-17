@@ -16,6 +16,7 @@ local addon = TopPriorityAction
 ---@field Known boolean
 ---@field ReadyIn fun(self:Spell):number
 ---@field IsUsableNow fun(self:Spell):boolean,boolean
+---@field IsQueued fun(self:Spell):boolean
 ---@field IsKnown fun(self:Spell):boolean
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field IsInRange fun(self:Spell):boolean
@@ -82,6 +83,11 @@ end
 local IsSpellInRange = IsSpellInRange
 function Spell:IsInRange()
     return (IsSpellInRange(self.Name, "target") or 0) == 1
+end
+
+local IsCurrentSpell = IsCurrentSpell
+function Spell:IsQueued()
+    return IsCurrentSpell(self.Id)
 end
 
 local GetSpellLossOfControlCooldown = GetSpellLossOfControlCooldown

@@ -59,9 +59,9 @@ local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax
 ---@return number current
 ---@return number deficit
 function Player:Resource(index)
+    local total = UnitPowerMax("player", index)
     local current = UnitPower("player", index)
-    local max = UnitPowerMax("player", index)
-    return current, max - current
+    return current, total - current
 end
 
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax

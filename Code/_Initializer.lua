@@ -43,8 +43,12 @@ local cmdHandlers = {
             addon.Rotation.PauseTimestamp = addon.Rotation.Timestamp + seconds
         end
     end,
-    sqw = function(...)
-        addon.SavedSettings.Instance.SpellQueueWindow = (GetSpellQueueWindow() / 1000)
+    sqw = function(arg, ...)
+        local ms = tonumber(arg) or 400
+        ms = max(0, min(ms, 400))
+        C_CVar.SetCVar("SpellQueueWindow", ms)
+        addon.SavedSettings.Instance.SpellQueueWindow = (ms / 1000)
+        addon.Helper:Print({"spell queue window", ms})
     end,
 }
 local toLower = strlower

@@ -131,7 +131,6 @@ local feralRotation = {
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
     CanDotTarget           = false,
-    RegrowthLastSent       = 0,
     LastCastSent           = 0,
 }
 
@@ -194,8 +193,15 @@ function feralRotation:Pulse()
         -- if (not selectedAction or selectedAction == self.EmptySpell) then
         -- end
     end
-    self.SelectedAction = self.SelectedAction or self.EmptySpell
-    return self.SelectedAction
+    self:ReduceSpellSpam()
+    return self.SelectedAction or self.EmptySpell
+end
+
+function feralRotation:ReduceSpellSpam()
+    local action = self.SelectedAction
+    if (action and action.Id > 0 and action:IsQueued()) then
+        self.SelectedAction = self.EmptySpell
+    end
 end
 
 local stealthOpenerList
@@ -273,7 +279,7 @@ function feralRotation:Utility()
     local target = self.Player.Target
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn and self.Timestamp - self.RegrowthLastSent > 2.5) then return spells.Regrowth end
+            function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end
             end
         }
     self.CurrentPriorityList = utilityList
@@ -318,11 +324,9 @@ function feralRotation:Activate()
     end
 
     function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
-        -- instant regrowth has 0.5 gcd which causes double casts with 400 queue window
-        if (eventArgs[1] == "player" and eventArgs[4] == spells.Regrowth.Id) then
-            self.RegrowthLastSent = self.Timestamp
+        if (eventArgs[1] == "player") then
+            self.LastCastSent = self.Timestamp
         end
-        self.LastCastSent = self.Timestamp
     end
 
     self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
