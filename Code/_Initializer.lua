@@ -101,7 +101,7 @@ end
 
 function Helper:ToHashSet(table)
     local t = {}
-    for index, value in ipairs(t) do
+    for index, value in ipairs(table) do
         t[value] = value
     end
     return t
