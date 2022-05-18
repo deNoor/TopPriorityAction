@@ -10,6 +10,7 @@ BINDING_HEADER_TPRIOACTION = "Top priority action"
 BINDING_NAME_SWITCH = "Switch"
 BINDING_NAME_BURST = "Burst"
 BINDING_NAME_AOE = "AoE"
+BINDING_NAME_DISPEL = "Dispel"
 TpaKeys = {}
 function TpaKeys.Toggle(toggle)
     addon.SavedSettings.Instance[toggle] = not addon.SavedSettings.Instance[toggle]
@@ -36,6 +37,9 @@ local cmdHandlers = {
     end,
     burst = function(...)
         addon.SavedSettings.Instance.Burst = not addon.SavedSettings.Instance.Burst
+    end,
+    dispel = function(...)
+        addon.SavedSettings.Instance.Dispel = not addon.SavedSettings.Instance.Dispel
     end,
     pause = function(arg, ...)
         local seconds = tonumber(arg)

@@ -87,6 +87,14 @@ local spells = {
         Id = 197625,
         Buff = 197625,
     },
+    Soothe = {
+        Key = "F6",
+        Id = 2908,
+    },
+    RemoveCorruption = {
+        Key = "F6",
+        Id = 2782,
+    },
     -- Procs
     OmenOfClarity = {
         Id = 16864,
@@ -101,16 +109,17 @@ local spells = {
 ---@type Rotation
 local feralRotation = {
     -- framework dependencies
-    Timestamp = 0,
-    Settings = nil,
-    EmptySpell = nil,
-    Player = addon.Player,
+    Timestamp      = 0,
+    Settings       = nil,
+    EmptySpell     = nil,
+    Player         = addon.Player,
     PauseTimestamp = 0,
 
     -- instance fields, init in Activate
-    LocalEvents = nil, ---@type EventTracker
-    RangeChecker = nil, ---@type Spell
-    ComboCap = 4,
+    LocalEvents      = nil, ---@type EventTracker
+    RangeChecker     = nil, ---@type Spell
+    ComboCap         = 4,
+    DispellableTypes = addon.Helper:ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     SelectedAction         = nil,
@@ -121,6 +130,7 @@ local feralRotation = {
     EnergyDeficit          = 0,
     Combo                  = 0,
     ComboDeficit           = 0,
+    Mana                   = 0,
     GcdReadyIn             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
@@ -132,6 +142,8 @@ local feralRotation = {
     CanAttackTarget        = false,
     CanDotTarget           = false,
     LastCastSent           = 0,
+    MouseoverIsFriend      = false,
+    MouseoverIsEnemy       = false,
 }
 
 ---@return Spell?
@@ -185,13 +197,6 @@ function feralRotation:Pulse()
         else
             self:Aoe():RunPriorityList()
         end
-        -- if (not self.Settings.AOE) then
-        --     selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:SingleTarget():RunPriorityList()
-        -- else
-        --     selectedAction = self.Stealhed and self:StealthOpener():RunPriorityList() or self:Aoe():RunPriorityList()
-        -- end
-        -- if (not selectedAction or selectedAction == self.EmptySpell) then
-        -- end
     end
     self:ReduceSpellSpam()
     return self.SelectedAction or self.EmptySpell
@@ -275,17 +280,32 @@ end
 
 local utilityList
 function feralRotation:Utility()
+    local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
+    local mouseover = self.Player.Mouseover
+    local function CanDispel()
+        if (self.MouseoverIsFriend) then
+            return mouseover.Debuffs:HasDispelable(self.DispellableTypes)
+        end
+        if (self.MouseoverIsEnemy) then
+            return mouseover.Buffs:HasPurgeable()
+        end
+        return false
+    end
+
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end
-            end
+            end,
+            function() if (settings.Dispel and CanDispel() and self.Mana > 500) then if (self.MouseoverIsFriend) then return spells.RemoveCorruption end if (self.MouseoverIsEnemy) then return spells.Soothe end end
+            end,
         }
     self.CurrentPriorityList = utilityList
     return self
 end
 
+local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
 function feralRotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -293,10 +313,13 @@ function feralRotation:Refresh()
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
+    player.Mouseover.Buffs:Refresh(timestamp)
+    player.Mouseover.Debuffs:Refresh(timestamp)
 
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(3)
     self.Combo, self.ComboDeficit = player:Resource(4)
+    self.Mana = player:Resource(0)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.GcdReadyIn = player:GCDReadyIn()
     self.CastingEndsIn = player:CastingEndsIn()
@@ -305,6 +328,7 @@ function feralRotation:Refresh()
     self.InCombatWithTarget = player:InCombatWithTarget()
     self.CanAttackTarget = player:CanAttackTarget()
     self.CanDotTarget = player:CanDotTarget()
+    self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
 end
 
 function feralRotation:Dispose()
@@ -316,6 +340,8 @@ function feralRotation:Activate()
     addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
     addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
     addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
+    addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
+    addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
 
     local handlers = {}
     local IsStealthed = IsStealthed

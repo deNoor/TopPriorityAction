@@ -11,6 +11,7 @@ local addon = TopPriorityAction
 ---@field Enabled boolean
 ---@field Burst boolean
 ---@field AOE boolean
+---@field Dispel boolean
 ---@field SpellQueueWindow integer
 
 local SavedSettings = { Instance = nil }

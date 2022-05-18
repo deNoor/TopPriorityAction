@@ -7,6 +7,7 @@ local addon = TopPriorityAction
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection
 ---@field Target Target
+---@field Mouseover Mouseover
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
 ---@field CastingEndsIn fun(self:Player):number
@@ -21,12 +22,20 @@ local addon = TopPriorityAction
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection
 
+---@class Mouseover
+---@field Buffs AuraCollection
+---@field Debuffs AuraCollection
+
 ---@type Player
 local Player = {
     Rotation = nil,
     Buffs = nil,
     Debuffs = nil,
     Target = {
+        Buffs = nil,
+        Debuffs = nil,
+    },
+    Mouseover = {
         Buffs = nil,
         Debuffs = nil,
     },
