@@ -68,6 +68,7 @@ end
 ---@class Helper
 ---@field Print fun(self:Helper, params:string[])
 ---@field Throw fun(self:Helper, params:string[])
+---@field ToHashSet fun(self:Helper, table:string[]):table<string,string>
 
 local Helper = {}
 local concat = table.concat
@@ -92,6 +93,14 @@ end
 local error = error
 function Helper:Error(params)
     error(concat(prepare(params), " "))
+end
+
+function Helper:ToHashSet(table)
+    local t = {}
+    for index, value in ipairs(t) do
+        t[value] = value
+    end
+    return t
 end
 
 addon.Helper = Helper

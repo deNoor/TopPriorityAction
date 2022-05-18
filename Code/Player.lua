@@ -73,7 +73,7 @@ function Player:HealthPercent()
 end
 
 local select, GetInstanceInfo = select, GetInstanceInfo
-local instanceTypes = { ["raid"] = true, ["party"] = true, ["pvp"] = true, ["arena"] = true, }
+local instanceTypes = addon.Helper:ToHashSet({ "raid", "party", "pvp", "arena", })
 function Player:InInstance()
     return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil
 end
@@ -88,7 +88,7 @@ function Player:CanAttackTarget()
     return UnitCanAttack("player", "target") and not UnitIsDead("target")
 end
 
-local goodUnitClassifications = { ["worldboss"] = true, ["rareelite"] = true, ["elite"] = true, ["rare"] = true, ["normal"] = true, }
+local goodUnitClassifications = addon.Helper:ToHashSet({ "worldboss", "rareelite", "elite", "rare", "normal", })
 function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil
 end
