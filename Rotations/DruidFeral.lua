@@ -263,7 +263,7 @@ function feralRotation:Aoe()
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
-            function() if (self.Combo >= self.ComboCap) then if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end end
+            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite --[[ if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end ]] end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
