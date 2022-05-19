@@ -67,15 +67,9 @@ function Spell:IsKnown()
     return self.Known
 end
 
-local IsUsableSpell, GetSpellCharges = IsUsableSpell, GetSpellCharges
+local IsUsableSpell = IsUsableSpell
 function Spell:IsUsableNow()
-    local onCD = true
-    if(self.ChangesBased) then
-        local currentCharges, maxCharges, lastChargeCooldownStart, chargeCooldownDuration = GetSpellCharges(self.Id)
-        onCD = currentCharges < 1 and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
-    else
-        onCD = self.NoGCD and self.HasCD and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
-    end
+    local onCD = (self.HasCD or self.ChangesBased) and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
     local usable, noMana = IsUsableSpell(self.Id)
     return not onCD and usable, noMana
 end
@@ -96,6 +90,16 @@ function Spell:CCUnlockIn()
     local start, duration = GetSpellLossOfControlCooldown(self.Id)
     if start then
         return max(0, start + duration - now)
+    end
+end
+
+local GetSpellCharges = GetSpellCharges
+function Spell:ActiveCharges()
+    if(self.ChangesBased) then
+        local currentCharges, maxCharges, lastChargeCooldownStart, chargeCooldownDuration = GetSpellCharges(self.Id)
+        return currentCharges
+    else
+        return 0
     end
 end
 
