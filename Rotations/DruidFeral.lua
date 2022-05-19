@@ -104,6 +104,11 @@ local spells = {
         Id = 16974,
         Buff = 69369,
     },
+    -- Shadowlands specials
+    AdaptiveSwarm = {
+        Key = "6",
+        Id = 325727,
+    },
 }
 
 ---@type Rotation
@@ -227,6 +232,8 @@ function feralRotation:SingleTarget()
     local target = self.Player.Target
     singleTargetList = singleTargetList or
         {
+            function () return spells.AdaptiveSwarm
+            end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
             end,
             function() if (settings.Burst) then return spells.Berserk end
@@ -255,6 +262,8 @@ function feralRotation:Aoe()
     local target = self.Player.Target
     aoeList = aoeList or
         {
+            function () return spells.AdaptiveSwarm
+            end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
             end,
             function() if (settings.Burst) then return spells.Berserk end
