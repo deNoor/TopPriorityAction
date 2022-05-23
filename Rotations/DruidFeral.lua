@@ -109,6 +109,10 @@ local spells = {
         Key = "6",
         Id = 325727,
     },
+    ConvokeTheSpirits = {
+        Key = "6",
+        Id = 323764,
+    },
 }
 
 ---@type Rotation
@@ -232,19 +236,21 @@ function feralRotation:SingleTarget()
     local target = self.Player.Target
     singleTargetList = singleTargetList or
         {
-            function () return spells.AdaptiveSwarm
+            function() return spells.AdaptiveSwarm
             end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
+            end,
+            function() if (settings.Burst) then return spells.ConvokeTheSpirits end
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
-            function() if (self.Combo >= self.ComboCap) then if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end end
-            end,
-            function() if (player.Buffs:Applied(spells.OmenOfClarity.Buff)) then return spells.Shred end
+            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite --[[ if (self.Energy > 50) then return spells.FerociousBite else return self.EmptySpell end ]] end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
+            end,
+            function() if (player.Buffs:Applied(spells.OmenOfClarity.Buff)) then return spells.Shred end
             end,
             function() if (self.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end
             end,
@@ -262,9 +268,11 @@ function feralRotation:Aoe()
     local target = self.Player.Target
     aoeList = aoeList or
         {
-            function () return spells.AdaptiveSwarm
+            function() return spells.AdaptiveSwarm
             end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
+            end,
+            function() if (settings.Burst) then return spells.ConvokeTheSpirits end
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
