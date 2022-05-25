@@ -42,8 +42,8 @@ local emptyRotation = {
 ---@param self Rotation
 ---@return boolean
 local
-SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, UnitHasVehicleUI =
-SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, UnitHasVehicleUI
+SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasOverrideActionBar =
+SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasOverrideActionBar
 local function ShouldNotRun(self)
     return not self.Settings.Enabled
         or not self.RangeChecker.Name
@@ -54,7 +54,7 @@ local function ShouldNotRun(self)
         or SpellIsTargeting()
         or GetCursorInfo()
         or IsMounted()
-        or UnitHasVehicleUI("player")
+        or HasOverrideActionBar()
         or UnitOnTaxi("player")
         or ACTIVE_CHAT_EDIT_BOX
 end
