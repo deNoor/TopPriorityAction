@@ -26,22 +26,30 @@ local emptyAura = {
     CanPurge = false,
 }
 
+local auraCache = {}
 local function UpdateAuras(auras, unit, filter, timestamp)
     AuraUtil.ForEachAura(unit, filter, nil, function(name, _, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossDebuff, castByPlayer, ...)
         local now = timestamp or getTime()
-        local entry = auras[spellId] or {
-            Remains = nil,
-            Stacks = nil,
-            FullDuration = nil,
-            DispelType = nil,
-            CanPurge = nil,
-        }
-        entry.Remains = expirationTimestamp > 0 and expirationTimestamp - now or 999999 -- exp is zero for endless aura
-        entry.Stacks = stacks
-        entry.FullDuration = duration
-        entry.DispelType = dispelType -- ["Magic", "Disease", "Poison", "Curse", ""] and nil
-        entry.CanPurge = canStealOrPurge
-        auras[spellId] = entry
+        local aura = auras[spellId]
+        if (not aura) then
+            aura = auraCache[spellId]
+            if (not aura) then
+                aura = {
+                    Remains = nil,
+                    Stacks = nil,
+                    FullDuration = nil,
+                    DispelType = nil,
+                    CanPurge = nil,
+                }
+                auraCache[spellId] = aura
+            end
+            auras[spellId] = aura
+        end
+        aura.Remains = expirationTimestamp > 0 and expirationTimestamp - now or 999999 -- exp is zero for endless aura
+        aura.Stacks = stacks
+        aura.FullDuration = duration
+        aura.DispelType = dispelType -- ["Magic", "Disease", "Poison", "Curse", ""] and nil
+        aura.CanPurge = canStealOrPurge
     end)
 end
 
@@ -65,7 +73,8 @@ local function NewAuraCollection(unit, filter)
             return collection.Auras[spellId]
         end,
         Applied = function(collection, spellId)
-            return collection.Auras[spellId] ~= nil
+            local aura = collection.Auras[spellId] or emptyAura
+            return aura.Remains > 0
         end,
         Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
@@ -74,7 +83,7 @@ local function NewAuraCollection(unit, filter)
         HasPurgeable = function(collection)
             local auras = collection.Auras
             for spellId, aura in pairs(auras) do
-                if (aura.CanPurge) then
+                if (aura.Remains > 1 and aura.CanPurge) then
                     return true
                 end
             end
@@ -83,7 +92,7 @@ local function NewAuraCollection(unit, filter)
         HasDispelable = function(collection, dispelTypes)
             local auras = collection.Auras
             for spellId, aura in pairs(auras) do
-                if (dispelTypes[aura.DispelType]) then
+                if (aura.Remains > 1 and dispelTypes[aura.DispelType]) then
                     return true
                 end
             end
