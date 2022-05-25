@@ -12,6 +12,7 @@ local addon = TopPriorityAction
 ---@field GCDReadyIn fun(self:Player): number
 ---@field CastingEndsIn fun(self:Player):number
 ---@field Resource fun(self:Player, index:integer):number,number
+---@field ResourcePercent fun(self:Player, index:integer):number,number
 ---@field HealthPercent fun(self:Player):number,number
 ---@field InInstance fun(self:Player):boolean
 ---@field InCombatWithTarget fun(self:Player):boolean
@@ -71,6 +72,16 @@ function Player:Resource(index)
     local total = UnitPowerMax("player", index)
     local current = UnitPower("player", index)
     return current, total - current
+end
+
+---@param index number
+---@return number current
+---@return number deficit
+function Player:ResourcePercent(index)
+    local total = UnitPowerMax("player", index)
+    local current = UnitPower("player", index)
+    local currentPercent = current * 100 / total
+    return currentPercent, 100 - currentPercent
 end
 
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax

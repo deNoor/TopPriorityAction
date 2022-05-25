@@ -139,7 +139,7 @@ local feralRotation = {
     EnergyDeficit          = 0,
     Combo                  = 0,
     ComboDeficit           = 0,
-    Mana                   = 0,
+    ManaPercent            = 0,
     GcdReadyIn             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
@@ -315,7 +315,7 @@ function feralRotation:Utility()
         {
             function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end
             end,
-            function() if (settings.Dispel and CanDispel() and self.Mana > 500) then if (self.MouseoverIsFriend) then return spells.RemoveCorruption end if (self.MouseoverIsEnemy) then return spells.Soothe end end
+            function() if (settings.Dispel and CanDispel() and self.ManaPercent > 6.5) then if (self.MouseoverIsFriend) then return spells.RemoveCorruption end if (self.MouseoverIsEnemy) then return spells.Soothe end end
             end,
         }
     self.CurrentPriorityList = utilityList
@@ -336,7 +336,7 @@ function feralRotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(3)
     self.Combo, self.ComboDeficit = player:Resource(4)
-    self.Mana = player:Resource(0)
+    self.ManaPercent = player:ResourcePercent(0)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.GcdReadyIn = player:GCDReadyIn()
     self.CastingEndsIn = player:CastingEndsIn()
