@@ -19,6 +19,8 @@ local addon = TopPriorityAction
 ---@field Activate fun(self:Rotation)
 ---@field Dispose fun(self:Rotation)
 
+local wipe, pairs, ipairs = wipe, pairs, ipairs
+
 ---@type Spell
 local emptySpell = { Id = -1, Name = "Empty", Key = "", }
 ---@type Rotation

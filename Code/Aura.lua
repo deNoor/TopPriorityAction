@@ -17,7 +17,7 @@ local addon = TopPriorityAction
 ---@field HasPurgeable fun(self:AuraCollection):boolean
 ---@field HasDispelable fun(self:AuraCollection, dispelTypes:table<string,any>):boolean
 
-local getTime = GetTime
+local getTime, pairs, ipairs = GetTime, pairs, ipairs
 local emptyAura = {
     Remains = -1,
     Stacks = 0,

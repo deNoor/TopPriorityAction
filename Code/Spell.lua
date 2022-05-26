@@ -21,6 +21,8 @@ local addon = TopPriorityAction
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field IsInRange fun(self:Spell):boolean
 
+local max, pairs, ipairs = max, pairs, ipairs
+
 ---@type Spell
 local Spell = {}
 
@@ -39,7 +41,7 @@ local function NewSpell(spell)
     return spell
 end
 
-local GetSpellCooldown, max = GetSpellCooldown, max
+local GetSpellCooldown = GetSpellCooldown
 function Spell:ReadyIn()
     local now = addon.Rotation.Timestamp
     local start, duration = GetSpellCooldown(self.Id)
