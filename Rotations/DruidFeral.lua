@@ -158,7 +158,7 @@ local feralRotation = {
 ---@return Spell?
 function feralRotation:RunPriorityList()
     if (self.SelectedAction) then
-        return
+        return self
     end
     for i, func in ipairs(self.CurrentPriorityList) do
         ---@type Spell
@@ -166,17 +166,18 @@ function feralRotation:RunPriorityList()
         if (action) then
             if (action == self.EmptySpell) then
                 self.SelectedAction = action
-                return
+                return self
             end
             if (action:IsKnown()) then
                 local usable, noMana = action:IsUsableNow()
                 if (usable or noMana) then
                     self.SelectedAction = noMana and self.EmptySpell or action
-                    return
+                    return self
                 end
             end
         end
     end
+    return self
 end
 
 function feralRotation:Pulse()
@@ -193,7 +194,7 @@ function feralRotation:Pulse()
         and self.InRange
         and self.CanAttackTarget
         and (not self.InInstance or self.InCombatWithTarget)
-        and self.GcdReadyIn <= self.SpellQueueWindow
+        -- and self.GcdReadyIn <= self.SpellQueueWindow
         and self.CastingEndsIn <= self.SpellQueueWindow
         )
     then
@@ -207,7 +208,7 @@ function feralRotation:Pulse()
             self:Aoe():RunPriorityList()
         end
     end
-    self:ReduceSpellSpam()
+    self:ReduceSpellSpam():WaitForGcd()
     return self.SelectedAction or self.EmptySpell
 end
 
@@ -216,6 +217,15 @@ function feralRotation:ReduceSpellSpam()
     if (action and action.Id > 0 and action:IsQueued()) then
         self.SelectedAction = self.EmptySpell
     end
+    return self
+end
+
+function feralRotation:WaitForGcd()
+    local action = self.SelectedAction
+    if(action and not action.NoGCD and self.GcdReadyIn > self.SpellQueueWindow) then
+        self.SelectedAction = self.EmptySpell
+    end
+    return self
 end
 
 local stealthOpenerList
