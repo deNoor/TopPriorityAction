@@ -10,7 +10,9 @@
 
 Code\_Initializer.lua
 Code\Aura.lua
+Code\Equipment.lua
 Code\EventTracker.lua
+Code\Item.lua
 Code\Player.lua
 Code\Rotation.lua
 Code\SavedSettings.lua

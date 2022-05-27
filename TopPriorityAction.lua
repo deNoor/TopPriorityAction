@@ -10,10 +10,12 @@ local addon = TopPriorityAction
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
 ---@field Rotation Rotation
----@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, spells:table<string,Spell>, rotation:Rotation)
+---@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, spells:table<string,Spell>, items:table<string,Item>, rotation:Rotation)
 ---@field DetectRotation fun(self:TopPriorityAction)
 ---@field UpdateTalents fun(self:TopPriorityAction)
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
+---@field UpdateKnownItems fun(self:TopPriorityAction)
+---@field UpdateEquipment fun(self:TopPriorityAction)
 ---@field Player Player
 ---@field EventTracker EventTracker
 
@@ -28,13 +30,14 @@ function Program:RegisterActionUpdater()
     local getTime = GetTime
     local addon = addon
     local shared = addon.Shared
+    local emptyAction = addon.Initializer.Empty.Action
     self.Frame:SetScript("OnUpdate", function()
         local now = getTime()
         if (now - lastUpdate >= updateLimit) then
             lastUpdate = now
             local rotation = addon.Rotation
             rotation.Timestamp = now
-            shared.CurrentAction = rotation:Pulse() or rotation.EmptySpell
+            shared.CurrentAction = rotation:Pulse() or emptyAction
         end
     end)
     return self

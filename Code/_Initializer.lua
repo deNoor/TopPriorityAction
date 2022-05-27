@@ -47,12 +47,13 @@ local cmdHandlers = {
             addon.Rotation.PauseTimestamp = addon.Rotation.Timestamp + seconds
         end
     end,
-    sqw = function(arg, ...)
+    aaw = function(arg, ...)
         local ms = tonumber(arg) or 400
         ms = max(0, min(ms, 400))
-        C_CVar.SetCVar("SpellQueueWindow", ms)
-        addon.SavedSettings.Instance.SpellQueueWindow = (ms / 1000)
-        addon.Helper:Print({"spell queue window", ms})
+        -- C_CVar.SetCVar("SpellQueueWindow", ms)
+        addon.SavedSettings.Instance.ActionAdvanceWindow = (ms / 1000)
+        addon.Helper:Print({ "action advance window", ms })
+        addon.Helper:Print({ "spell queue window", GetSpellQueueWindow() })
     end,
 }
 local toLower = strlower
@@ -110,16 +111,60 @@ end
 addon.Helper = Helper
 --------------------------------------
 
+---@class Empty
+---@field Rotation Rotation
+---@field Action Action
+
+---@type Action
+local emptyAction = {
+    Id = -1,
+    Name = "Empty",
+    Type = "Empty",
+    Key = "",
+    IsAvailable = function() return true end,
+    IsUsableNow = function() return true, false end,
+    IsQueued = function() return false end,
+    IsInRange = function() return true end,
+    ReadyIn = function() return 0 end,
+}
+---@type Rotation
+local emptyRotation = {
+    Pulse = function(_) return emptyAction end,
+    ShouldNotRun = function(_) return true end,
+    Activate = function(_) end,
+    Dispose = function(_) end,
+    Spells = {},
+    Items = {},
+    Talents = {},
+    Timestamp = 0,
+    Settings = nil,
+    GCDSpell = nil,
+    PauseTimestamp = 0,
+    IsPauseKeyDown = false,
+    AddedPauseOnKey = 0,
+    RangeChecker = emptyAction,
+}
+
 ---@class Initializer
+---@field Empty Empty
 ---@field NewSpell fun(spell:Spell):Spell
----@field NewAuraCollection fun(unit:string,filter:string):AuraCollection
+---@field NewItem fun(spell:Item):Item
+---@field NewAuraCollection fun(unit:string,filter:WowUnit):AuraCollection
 ---@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
+---@field NewEquipment fun():Equipment
 
 ---@type Initializer
 local Initializer = {
+    Empty = {
+        Rotation = emptyRotation,
+        Action = emptyAction,
+    },
     NewSpell = nil,
+    NewItem = nil,
     NewAuraCollection = nil,
     NewEventTracker = nil,
+    NewEquipment = nil,
 }
 
+-- attach to addon
 addon.Initializer = Initializer

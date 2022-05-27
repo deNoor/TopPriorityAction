@@ -73,6 +73,7 @@ function handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
     addon:DetectRotation()
     addon:UpdateKnownSpells()
     addon:UpdateTalents()
+    addon:UpdateEquipment()
     addon.EventTracker:UnRegisterEvent(event)
 end
 
@@ -85,6 +86,15 @@ function handlers.PLAYER_TALENT_UPDATE(event, eventArgs)
     addon:UpdateTalents()
 end
 
+function handlers.PLAYER_EQUIPMENT_CHANGED(event, eventArgs)
+    addon:UpdateEquipment()
+end
+
+-- fired after spec change, talent change, spellbook change
+function handlers.SPELLS_CHANGED(event, eventArgs)
+    addon:UpdateKnownSpells()
+end
+
 function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
     if (eventArgs[1] == "RCTRL") then
         local rotation = addon.Rotation
@@ -95,11 +105,6 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
             rotation.IsPauseKeyDown = false
         end
     end
-end
-
--- fired after spec change, talent change, spellbook change
-function handlers.SPELLS_CHANGED(event, eventArgs)
-    addon:UpdateKnownSpells()
 end
 
 -- attach to addon

@@ -4,6 +4,8 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class Player
+---@field Talents integer[]
+---@field Equipment Equipment
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection
 ---@field Target Target
@@ -29,7 +31,8 @@ local addon = TopPriorityAction
 
 ---@type Player
 local Player = {
-    Rotation = nil,
+    Equipment = {},
+    Talents = {},
     Buffs = nil,
     Debuffs = nil,
     Target = {
@@ -113,4 +116,27 @@ function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil
 end
 
+function addon:UpdateTalents()
+    local rotation = self.Rotation
+    local emptyRotation = self.Initializer.Empty.Rotation
+    if (rotation == emptyRotation) then
+        return
+    end
+    local talents = self.Player.Talents
+    wipe(talents)
+    local specGroupIndex = GetActiveSpecGroup()
+    for tier = 1, MAX_TALENT_TIERS do
+        for column = 1, NUM_TALENT_COLUMNS do
+            local talentID, name, texture, selected, available, spellID = GetTalentInfo(tier, column, specGroupIndex)
+            if (selected) then
+                talents[talentID] = true
+            end
+        end
+    end
+    for slotN, talentID in ipairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs()) do
+        talents[talentID] = true
+    end
+end
+
+-- attach to addon
 addon.Player = Player

@@ -3,23 +3,15 @@ local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
 
----@class Spell
----@field Id integer
----@field Name string
----@field Key string
+---@class Spell : Action
 ---@field Buff integer
 ---@field Debuff integer
 ---@field NoGCD boolean
 ---@field HasCD boolean
----@field ChangesBased boolean
+---@field ChargesBased boolean
 ---@field HardCast boolean
 ---@field Known boolean
----@field ReadyIn fun(self:Spell):number
----@field IsUsableNow fun(self:Spell):boolean,boolean
----@field IsQueued fun(self:Spell):boolean
----@field IsKnown fun(self:Spell):boolean
 ---@field CCUnlockIn fun(self:Spell):number
----@field IsInRange fun(self:Spell):boolean
 
 local max, pairs, ipairs = max, pairs, ipairs
 
@@ -33,6 +25,7 @@ local function NewSpell(spell)
     if (spell.Id < 1) then
         addon.Helper:Throw({ "attempt to initialize empty player spell", spell.Id, })
     end
+    spell.Type = "Spell"
     for name, func in pairs(Spell) do -- add functions directly, direct lookup might be faster than metatable lookup
         if (type(func) == "function") then
             spell[name] = func
@@ -44,7 +37,7 @@ end
 local GetSpellCooldown = GetSpellCooldown
 function Spell:ReadyIn()
     local now = addon.Rotation.Timestamp
-    local start, duration = GetSpellCooldown(self.Id)
+    local start, duration, enabled = GetSpellCooldown(self.Id)
     if start then
         return max(0, start + duration - now) -- seconds
     end
@@ -54,31 +47,37 @@ local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpell
 function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
-        local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
-        spell.Name = name
-        spell.HardCast = castTime > 0
-        spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
-        local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
-        spell.NoGCD = gcdMS == 0
-        spell.HasCD = cooldownMS > 0
-        spell.ChangesBased = (GetSpellCharges(spell.Id)) ~= nil
+        if (spell.Id > 0) then
+            local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
+            spell.Name = name
+            spell.HardCast = castTime > 0
+            spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
+            local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
+            spell.NoGCD = gcdMS == 0
+            spell.HasCD = cooldownMS > 0
+            spell.ChargesBased = (GetSpellCharges(spell.Id)) ~= nil
+        end
     end
 end
 
-function Spell:IsKnown()
+function Spell:IsAvailable()
     return self.Known
 end
 
 local IsUsableSpell = IsUsableSpell
 function Spell:IsUsableNow()
-    local onCD = (self.HasCD or self.ChangesBased) and self:ReadyIn() >= addon.Rotation.Settings.SpellQueueWindow
     local usable, noMana = IsUsableSpell(self.Id)
-    return not onCD and usable, noMana
+    if (usable) then
+        local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > addon.Rotation.Settings.ActionAdvanceWindow
+        usable = not onCD
+    end
+    return usable, noMana
 end
 
 local IsSpellInRange = IsSpellInRange
-function Spell:IsInRange()
-    return (IsSpellInRange(self.Name, "target") or 0) == 1
+function Spell:IsInRange(unit)
+    unit = unit or "target"
+    return (IsSpellInRange(self.Name, unit) or 0) == 1
 end
 
 local IsCurrentSpell = IsCurrentSpell
@@ -97,7 +96,7 @@ end
 
 local GetSpellCharges = GetSpellCharges
 function Spell:ActiveCharges()
-    if(self.ChangesBased) then
+    if (self.ChargesBased) then
         local currentCharges, maxCharges, lastChargeCooldownStart, chargeCooldownDuration = GetSpellCharges(self.Id)
         return currentCharges
     else
@@ -109,4 +108,5 @@ function Spell:Report()
     addon.Helper:Print({ "Id", self.Id, "Name", self.Name, "Key", self.Key })
 end
 
+-- attach to addon
 addon.Initializer.NewSpell = NewSpell

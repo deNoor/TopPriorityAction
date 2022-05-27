@@ -102,4 +102,5 @@ local function NewAuraCollection(unit, filter)
     return newCollection
 end
 
+-- attach to addon
 addon.Initializer.NewAuraCollection = NewAuraCollection
