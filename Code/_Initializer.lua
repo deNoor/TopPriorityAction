@@ -50,10 +50,9 @@ local cmdHandlers = {
     aaw = function(arg, ...)
         local ms = tonumber(arg) or 400
         ms = max(0, min(ms, 400))
-        -- C_CVar.SetCVar("SpellQueueWindow", ms)
         addon.SavedSettings.Instance.ActionAdvanceWindow = (ms / 1000)
-        addon.Helper:Print({ "action advance window", ms })
-        addon.Helper:Print({ "spell queue window", GetSpellQueueWindow() })
+        addon.Helper.Print({ "action advance window", ms })
+        addon.Helper.Print({ "spell queue window", GetSpellQueueWindow() })
     end,
 }
 local toLower = strlower
@@ -71,9 +70,9 @@ end
 
 -- helper functions ------------------
 ---@class Helper
----@field Print fun(self:Helper, params:string[])
----@field Throw fun(self:Helper, params:string[])
----@field ToHashSet fun(self:Helper, table:string[]):table<string,string>
+---@field Print fun(params:string[])
+---@field Throw fun(params:string[])
+---@field ToHashSet fun(table:string[]):table<string,string>
 
 local Helper = {}
 local concat = table.concat
@@ -91,16 +90,16 @@ local function prepare(table)
 end
 
 local print = print
-function Helper:Print(params)
+function Helper.Print(params)
     print(concat(prepare(params), " "))
 end
 
 local error = error
-function Helper:Error(params)
+function Helper.Throw(params)
     error(concat(prepare(params), " "))
 end
 
-function Helper:ToHashSet(table)
+function Helper.ToHashSet(table)
     local t = {}
     for index, value in ipairs(table) do
         t[value] = value
@@ -117,10 +116,11 @@ addon.Helper = Helper
 
 ---@type Action
 local emptyAction = {
-    Id = -1,
-    Name = "Empty",
-    Type = "Empty",
+    Id = 0,
     Key = "",
+    Name = "Empty",
+    Icon = 0,
+    Type = "Empty",
     IsAvailable = function() return true end,
     IsUsableNow = function() return true, false end,
     IsQueued = function() return false end,

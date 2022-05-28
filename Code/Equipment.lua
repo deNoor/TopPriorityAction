@@ -27,7 +27,7 @@ local EquipItem = {}
 ---@return EquipItem
 local function NewEquipItem(inventorySlotId)
     if (not (inventorySlotId and type(inventorySlotId) == "number" and INVSLOT_AMMO <= inventorySlotId and inventorySlotId <= INVSLOT_TABARD)) then
-        addon.Helper:Throw({ "attempt to initialize invalid inventory slot", inventorySlotId })
+        addon.Helper.Throw({ "attempt to initialize invalid inventory slot", inventorySlotId })
     end
     local equipItem = { SlotId = inventorySlotId, Type = "EquipItem", } ---@type EquipItem
     for name, func in pairs(EquipItem) do -- add functions directly, direct lookup might be faster than metatable lookup
@@ -87,8 +87,9 @@ function addon:UpdateEquipment()
         local itemId = GetInventoryItemID("player", equipItem.SlotId)
         if (itemId and itemId > 0) then
             equipItem.Id = itemId
-            local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, texture, sellPrice, classID, subclassID = GetItemInfo(itemId)
+            local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID = GetItemInfo(itemId)
             equipItem.Name = name
+            equipItem.Icon = icon
             local spellName, spellId = GetItemSpell(itemId)
             if (spellId) then
                 equipItem.Active = true

@@ -57,14 +57,14 @@ local function SetDefaults(rotation)
 end
 
 function addon:AddRotation(class, spec, spells, items, rotation)
-    rotation = rotation or addon.Helper:Throw({ "attempt to add nil rotation for", class, spec })
+    rotation = rotation or addon.Helper.Throw({ "attempt to add nil rotation for", class, spec })
     SetDefaults(rotation)
-    spells = spells or addon.Helper:Throw({ "attempt to add nil spells for", class, spec })
+    spells = spells or addon.Helper.Throw({ "attempt to add nil spells for", class, spec })
     for name, spell in pairs(spells) do
         addon.Initializer.NewSpell(spell)
     end
     rotation.Spells = spells
-    items = items or addon.Helper:Throw({ "attempt to add nil items for", class, spec })
+    items = items or addon.Helper.Throw({ "attempt to add nil items for", class, spec })
     for name, item in pairs(items) do
         addon.Initializer.NewItem(item)
     end
@@ -84,7 +84,7 @@ function addon:DetectRotation()
     end
 
     if (not knownRotation) then
-        addon.Helper:Print({ "unknown spec", class, specIndex, })
+        addon.Helper.Print({ "unknown spec", class, specIndex, })
         addon.Rotation = emptyRotation
         addon.Shared.RangeCheckSpell = emptyAction
         return

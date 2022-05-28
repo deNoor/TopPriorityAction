@@ -6,17 +6,18 @@ local addon = TopPriorityAction
 ---@class Item : Action
 ---@field EquipLoc string
 
-local max, pairs, ipairs = max, pairs, ipairs
+local pairs, ipairs = pairs, ipairs
 
+-- ===== NOT SUPPORTED YET ======
 ---@type Item
 local Item = {}
 
 ---@param item Item
 ---@return Item
 local function NewItem(item)
-    local item = item or addon.Helper:Throw({ "attempt to initialize nil player item" })
+    local item = item or addon.Helper.Throw({ "attempt to initialize nil player item" })
     if (item.Id < 1) then
-        addon.Helper:Throw({ "attempt to initialize empty player item", item.Id, })
+        addon.Helper.Throw({ "attempt to initialize empty player item", item.Id, })
     end
     item.Type = "Item"
     for name, func in pairs(Item) do -- add functions directly, direct lookup might be faster than metatable lookup

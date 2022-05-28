@@ -96,7 +96,7 @@ function Player:HealthPercent()
 end
 
 local select, GetInstanceInfo = select, GetInstanceInfo
-local instanceTypes = addon.Helper:ToHashSet({ "raid", "party", "pvp", "arena", })
+local instanceTypes = addon.Helper.ToHashSet({ "raid", "party", "pvp", "arena", })
 function Player:InInstance()
     return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil
 end

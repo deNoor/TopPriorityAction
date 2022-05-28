@@ -5,8 +5,9 @@ local addon = TopPriorityAction
 
 ---@class PlayerAction
 ---@field Id integer
----@field Name string
 ---@field Key string
+---@field Name string
+---@field Icon integer
 
 ---@class SharedData
 ---@field CurrentAction PlayerAction
@@ -19,6 +20,7 @@ TopPriorityActionSharedData = {
         Id = 0,
         Key = "",
         Name = "Empty",
+        Icon = 0,
     },
     RangeCheckSpell = {},
 }

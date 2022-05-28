@@ -21,9 +21,9 @@ local Spell = {}
 ---@param spell Spell
 ---@return Spell
 local function NewSpell(spell)
-    local spell = spell or addon.Helper:Throw({ "attempt to initialize nil player spell" })
+    local spell = spell or addon.Helper.Throw({ "attempt to initialize nil player spell" })
     if (spell.Id < 1) then
-        addon.Helper:Throw({ "attempt to initialize empty player spell", spell.Id, })
+        addon.Helper.Throw({ "attempt to initialize empty player spell", spell.Id, })
     end
     spell.Type = "Spell"
     for name, func in pairs(Spell) do -- add functions directly, direct lookup might be faster than metatable lookup
@@ -50,6 +50,7 @@ function addon:UpdateKnownSpells()
         if (spell.Id > 0) then
             local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
             spell.Name = name
+            spell.Icon = icon
             spell.HardCast = castTime > 0
             spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
             local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
@@ -105,7 +106,7 @@ function Spell:ActiveCharges()
 end
 
 function Spell:Report()
-    addon.Helper:Print({ "Id", self.Id, "Name", self.Name, "Key", self.Key })
+    addon.Helper.Print({ "Id", self.Id, "Name", self.Name, "Key", self.Key })
 end
 
 -- attach to addon

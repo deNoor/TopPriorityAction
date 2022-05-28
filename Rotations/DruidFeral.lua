@@ -120,13 +120,13 @@ local feralRotation = {
 
     -- instance fields, init nils in Activate
     LocalEvents      = nil, ---@type EventTracker
-    RangeChecker     = nil, ---@type Spell
+    RangeChecker     = spells.Rake,
     ComboCap         = 4,
-    DispellableTypes = addon.Helper:ToHashSet({ "Curse", "Poison", }),
+    DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     SelectedAction         = nil,
-    CurrentPriorityList    = nil, ---@type (fun():Spell|Item)[]
+    CurrentPriorityList    = nil, ---@type (fun():Action)[]
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
     Energy                 = 0,
@@ -155,7 +155,6 @@ function feralRotation:RunPriorityList()
         return self
     end
     for i, func in ipairs(self.CurrentPriorityList) do
-        ---@type Action
         local action = func()
         if (action) then
             if (action:IsAvailable()) then
@@ -210,35 +209,36 @@ function feralRotation:ReduceActionSpam()
     return self
 end
 
+local actionTypeSwitch
 function feralRotation:WaitForOpportunity()
-    local action = self.SelectedAction
-    local switch = {
+    actionTypeSwitch = actionTypeSwitch or {
         Empty = function() end,
         Spell = function()
-            local spell = action ---@type Spell
+            local spell = self.SelectedAction ---@type Spell
             if (not spell.NoGCD and self.GcdReadyIn > self.ActionAdvanceWindow) then
                 self.SelectedAction = self.EmptyAction
             end
         end,
         EquipItem = function()
-            local item = action ---@type EquipItem|Item
+            local item = self.SelectedAction ---@type EquipItem
             if (self.CastingEndsIn > 0) then
                 self.SelectedAction = self.EmptyAction
             end
         end,
         Item = function()
-            local item = action ---@type EquipItem|Item
+            local item = self.SelectedAction ---@type Item
             if (self.CastingEndsIn > 0) then
                 self.SelectedAction = self.EmptyAction
             end
         end,
     }
+    local action = self.SelectedAction
     if (action) then
-        local case = switch[action.Type]
+        local case = actionTypeSwitch[action.Type]
         if (case) then
             case()
         else
-            addon.Helper:Print({ "Indefined swith label", action.Type })
+            addon.Helper.Print({ "Indefined swith label", action.Type })
         end
     end
     return self
@@ -273,11 +273,11 @@ function feralRotation:SingleTarget()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function () if(self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
+            function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
-            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite --[[ if (self.Energy > 50) then return spells.FerociousBite else return self.EmptyAction end ]] end
+            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
@@ -307,13 +307,13 @@ function feralRotation:Aoe()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function () if(self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
+            function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
             end,
             function() if (self.Combo >= self.ComboCap) then return spells.PrimalWrath end
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
-            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite --[[ if (self.Energy > 50) then return spells.FerociousBite else return self.EmptyAction end ]] end
+            function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite end
             end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end
             end,
@@ -370,9 +370,9 @@ function feralRotation:Refresh()
     player.Mouseover.Debuffs:Refresh(timestamp)
 
     self.InRange = self.RangeChecker:IsInRange("target")
-    self.Energy, self.EnergyDeficit = player:Resource(3)
-    self.Combo, self.ComboDeficit = player:Resource(4)
-    self.ManaPercent = player:ResourcePercent(0)
+    self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
+    self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
+    self.ManaPercent = player:ResourcePercent(Enum.PowerType.Mana)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.GcdReadyIn = player:GCDReadyIn()
     self.CastingEndsIn = player:CastingEndsIn()
@@ -382,6 +382,39 @@ function feralRotation:Refresh()
     self.CanAttackTarget = player:CanAttackTarget()
     self.CanDotTarget = player:CanDotTarget()
     self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
+end
+
+function feralRotation:Dispose()
+    self.LocalEvents:Dispose()
+end
+
+function feralRotation:Activate()
+    addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
+    addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
+    addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
+    addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
+    addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
+    addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
+    addon.Initializer.NewEquipment()
+    self.LocalEvents = self:CreateLocalEventTracker()
+    self:SetLayout()
+end
+
+function feralRotation:CreateLocalEventTracker()
+    local handlers = {}
+
+    local IsStealthed = IsStealthed
+    function handlers.UPDATE_STEALTH(event, eventArgs)
+        self.Stealhed = IsStealthed()
+    end
+
+    function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
+        if (eventArgs[1] == "player") then
+            self.LastCastSent = self.Timestamp
+        end
+    end
+
+    return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
 end
 
 function feralRotation:SetLayout()
@@ -405,36 +438,6 @@ function feralRotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
-end
-
-function feralRotation:Dispose()
-    self.LocalEvents:Dispose()
-end
-
-function feralRotation:Activate()
-    addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
-    addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
-    addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
-    addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
-    addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
-    addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
-
-    local handlers = {}
-    local IsStealthed = IsStealthed
-    function handlers.UPDATE_STEALTH(event, eventArgs)
-        self.Stealhed = IsStealthed()
-    end
-
-    function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
-        if (eventArgs[1] == "player") then
-            self.LastCastSent = self.Timestamp
-        end
-    end
-
-    addon.Initializer.NewEquipment()
-    self.LocalEvents = addon.Initializer.NewEventTracker(handlers):RegisterEvents()
-    self.RangeChecker = spells.Rake
-    self:SetLayout()
 end
 
 addon:AddRotation("DRUID", 2, spells, items, feralRotation)
