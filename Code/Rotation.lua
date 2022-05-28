@@ -76,7 +76,7 @@ function addon:DetectRotation()
     local class = UnitClassBase("player")
     local specIndex = GetSpecialization()
     local knownClass = addon.WowClass[class]
-    local knownRotation = knownClass[specIndex] ---@type Rotation
+    local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation
 
     local currentRotation = addon.Rotation or emptyRotation
     if (currentRotation.Dispose) then
