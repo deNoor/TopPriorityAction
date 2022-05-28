@@ -111,7 +111,7 @@ function Player:CanAttackTarget()
     return UnitCanAttack("player", "target") and not UnitIsDead("target")
 end
 
-local goodUnitClassifications = addon.Helper:ToHashSet({ "worldboss", "rareelite", "elite", "rare", "normal", })
+local goodUnitClassifications = addon.Helper.ToHashSet({ "worldboss", "rareelite", "elite", "rare", "normal", })
 function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil
 end
