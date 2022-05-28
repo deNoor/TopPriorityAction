@@ -43,6 +43,11 @@ local spells = {
         Id = 285381,
         TalentId = 22370,
     },
+    SavageRoar = {
+        Id = 52610,
+        Buff = 52610,
+        TalentId = 18579,
+    },
     -- defensives
     Barkskin = {
         Id = 22812,
@@ -153,10 +158,6 @@ function feralRotation:RunPriorityList()
         ---@type Action
         local action = func()
         if (action) then
-            -- if (action == self.EmptyAction) then -- todo: remove block?
-            --     self.SelectedAction = action
-            --     return self
-            -- end
             if (action:IsAvailable()) then
                 local usable, noMana = action:IsUsableNow()
                 if (usable or noMana) then
@@ -272,6 +273,8 @@ function feralRotation:SingleTarget()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
+            function () if(self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
+            end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
             function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite --[[ if (self.Energy > 50) then return spells.FerociousBite else return self.EmptyAction end ]] end
@@ -304,7 +307,9 @@ function feralRotation:Aoe()
             end,
             function() if (settings.Burst) then return spells.Berserk end
             end,
-            function() if (player.Talents[spells.PrimalWrath.TalentId] and self.Combo >= self.ComboCap) then return spells.PrimalWrath end
+            function () if(self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end
+            end,
+            function() if (self.Combo >= self.ComboCap) then return spells.PrimalWrath end
             end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end
             end,
@@ -396,6 +401,7 @@ function feralRotation:SetLayout()
     spells.Regrowth.Key = "-"
     spells.Soothe.Key = "F6"
     spells.RemoveCorruption.Key = "F6"
+    spells.SavageRoar.Key = "F1"
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
