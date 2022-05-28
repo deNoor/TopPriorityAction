@@ -297,11 +297,14 @@ function feralRotation:Aoe()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
+    local equip = player.Equipment
     aoeList = aoeList or
         {
             function() return spells.AdaptiveSwarm
             end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end
+            end,
+            function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end
             end,
             function() if (settings.Burst) then return spells.ConvokeTheSpirits end
             end,
