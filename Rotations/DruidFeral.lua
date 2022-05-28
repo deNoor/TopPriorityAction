@@ -113,12 +113,12 @@ local items = {}
 local feralRotation = {
     -- framework dependencies
     Timestamp      = 0,
-    Settings       = nil,
     PauseTimestamp = 0,
     EmptyAction    = addon.Initializer.Empty.Action,
     Player         = addon.Player,
 
     -- instance fields, init nils in Activate
+    Settings         = nil,
     LocalEvents      = nil, ---@type EventTracker
     RangeChecker     = spells.Rake,
     ComboCap         = 4,
@@ -398,7 +398,8 @@ function feralRotation:Activate()
     addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
     addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
     addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
-    addon.Initializer.NewEquipment()
+
+    self.Settings = addon.SavedSettings.Instance
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end

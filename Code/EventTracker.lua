@@ -70,16 +70,13 @@ function handlers.ADDON_LOADED(event, eventArgs)
 end
 
 function handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
+    addon.Initializer.NewEquipment()
     addon:DetectRotation()
-    addon:UpdateKnownSpells()
-    addon:UpdateTalents()
-    addon:UpdateEquipment()
     addon.EventTracker:UnRegisterEvent(event)
 end
 
 function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
     addon:DetectRotation()
-    addon:UpdateTalents()
 end
 
 function handlers.PLAYER_TALENT_UPDATE(event, eventArgs)

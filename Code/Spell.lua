@@ -48,15 +48,17 @@ function addon:UpdateKnownSpells()
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
         if (spell.Id > 0) then
-            local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
-            spell.Name = name
-            spell.Icon = icon
-            spell.HardCast = castTime > 0
-            spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
-            local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
-            spell.NoGCD = gcdMS == 0
-            spell.HasCD = cooldownMS > 0
-            spell.ChargesBased = (GetSpellCharges(spell.Id)) ~= nil
+            addon.DataQuery.OnSpellLoaded(spell.Id, function()
+                local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
+                spell.Name = name
+                spell.Icon = icon
+                spell.HardCast = castTime > 0
+                spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
+                local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
+                spell.NoGCD = gcdMS == 0
+                spell.HasCD = cooldownMS > 0
+                spell.ChargesBased = (GetSpellCharges(spell.Id)) ~= nil
+            end)
         end
     end
 end

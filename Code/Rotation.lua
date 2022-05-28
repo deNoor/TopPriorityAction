@@ -90,7 +90,9 @@ function addon:DetectRotation()
         return
     end
 
-    knownRotation.Settings = addon.SavedSettings.Instance -- runtime value, cannot be set statically
+    addon:UpdateKnownSpells()
+    addon:UpdateTalents()
+    addon:UpdateEquipment()
     if (knownRotation.Activate) then
         knownRotation:Activate()
     end

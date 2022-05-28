@@ -5,6 +5,7 @@ local addon = TopPriorityAction
 
 ---@class TopPriorityAction
 ---@field Initializer Initializer
+---@field DataQuery DataQuery
 ---@field Helper Helper
 ---@field Shared SharedData
 ---@field SavedSettings SavedSettings

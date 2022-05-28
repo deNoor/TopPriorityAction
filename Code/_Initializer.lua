@@ -68,6 +68,31 @@ SlashCmdList.TPrioS = function(msg, editBox)
 end
 --------------------------------------
 
+-- Async data loader -----------------
+---@class DataQuery
+---@field OnSpellLoaded fun(spellId:integer, callback:function)
+---@field OnItemLoaded fun(itemId:integer, callback:function)
+---@field OnEqupItemLoaded fun(slotId:integer, callback:function)
+
+local DataQuery = {}
+
+local Spell = Spell
+function DataQuery.OnSpellLoaded(spellId, callback)
+    Spell:CreateFromSpellID(spellId):ContinueOnSpellLoad(callback)
+end
+
+local Item = Item
+function DataQuery.OnItemLoaded(itemId, callback)
+    Item:CreateFromItemID(itemId):ContinueOnItemLoad(callback)
+end
+
+function DataQuery.OnEqupItemLoaded(slotId, callback)
+    Item:CreateFromEquipmentSlot(slotId):ContinueOnItemLoad(callback)
+end
+
+addon.DataQuery = DataQuery
+--------------------------------------
+
 -- helper functions ------------------
 ---@class Helper
 ---@field Print fun(params:string[])

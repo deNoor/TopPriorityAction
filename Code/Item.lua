@@ -32,9 +32,9 @@ local strlen, GetItemInfo = strlen, GetItemInfo
 function addon:UpdateKnownItems()
     local items = self.Rotation.Items
     for key, item in pairs(items) do
-        local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, texture, sellPrice, classID, subclassID = GetItemInfo(item.Id)
-        item.Name = name
-        item.EquipLoc = strlen(equipLoc) > 1 and equipLoc or nil -- https://wowpedia.fandom.com/wiki/Enum.InventoryType
+        -- local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, texture, sellPrice, classID, subclassID = GetItemInfo(item.Id)
+        -- item.Name = name
+        -- item.EquipLoc = strlen(equipLoc) > 1 and equipLoc or nil -- https://wowpedia.fandom.com/wiki/Enum.InventoryType
         -- item.Known = IsSpellKnownOrOverridesKnown(item.Id)
         -- local cooldownMS, gcdMS = GetSpellBaseCooldown(item.Id)
         -- item.NoGCD = gcdMS == 0

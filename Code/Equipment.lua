@@ -84,19 +84,23 @@ function addon:UpdateEquipment()
     local equipment = addon.Player.Equipment ---@type table<string,EquipItem>
     for key, equipItem in pairs(equipment) do
         SetDefaults(equipItem)
-        local itemId = GetInventoryItemID("player", equipItem.SlotId)
-        if (itemId and itemId > 0) then
-            equipItem.Id = itemId
-            local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID = GetItemInfo(itemId)
-            equipItem.Name = name
-            equipItem.Icon = icon
-            local spellName, spellId = GetItemSpell(itemId)
-            if (spellId) then
-                equipItem.Active = true
-                equipItem.SpellId = spellId
-                equipItem.SpellName = spellName
+        addon.DataQuery.OnEqupItemLoaded(equipItem.SlotId, function()
+            local itemId = GetInventoryItemID("player", equipItem.SlotId)
+            if (itemId and itemId > 0) then
+                equipItem.Id = itemId
+                local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID = GetItemInfo(itemId)
+                equipItem.Name = name
+                equipItem.Icon = icon
+                local spellName, spellId = GetItemSpell(itemId)
+                if (spellId) then
+                    equipItem.Active = true
+                    equipItem.SpellId = spellId
+                    equipItem.SpellName = spellName
+                else
+                    addon.Helper.Print({ "Item", key, "is inactive", })
+                end
             end
-        end
+        end)
     end
 end
 
