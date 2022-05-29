@@ -140,6 +140,7 @@ local feralRotation = {
     ActionAdvanceWindow    = 0,
     MyHealthPercent        = 0,
     MyHealthPercentDeficit = 0,
+    MyHealAbsorb           = 0,
     InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
@@ -349,7 +350,7 @@ function feralRotation:Utility()
 
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 15 and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end
+            function() if ((self.MyHealthPercentDeficit > 15 or self.MyHealAbsorb > 0) and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end
             end,
             function() if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
                     if (self.MouseoverIsFriend) then return spells.RemoveCorruption end
@@ -377,6 +378,7 @@ function feralRotation:Refresh()
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
     self.ManaPercent = player:ResourcePercent(Enum.PowerType.Mana)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
+    self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
     self.CastingEndsIn = player:CastingEndsIn()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow

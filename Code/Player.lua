@@ -13,9 +13,11 @@ local addon = TopPriorityAction
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
 ---@field CastingEndsIn fun(self:Player):number
----@field Resource fun(self:Player, index:integer):number,number
----@field ResourcePercent fun(self:Player, index:integer):number,number
----@field HealthPercent fun(self:Player):number,number
+---@field Resource fun(self:Player, index:integer):number,number @current, deficit
+---@field ResourcePercent fun(self:Player, index:integer):number,number @current, deficit
+---@field Health fun(self:Player):number,number @current, deficit
+---@field HealthPercent fun(self:Player):number,number @current, deficit
+---@field HealAbsorb fun(self:Player):number
 ---@field InInstance fun(self:Player):boolean
 ---@field InCombatWithTarget fun(self:Player):boolean
 ---@field CanAttackTarget fun(self:Player):boolean
@@ -93,6 +95,16 @@ function Player:HealthPercent()
     local current = UnitHealth("player")
     local currentPercent = current * 100 / total
     return currentPercent, 100 - currentPercent
+end
+function Player:Health()
+    local total = UnitHealthMax("player")
+    local current = UnitHealth("player")
+    return current, total - current
+end
+
+local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
+function Player:HealAbsorb()
+    return UnitGetTotalHealAbsorbs("player")
 end
 
 local select, GetInstanceInfo = select, GetInstanceInfo
