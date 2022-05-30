@@ -96,8 +96,6 @@ function addon:UpdateEquipment()
                     equipItem.Active = true
                     equipItem.SpellId = spellId
                     equipItem.SpellName = spellName
-                else
-                    addon.Helper.Print({ "Item", key, "is inactive", })
                 end
             end
         end)
