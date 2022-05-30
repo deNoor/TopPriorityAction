@@ -78,16 +78,25 @@ local DataQuery = {}
 
 local Spell = Spell
 function DataQuery.OnSpellLoaded(spellId, callback)
-    Spell:CreateFromSpellID(spellId):ContinueOnSpellLoad(callback)
+    local spell = Spell:CreateFromSpellID(spellId)
+    if (not spell:IsSpellEmpty()) then
+        spell:ContinueOnSpellLoad(callback)
+    end
 end
 
 local Item = Item
 function DataQuery.OnItemLoaded(itemId, callback)
-    Item:CreateFromItemID(itemId):ContinueOnItemLoad(callback)
+    local item = Item:CreateFromItemID(itemId)
+    if (not item:IsItemEmpty()) then
+        item:ContinueOnItemLoad(callback)
+    end
 end
 
 function DataQuery.OnEqupItemLoaded(slotId, callback)
-    Item:CreateFromEquipmentSlot(slotId):ContinueOnItemLoad(callback)
+    local item = Item:CreateFromEquipmentSlot(slotId)
+    if (not item:IsItemEmpty()) then
+        item:ContinueOnItemLoad(callback)
+    end
 end
 
 addon.DataQuery = DataQuery
