@@ -30,11 +30,7 @@ local function NewEquipItem(inventorySlotId)
         addon.Helper.Throw({ "attempt to initialize invalid inventory slot", inventorySlotId })
     end
     local equipItem = { SlotId = inventorySlotId, Type = "EquipItem", } ---@type EquipItem
-    for name, func in pairs(EquipItem) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if (type(func) == "function") then
-            equipItem[name] = func
-        end
-    end
+    addon.Helper.AddMethods(equipItem, EquipItem)
     return equipItem
 end
 

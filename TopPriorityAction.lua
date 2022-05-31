@@ -11,7 +11,7 @@ local addon = TopPriorityAction
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
 ---@field Rotation Rotation
----@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, spells:table<string,Spell>, items:table<string,Item>, rotation:Rotation)
+---@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, rotation:Rotation)
 ---@field DetectRotation fun(self:TopPriorityAction)
 ---@field UpdateTalents fun(self:TopPriorityAction)
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)

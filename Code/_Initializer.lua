@@ -107,6 +107,7 @@ addon.DataQuery = DataQuery
 ---@field Print fun(params:string[])
 ---@field Throw fun(params:string[])
 ---@field ToHashSet fun(table:string[]):table<string,string>
+---@field AddMethods fun(instance:table, classDefinition:table):table @adds methods to object instance
 
 local Helper = {}
 local concat = table.concat
@@ -130,7 +131,7 @@ end
 
 local error = error
 function Helper.Throw(params)
-    error(concat(prepare(params), " "))
+    print(concat(prepare(params), " "))
 end
 
 function Helper.ToHashSet(table)
@@ -139,6 +140,18 @@ function Helper.ToHashSet(table)
         t[value] = value
     end
     return t
+end
+
+---adds methods to object instance
+---@param instance table
+---@param classDefinition table
+function Helper.AddMethods(instance, classDefinition)
+    for name, func in pairs(classDefinition) do -- add functions directly, direct lookup might be faster than metatable lookup
+        if (type(func) == "function") then
+            instance[name] = func
+        end
+    end
+    return instance
 end
 
 addon.Helper = Helper
@@ -163,20 +176,13 @@ local emptyAction = {
 }
 ---@type Rotation
 local emptyRotation = {
+    Spells = {},
+    Items = {},
     Pulse = function(_) return emptyAction end,
+    SelectAction = function(_) return nil end,
     ShouldNotRun = function(_) return true end,
     Activate = function(_) end,
     Dispose = function(_) end,
-    Spells = {},
-    Items = {},
-    Talents = {},
-    Timestamp = 0,
-    Settings = nil,
-    GCDSpell = nil,
-    PauseTimestamp = 0,
-    IsPauseKeyDown = false,
-    AddedPauseOnKey = 0,
-    RangeChecker = emptyAction,
 }
 
 ---@class Initializer

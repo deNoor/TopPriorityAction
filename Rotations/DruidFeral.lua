@@ -82,6 +82,7 @@ local spells = {
         Id = 197625,
         Buff = 197625,
     },
+    -- utility
     Soothe = {
         Id = 2908,
     },
@@ -110,23 +111,19 @@ local spells = {
 local items = {}
 
 ---@type Rotation
-local feralRotation = {
-    -- framework dependencies
-    Timestamp      = 0,
-    PauseTimestamp = 0,
-    EmptyAction    = addon.Initializer.Empty.Action,
-    Player         = addon.Player,
-
+local rotation = {
+    Spells = spells,
+    Items = items,
+    
     -- instance fields, init nils in Activate
-    Settings         = nil,
     LocalEvents      = nil, ---@type EventTracker
+    EmptyAction      = addon.Initializer.Empty.Action,
+    Player           = addon.Player,
     RangeChecker     = spells.Rake,
     ComboCap         = 4,
     DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
-    SelectedAction         = nil,
-    CurrentPriorityList    = nil, ---@type (fun():Action)[]
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
     Energy                 = 0,
@@ -150,32 +147,7 @@ local feralRotation = {
     MouseoverIsEnemy       = false,
 }
 
----@return Action?
-function feralRotation:RunPriorityList()
-    if (self.SelectedAction) then
-        return self
-    end
-    for i, func in ipairs(self.CurrentPriorityList) do
-        local action = func()
-        if (action) then
-            if (action:IsAvailable()) then
-                local usable, noMana = action:IsUsableNow()
-                if (usable or noMana) then
-                    self.SelectedAction = noMana and self.EmptyAction or action
-                    return self
-                end
-            end
-        end
-    end
-    return self
-end
-
-function feralRotation:Pulse()
-    if self:ShouldNotRun() then
-        return self.EmptyAction
-    end
-
-    self.SelectedAction = nil
+function rotation:SelectAction()
     self:Refresh()
     local now = self.Timestamp
     local playerBuffs = self.Player.Buffs
@@ -198,55 +170,10 @@ function feralRotation:Pulse()
             self:Aoe():RunPriorityList()
         end
     end
-    self:ReduceActionSpam():WaitForOpportunity()
-    return self.SelectedAction or self.EmptyAction
-end
-
-function feralRotation:ReduceActionSpam()
-    local action = self.SelectedAction
-    if (action and action:IsQueued()) then
-        self.SelectedAction = self.EmptyAction
-    end
-    return self
-end
-
-local actionTypeSwitch
-function feralRotation:WaitForOpportunity()
-    actionTypeSwitch = actionTypeSwitch or {
-        Empty = function() end,
-        Spell = function()
-            local spell = self.SelectedAction ---@type Spell
-            if (not spell.NoGCD and self.GcdReadyIn > self.ActionAdvanceWindow) then
-                self.SelectedAction = self.EmptyAction
-            end
-        end,
-        EquipItem = function()
-            local item = self.SelectedAction ---@type EquipItem
-            if (self.CastingEndsIn > 0) then
-                self.SelectedAction = self.EmptyAction
-            end
-        end,
-        Item = function()
-            local item = self.SelectedAction ---@type Item
-            if (self.CastingEndsIn > 0) then
-                self.SelectedAction = self.EmptyAction
-            end
-        end,
-    }
-    local action = self.SelectedAction
-    if (action) then
-        local case = actionTypeSwitch[action.Type]
-        if (case) then
-            case()
-        else
-            addon.Helper.Print({ "Indefined swith label", action.Type })
-        end
-    end
-    return self
 end
 
 local stealthOpenerList
-function feralRotation:StealthOpener()
+function rotation:StealthOpener()
     stealthOpenerList = stealthOpenerList or
         {
             function() return spells.Rake
@@ -257,7 +184,7 @@ function feralRotation:StealthOpener()
 end
 
 local singleTargetList
-function feralRotation:SingleTarget()
+function rotation:SingleTarget()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
@@ -282,7 +209,7 @@ function feralRotation:SingleTarget()
 end
 
 local aoeList
-function feralRotation:Aoe()
+function rotation:Aoe()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
@@ -308,7 +235,7 @@ function feralRotation:Aoe()
 end
 
 local utilityList
-function feralRotation:Utility()
+function rotation:Utility()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
@@ -337,7 +264,7 @@ function feralRotation:Utility()
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
-function feralRotation:Refresh()
+function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
     player.Buffs:Refresh(timestamp)
@@ -363,11 +290,11 @@ function feralRotation:Refresh()
     self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
 end
 
-function feralRotation:Dispose()
+function rotation:Dispose()
     self.LocalEvents:Dispose()
 end
 
-function feralRotation:Activate()
+function rotation:Activate()
     addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
     addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
     addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
@@ -375,12 +302,11 @@ function feralRotation:Activate()
     addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
     addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
 
-    self.Settings = addon.SavedSettings.Instance
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end
 
-function feralRotation:CreateLocalEventTracker()
+function rotation:CreateLocalEventTracker()
     local handlers = {}
 
     local IsStealthed = IsStealthed
@@ -397,7 +323,7 @@ function feralRotation:CreateLocalEventTracker()
     return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
 end
 
-function feralRotation:SetLayout()
+function rotation:SetLayout()
     local spells = self.Spells
     spells.TigersFury.Key = "1"
     spells.Rake.Key = "2"
@@ -420,4 +346,4 @@ function feralRotation:SetLayout()
     equip.Trinket13.Key = "F11"
 end
 
-addon:AddRotation("DRUID", 2, spells, items, feralRotation)
+addon:AddRotation("DRUID", 2, rotation)

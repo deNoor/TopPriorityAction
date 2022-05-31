@@ -8,6 +8,7 @@ local addon = TopPriorityAction
 local WowClass = {
     DRUID = {
         [2] = nil, -- Feral
+        [3] = nil, -- Guardian
     },
 }
 

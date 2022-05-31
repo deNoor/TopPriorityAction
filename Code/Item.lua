@@ -20,11 +20,7 @@ local function NewItem(item)
         addon.Helper.Throw({ "attempt to initialize empty player item", item.Id, })
     end
     item.Type = "Item"
-    for name, func in pairs(Item) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if (type(func) == "function") then
-            item[name] = func
-        end
-    end
+    addon.Helper.AddMethods(item, Item)
     return item
 end
 

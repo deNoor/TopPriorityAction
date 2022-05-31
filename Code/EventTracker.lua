@@ -48,11 +48,7 @@ local function NewEventTracker(handlers)
         Handlers = handlers or {},
         Timestamp = 0,
     }
-    for name, func in pairs(EventTracker) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if (type(func) == "function") then
-            eventTracker[name] = func
-        end
-    end
+    addon.Helper.AddMethods(eventTracker, EventTracker)
     eventTracker:RegisterEvents()
     return eventTracker
 end

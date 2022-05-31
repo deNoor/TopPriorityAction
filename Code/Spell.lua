@@ -26,11 +26,7 @@ local function NewSpell(spell)
         addon.Helper.Throw({ "attempt to initialize empty player spell", spell.Id, })
     end
     spell.Type = "Spell"
-    for name, func in pairs(Spell) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if (type(func) == "function") then
-            spell[name] = func
-        end
-    end
+    addon.Helper.AddMethods(spell, Spell)
     return spell
 end
 
