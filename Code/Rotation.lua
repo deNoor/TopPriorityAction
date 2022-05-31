@@ -57,8 +57,6 @@ function Rotation:SetDefaults()
     return self
 end
 
-function Rotation:Activate() end
-
 ---@param self Rotation
 ---@return boolean
 local
@@ -116,9 +114,8 @@ function Rotation:ReduceActionSpam()
     return self
 end
 
-local actionTypeSwitch
 function Rotation:WaitForOpportunity()
-    actionTypeSwitch = actionTypeSwitch or {
+    self.ActionTypeSwitch = self.ActionTypeSwitch or {
         Empty = function() end,
         Spell = function()
             local spell = self.SelectedAction ---@type Spell
@@ -139,13 +136,14 @@ function Rotation:WaitForOpportunity()
             end
         end,
     }
+    local swith = self.ActionTypeSwitch
     local action = self.SelectedAction
     if (action) then
-        local case = actionTypeSwitch[action.Type]
+        local case = swith[action.Type]
         if (case) then
             case()
         else
-            addon.Helper.Print({ "Indefined swith label", action.Type, })
+            addon.Helper.Print({ "Undefined swith label", action.Type, })
         end
     end
     return self
@@ -181,7 +179,13 @@ function addon:AddRotation(class, spec, rotation)
     rotation = rotation or addon.Helper.Throw({ "attempt to add nil rotation for", class, spec })
     addon.Helper.AddVirtualMethods(rotation, Rotation)
     rotation:VerifyAbstractsOverriden():SetDefaults():AddSpells(class, spec):AddItems(class, spec)
-    self.WowClass[class] = { [spec] = rotation }
+    if (not self.WowClass[class]) then
+        self.WowClass[class] = {}
+    end
+    if (self.WowClass[class][spec]) then
+        addon.Helper.Throw({ "Attempt to overwrite rotation for", class, spec, })
+    end
+    self.WowClass[class][spec] = rotation
 end
 
 local IsPauseKeyDown = IsRightControlKeyDown
