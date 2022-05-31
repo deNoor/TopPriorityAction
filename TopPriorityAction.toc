@@ -21,5 +21,6 @@ Code\Spell.lua
 
 Rotations\_WowClass.lua
 Rotations\DruidFeral.lua
+Rotations\DruidGuardian.lua
 
 TopPriorityAction.lua
