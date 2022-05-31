@@ -114,7 +114,7 @@ local items = {}
 local rotation = {
     Spells = spells,
     Items = items,
-    
+
     -- instance fields, init nils in Activate
     LocalEvents      = nil, ---@type EventTracker
     EmptyAction      = addon.Initializer.Empty.Action,
@@ -149,7 +149,6 @@ local rotation = {
 
 function rotation:SelectAction()
     self:Refresh()
-    local now = self.Timestamp
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     if (playerBuffs:Applied(spells.CatForm.Buff)
@@ -160,14 +159,14 @@ function rotation:SelectAction()
         and self.CastingEndsIn <= self.ActionAdvanceWindow
         )
     then
-        self:Utility():RunPriorityList()
+        self:Utility()
         if (self.Stealhed) then
-            self:StealthOpener():RunPriorityList()
+            self:StealthOpener()
         end
         if (not self.Settings.AOE) then
-            self:SingleTarget():RunPriorityList()
+            self:SingleTarget()
         else
-            self:Aoe():RunPriorityList()
+            self:Aoe()
         end
     end
 end
@@ -176,11 +175,9 @@ local stealthOpenerList
 function rotation:StealthOpener()
     stealthOpenerList = stealthOpenerList or
         {
-            function() return spells.Rake
-            end,
+            function() return spells.Rake end,
         }
-    self.CurrentPriorityList = stealthOpenerList
-    return self
+    return rotation:RunPriorityList(stealthOpenerList)
 end
 
 local singleTargetList
@@ -204,8 +201,7 @@ function rotation:SingleTarget()
             function() if (player.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end end,
             function() return spells.Shred end,
         }
-    self.CurrentPriorityList = singleTargetList
-    return self
+    return rotation:RunPriorityList(singleTargetList)
 end
 
 local aoeList
@@ -230,8 +226,7 @@ function rotation:Aoe()
             function() if (player.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash else return spells.Swipe end end,
             function() return spells.Thrash end, -- dump energy when Slash is out ouf charges
         }
-    self.CurrentPriorityList = aoeList
-    return self
+    return rotation:RunPriorityList(aoeList)
 end
 
 local utilityList
@@ -259,8 +254,7 @@ function rotation:Utility()
                 end
             end,
         }
-    self.CurrentPriorityList = utilityList
-    return self
+    return rotation:RunPriorityList(utilityList)
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy

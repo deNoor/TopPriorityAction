@@ -26,7 +26,7 @@ local function NewSpell(spell)
         addon.Helper.Throw({ "attempt to initialize empty player spell", spell.Id, })
     end
     spell.Type = "Spell"
-    addon.Helper.AddMethods(spell, Spell)
+    addon.Helper.AddVirtualMethods(spell, Spell)
     return spell
 end
 

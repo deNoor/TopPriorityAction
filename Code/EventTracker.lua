@@ -48,7 +48,7 @@ local function NewEventTracker(handlers)
         Handlers = handlers or {},
         Timestamp = 0,
     }
-    addon.Helper.AddMethods(eventTracker, EventTracker)
+    addon.Helper.AddVirtualMethods(eventTracker, EventTracker)
     eventTracker:RegisterEvents()
     return eventTracker
 end

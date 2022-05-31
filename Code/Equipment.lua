@@ -30,7 +30,7 @@ local function NewEquipItem(inventorySlotId)
         addon.Helper.Throw({ "attempt to initialize invalid inventory slot", inventorySlotId })
     end
     local equipItem = { SlotId = inventorySlotId, Type = "EquipItem", } ---@type EquipItem
-    addon.Helper.AddMethods(equipItem, EquipItem)
+    addon.Helper.AddVirtualMethods(equipItem, EquipItem)
     return equipItem
 end
 

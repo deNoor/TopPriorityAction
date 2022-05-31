@@ -20,7 +20,7 @@ local function NewItem(item)
         addon.Helper.Throw({ "attempt to initialize empty player item", item.Id, })
     end
     item.Type = "Item"
-    addon.Helper.AddMethods(item, Item)
+    addon.Helper.AddVirtualMethods(item, Item)
     return item
 end
 

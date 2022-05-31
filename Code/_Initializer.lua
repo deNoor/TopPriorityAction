@@ -107,7 +107,7 @@ addon.DataQuery = DataQuery
 ---@field Print fun(params:string[])
 ---@field Throw fun(params:string[])
 ---@field ToHashSet fun(table:string[]):table<string,string>
----@field AddMethods fun(instance:table, classDefinition:table):table @adds methods to object instance
+---@field AddVirtualMethods fun(instance:table, classDefinition:table):table @adds methods to object instance
 
 local Helper = {}
 local concat = table.concat
@@ -131,7 +131,7 @@ end
 
 local error = error
 function Helper.Throw(params)
-    print(concat(prepare(params), " "))
+    error(concat(prepare(params), " "))
 end
 
 function Helper.ToHashSet(table)
@@ -145,9 +145,9 @@ end
 ---adds methods to object instance
 ---@param instance table
 ---@param classDefinition table
-function Helper.AddMethods(instance, classDefinition)
+function Helper.AddVirtualMethods(instance, classDefinition)
     for name, func in pairs(classDefinition) do -- add functions directly, direct lookup might be faster than metatable lookup
-        if (type(func) == "function") then
+        if (type(func) == "function" and not instance[name]) then -- insert only non-overriden functions
             instance[name] = func
         end
     end

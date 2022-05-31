@@ -6,25 +6,20 @@ local addon = TopPriorityAction
 ---@class Rotation
 ---@field Spells table<string, Spell>
 ---@field Items table<string, Item>
----@field Timestamp number @updated by framework on Pulse call.
+---@field Timestamp number @updated by framework before Pulse call.
 ---@field Settings Settings @updated by framework on rotation load.
 ---@field GCDSpell Spell @updated by framework on init.
----@field PauseTimestamp number @updated by framework on events outside rotation.
----@field IsPauseKeyDown boolean @updated by framework on events outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
+---@field PauseTimestamp number @updated by eventTracker outside rotation.
+---@field IsPauseKeyDown boolean @updated by eventTracker outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
 ---@field AddedPauseOnKey integer @constant from defaults
 ---@field RangeChecker Spell @must be configured by custom rotation
----@field SelectedAction Action @updated by framework
----@field CurrentPriorityList (fun():Action)[] @variable during rotation run
----@field RunPriorityList fun(self:Rotation):Rotation @framework implements
----@field Pulse fun(self:Rotation):Action @framework implements
----@field ReduceActionSpam fun(self:Rotation):Rotation @framework implements
----@field WaitForOpportunity fun(self:Rotation):Rotation @framework implements
----@field ShouldNotRun fun(self:Rotation):boolean @framework implements
----@field SelectAction fun(self:Rotation):Rotation @custom rotation overrides
----@field Activate fun(self:Rotation) @custom rotation overrides
----@field Dispose fun(self:Rotation) @custom rotation overrides
+---@field RunPriorityList fun(self:Rotation, priorityList:(fun():Action)[]):Rotation @framework implements
+---@field Pulse fun(self:Rotation):Action @framework implements and exposes to addon, do not call in custom rotation
+---@field SelectAction fun(self:Rotation):Rotation @abstract, custom rotation must override
+---@field Activate fun(self:Rotation) @virtual, custom rotation may override
+---@field Dispose fun(self:Rotation) @virtual, custom rotation may override
 
-local abstractMethods = { "SelectAction", "Activate", "Dispose", }
+local abstractMethods = { "SelectAction", }
 
 local pairs, ipairs = pairs, ipairs
 
@@ -32,7 +27,11 @@ local emptyAction = addon.Initializer.Empty.Action
 local emptyRotation = addon.Initializer.Empty.Rotation
 
 ---@type Rotation
-local Rotation = {}
+local Rotation = {
+    SelectedAction = nil, ---@type Action
+    Activate = function(_) end,
+    Dispose = function(_) end,
+}
 
 
 function Rotation:VerifyAbstractsOverriden(class, spec)
@@ -54,9 +53,10 @@ function Rotation:SetDefaults()
     self.PauseTimestamp = 0
     self.IsPauseKeyDown = false
     self.AddedPauseOnKey = 2
-    self.CurrentPriorityList = {}
     return self
 end
+
+function Rotation:Activate() end
 
 ---@param self Rotation
 ---@return boolean
@@ -78,11 +78,14 @@ function Rotation:ShouldNotRun()
         or ACTIVE_CHAT_EDIT_BOX
 end
 
-function Rotation:RunPriorityList()
+---comment
+---@param priorityList (fun():Action)[]
+---@return Rotation
+function Rotation:RunPriorityList(priorityList)
     if (self.SelectedAction) then
         return self
     end
-    for i, func in ipairs(self.CurrentPriorityList) do
+    for i, func in ipairs(priorityList) do
         local action = func()
         if (action) then
             if (action:IsAvailable()) then
@@ -134,7 +137,7 @@ function Rotation:WaitForOpportunity()
         if (case) then
             case()
         else
-            addon.Helper.Print({ "Indefined swith label", action.Type })
+            addon.Helper.Print({ "Indefined swith label", action.Type, })
         end
     end
     return self
@@ -168,7 +171,7 @@ end
 
 function addon:AddRotation(class, spec, rotation)
     rotation = rotation or addon.Helper.Throw({ "attempt to add nil rotation for", class, spec })
-    addon.Helper.AddMethods(rotation, Rotation)
+    addon.Helper.AddVirtualMethods(rotation, Rotation)
     rotation:VerifyAbstractsOverriden():SetDefaults():AddSpells(class, spec):AddItems(class, spec)
     self.WowClass[class] = { [spec] = rotation }
 end
@@ -181,23 +184,19 @@ function addon:DetectRotation()
     local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation
 
     local currentRotation = addon.Rotation or emptyRotation
-    if (currentRotation.Dispose) then
-        currentRotation:Dispose()
-    end
+    addon.Rotation = emptyRotation
+    addon.Shared.RangeCheckSpell = emptyAction
+    currentRotation:Dispose()
 
     if (not knownRotation) then
         addon.Helper.Print({ "unknown spec", class, specIndex, })
-        addon.Rotation = emptyRotation
-        addon.Shared.RangeCheckSpell = emptyAction
         return
     end
 
     addon:UpdateKnownSpells()
     addon:UpdateTalents()
     addon:UpdateEquipment()
-    if (knownRotation.Activate) then
-        knownRotation:Activate()
-    end
+    knownRotation:Activate()
     addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
     knownRotation.IsPauseKeyDown = IsPauseKeyDown()
     knownRotation.Settings = addon.SavedSettings.Instance
