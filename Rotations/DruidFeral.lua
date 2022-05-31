@@ -297,6 +297,7 @@ function rotation:Activate()
     addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
     addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
 
+    self.WaitForResource = true
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end

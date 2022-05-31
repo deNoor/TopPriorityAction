@@ -8,6 +8,7 @@ local addon = TopPriorityAction
 ---@field Items table<string, Item>
 ---@field Timestamp number @updated by framework before Pulse call.
 ---@field Settings Settings @updated by framework on rotation load.
+---@field WaitForResource boolean @set by custom rotation
 ---@field GCDSpell Spell @updated by framework on init.
 ---@field PauseTimestamp number @updated by eventTracker outside rotation.
 ---@field IsPauseKeyDown boolean @updated by eventTracker outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
@@ -90,9 +91,16 @@ function Rotation:RunPriorityList(priorityList)
         if (action) then
             if (action:IsAvailable()) then
                 local usable, noMana = action:IsUsableNow()
-                if (usable or noMana) then
-                    self.SelectedAction = noMana and emptyAction or action
-                    return self
+                if (self.WaitForResource) then
+                    if (usable or noMana) then
+                        self.SelectedAction = noMana and emptyAction or action
+                        return self
+                    end
+                else
+                    if (usable) then
+                        self.SelectedAction = action
+                        return self
+                    end
                 end
             end
         end
