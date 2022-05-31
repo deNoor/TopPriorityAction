@@ -8,22 +8,23 @@ local addon = TopPriorityAction
 ---@class EventTracker
 ---@field private Frame Frame
 ---@field Handlers table<string, EventHandler>
----@field Timestamp number
+---@field EventTimestamp number
 ---@field private RegisterEvents fun(self:EventTracker)
 ---@field UnRegisterEvent fun(self:EventTracker, event:string)
 ---@field Dispose fun(self:EventTracker)
 
-local EventTracker = {}
+local EventTracker = {
+    EventTimestamp = 0
+}
 
 function EventTracker:RegisterEvents()
     for event, _ in pairs(self.Handlers) do
         self.Frame:RegisterEvent(event)
     end
-    local this = self
     local getTime = GetTime
-    local handlers = this.Handlers
+    local handlers = self.Handlers
     self.Frame:SetScript("OnEvent", function(_, event, ...)
-        this.Timestamp = getTime()
+        self.EventTimestamp = getTime()
         local handler = handlers[event]
         if handler then
             local eventArgs = { ... }
@@ -93,7 +94,7 @@ function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
         local rotation = addon.Rotation
         if (eventArgs[2] == 1) then
             rotation.IsPauseKeyDown = true
-            rotation.PauseTimestamp = rotation.Timestamp + rotation.AddedPauseOnKey
+            rotation.PauseTimestamp = EventTracker.EventTimestamp + rotation.AddedPauseOnKey
         elseif (eventArgs[2] == 0) then
             rotation.IsPauseKeyDown = false
         end

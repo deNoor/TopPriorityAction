@@ -34,10 +34,10 @@ function Program:RegisterActionUpdater()
     local emptyAction = addon.Initializer.Empty.Action
     self.Frame:SetScript("OnUpdate", function()
         local now = getTime()
+        local rotation = addon.Rotation
+        rotation.Timestamp = now
         if (now - lastUpdate >= updateLimit) then
             lastUpdate = now
-            local rotation = addon.Rotation
-            rotation.Timestamp = now
             shared.CurrentAction = rotation:Pulse() or emptyAction
         end
     end)

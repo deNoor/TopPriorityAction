@@ -286,6 +286,7 @@ end
 
 function rotation:Dispose()
     self.LocalEvents:Dispose()
+    self.LocalEvents = nil
 end
 
 function rotation:Activate()
@@ -310,7 +311,7 @@ function rotation:CreateLocalEventTracker()
 
     function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
         if (eventArgs[1] == "player") then
-            self.LastCastSent = self.Timestamp
+            self.LastCastSent = self.LocalEvents.EventTimestamp
         end
     end
 
