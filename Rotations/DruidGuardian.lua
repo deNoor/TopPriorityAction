@@ -103,6 +103,7 @@ local rotation = {
 
     -- locals
     InRange                = false,
+    InRange40              = false,
     Rage                   = 0,
     RageDeficit            = 0,
     ManaPercent            = 0,
@@ -132,9 +133,12 @@ function rotation:SelectAction()
         )
     then
         self:Utility()
-        self:Distant()
-        if (self.InRange and self.CanAttackTarget) then
-            self:Base()
+        if (self.CanAttackTarget) then
+            if (self.InRange) then
+                self:Base()
+            elseif (self.InRange40) then
+                self:Distant()
+            end
         end
     end
 end
@@ -147,7 +151,7 @@ function rotation:Distant()
     local equip = player.Equipment
     distantList = distantList or
         {
-            function() if (not settings.AOE and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8 and spells.Moonfire:IsInRange("target")) then return spells.Moonfire end end,
+            function() if (not settings.AOE --[[ and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8 ]] and spells.Moonfire:IsInRange("target")) then return spells.Moonfire end end,
         }
     return rotation:RunPriorityList(distantList)
 end
@@ -169,6 +173,7 @@ function rotation:Base()
             function() if (player.Buffs:Remains(spells.Ironfur.Buff) < 0.30 or self.RageDeficit <= 19) then return spells.Ironfur end end,
             function() return spells.Mangle end,
             function() return spells.Thrash end,
+            function() if (not settings.AOE and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8) then return spells.Moonfire end end,
             function() return spells.Swipe end,
         }
     return rotation:RunPriorityList(baseList)
@@ -214,6 +219,7 @@ function rotation:Refresh()
     player.Mouseover.Debuffs:Refresh(timestamp)
 
     self.InRange = self.RangeChecker:IsInRange("target")
+    self.InRange40 = spells.Moonfire:IsInRange("target")
     self.Rage, self.RageDeficit = player:Resource(Enum.PowerType.Rage)
     self.ManaPercent = player:ResourcePercent(Enum.PowerType.Mana)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
