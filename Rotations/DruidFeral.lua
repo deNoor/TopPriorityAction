@@ -247,7 +247,8 @@ function rotation:Utility()
     utilityList = utilityList or
         {
             function() if ((self.MyHealthPercentDeficit > 15 or self.MyHealAbsorb > 0) and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5 and not spells.Regrowth:IsQueued()) then return spells.Regrowth end end,
-            function() if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
+            function()
+                if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
                     if (self.MouseoverIsFriend) then return spells.RemoveCorruption end
                     if (self.MouseoverIsEnemy) then return spells.Soothe end
                 end

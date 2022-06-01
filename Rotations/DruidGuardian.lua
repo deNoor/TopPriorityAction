@@ -192,7 +192,8 @@ function rotation:Utility()
 
     utilityList = utilityList or
         {
-            function() if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
+            function()
+                if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
                     if (self.MouseoverIsFriend) then return spells.RemoveCorruption end
                     if (self.MouseoverIsEnemy) then return spells.Soothe end
                 end
