@@ -114,32 +114,36 @@ function Rotation:ReduceActionSpam()
     return self
 end
 
+local actionTypeSwitches = {} -- class level
 function Rotation:WaitForOpportunity()
-    self.ActionTypeSwitch = self.ActionTypeSwitch or {
-        Empty = function() end,
-        Spell = function()
-            local spell = self.SelectedAction ---@type Spell
-            if (not spell.NoGCD and addon.Player:GCDReadyIn() > self.Settings.ActionAdvanceWindow) then
-                self.SelectedAction = emptyAction
-            end
-        end,
-        EquipItem = function()
-            local item = self.SelectedAction ---@type EquipItem
-            if (addon.Player:CastingEndsIn() > 0) then
-                self.SelectedAction = emptyAction
-            end
-        end,
-        Item = function()
-            local item = self.SelectedAction ---@type Item
-            if (addon.Player:CastingEndsIn() > 0) then
-                self.SelectedAction = emptyAction
-            end
-        end,
-    }
-    local swith = self.ActionTypeSwitch
+    local switch = actionTypeSwitches[self] -- instance level
+    if (not switch) then
+        actionTypeSwitches[self] = {
+            Empty = function() end,
+            Spell = function()
+                local spell = self.SelectedAction ---@type Spell
+                if (not spell.NoGCD and addon.Player:GCDReadyIn() > self.Settings.ActionAdvanceWindow) then
+                    self.SelectedAction = emptyAction
+                end
+            end,
+            EquipItem = function()
+                local item = self.SelectedAction ---@type EquipItem
+                if (addon.Player:CastingEndsIn() > 0) then
+                    self.SelectedAction = emptyAction
+                end
+            end,
+            Item = function()
+                local item = self.SelectedAction ---@type Item
+                if (addon.Player:CastingEndsIn() > 0) then
+                    self.SelectedAction = emptyAction
+                end
+            end,
+        }
+        switch = actionTypeSwitches[self]
+    end
     local action = self.SelectedAction
     if (action) then
-        local case = swith[action.Type]
+        local case = switch[action.Type]
         if (case) then
             case()
         else
