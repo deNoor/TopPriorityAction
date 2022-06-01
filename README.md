@@ -2,8 +2,8 @@
 WoW addon to propose actions. Implements combat action priority list (APL).
 
 ## Current
-- Game version: 9.2.0
-- Specs: feral
+- Game version: 9.2.5
+- Specs: feral, guardian
 
 ## Description
 Uses retail WoW UI Lua.
