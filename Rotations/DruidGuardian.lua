@@ -63,6 +63,15 @@ local spells = {
         Id = 108238,
         TalentId = 18570,
     },
+    GalacticGuardian = {
+        Id = 203964,
+        Buff = 213708,
+        TalentId = 21707,
+    },
+    SoulOfTheForest = {
+        Id = 158477,
+        TalentId = 21709,
+    },
     -- defensives
     Barkskin = {
         Id = 22812,
@@ -151,7 +160,8 @@ function rotation:Distant()
     local equip = player.Equipment
     distantList = distantList or
         {
-            function() if (not settings.AOE --[[ and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8 ]] and spells.Moonfire:IsInRange("target")) then return spells.Moonfire end end,
+            function() if (self.MyHealthPercentDeficit >= 60 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+            function() if (not settings.AOE) then return spells.Moonfire end end,
         }
     return rotation:RunPriorityList(distantList)
 end
@@ -164,16 +174,14 @@ function rotation:Base()
     local equip = player.Equipment
     baseList = baseList or
         {
-            -- function() return spells.AdaptiveSwarm end,
             function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            -- function() if (settings.Burst) then return spells.Berserk end end,
-            function() if (self.MyHealthPercentDeficit >= 50 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+            function() if (self.MyHealthPercentDeficit >= 35 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
             function() if (settings.Burst) then return spells.Maul end end,
-            function() if (player.Buffs:Remains(spells.Ironfur.Buff) < 0.30 or self.RageDeficit <= 19) then return spells.Ironfur end end,
+            function() if (player.Buffs:Remains(spells.Ironfur.Buff) < 0.27 or self.RageDeficit <= 14 + (player.Talents[spells.SoulOfTheForest.TalentId] and 5 or 0)) then return spells.Ironfur end end,
             function() return spells.Mangle end,
             function() return spells.Thrash end,
-            function() if (not settings.AOE and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8) then return spells.Moonfire end end,
+            function() if ((not settings.AOE and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8) or player.Buffs:Applied(spells.GalacticGuardian.Buff)) then return spells.Moonfire end end,
             function() return spells.Swipe end,
         }
     return rotation:RunPriorityList(baseList)
