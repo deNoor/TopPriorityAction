@@ -193,7 +193,7 @@ function addon:AddRotation(class, spec, rotation)
     self.WowClass[class][spec] = rotation
 end
 
-local lastSpec = nil
+local lastSpec = -1
 local IsPauseKeyDown = IsRightControlKeyDown
 function addon:DetectRotation()
     local specIndex = GetSpecialization()

@@ -160,7 +160,6 @@ function rotation:Distant()
     local equip = player.Equipment
     distantList = distantList or
         {
-            function() if (self.MyHealthPercentDeficit >= 60 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
             function() if (not settings.AOE) then return spells.Moonfire end end,
         }
     return rotation:RunPriorityList(distantList)
@@ -205,6 +204,8 @@ function rotation:Utility()
 
     utilityList = utilityList or
         {
+            function() if (self.MyHealthPercent <= 20) then return spells.Renewal end end,
+            function() if (self.MyHealthPercent <= 40 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
             function()
                 if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
                     if (self.MouseoverIsFriend) then return spells.RemoveCorruption end

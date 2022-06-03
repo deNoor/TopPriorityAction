@@ -176,6 +176,7 @@ local emptyAction = {
 }
 ---@type Rotation
 local emptyRotation = {
+    Name = "Empty-Nospec",
     Spells = {},
     Items = {},
     Pulse = function(_) return emptyAction end,
