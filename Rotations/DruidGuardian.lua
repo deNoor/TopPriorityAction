@@ -175,7 +175,7 @@ function rotation:Base()
         {
             function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            function() if (self.MyHealthPercentDeficit >= 35 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+            function() if (self.MyHealthPercentDeficit >= 40 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
             function() if (settings.Burst) then return spells.Maul end end,
             function() if (player.Buffs:Remains(spells.Ironfur.Buff) < 0.27 or self.RageDeficit <= 14 + (player.Talents[spells.SoulOfTheForest.TalentId] and 5 or 0)) then return spells.Ironfur end end,
             function() return spells.Mangle end,
@@ -205,7 +205,7 @@ function rotation:Utility()
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercent <= 20) then return spells.Renewal end end,
-            function() if (self.MyHealthPercent <= 40 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+            function() if ((self.MyHealthPercent <= 40 or self.MyHealAbsorb > 0) and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
             function()
                 if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
                     if (self.MouseoverIsFriend) then return spells.RemoveCorruption end
@@ -278,6 +278,7 @@ function rotation:SetLayout()
     spells.Berserk.Key = "7"
     spells.ConvokeTheSpirits.Key = "9"
     spells.Maul.Key = "0"
+    spells.Renewal.Key = "F4"
     spells.Soothe.Key = "F6"
     spells.RemoveCorruption.Key = "F6"
 
