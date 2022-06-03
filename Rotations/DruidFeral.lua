@@ -112,6 +112,7 @@ local items = {}
 
 ---@type Rotation
 local rotation = {
+    Name = "Druid-Feral",
     Spells = spells,
     Items = items,
 
@@ -305,12 +306,13 @@ function rotation:CreateLocalEventTracker()
     local handlers = {}
 
     local IsStealthed = IsStealthed
-    function handlers.UPDATE_STEALTH(event, eventArgs)
+    function handlers.UPDATE_STEALTH(event, ...)
         self.Stealhed = IsStealthed()
     end
 
-    function handlers.UNIT_SPELLCAST_SENT(event, eventArgs)
-        if (eventArgs[1] == "player") then
+    function handlers.UNIT_SPELLCAST_SENT(event, ...)
+        local unit = ...
+        if (unit == "player") then
             self.LastCastSent = self.LocalEvents.EventTimestamp
         end
     end

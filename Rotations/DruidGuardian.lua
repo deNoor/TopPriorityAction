@@ -100,6 +100,7 @@ local items = {}
 
 ---@type Rotation
 local rotation = {
+    Name = "Druid-Guardian",
     Spells = spells,
     Items = items,
 

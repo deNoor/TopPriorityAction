@@ -3,7 +3,7 @@ local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
 
----@alias EventHandler fun(event:string,eventArgs:any[])
+---@alias EventHandler fun(event:string, ...)
 
 ---@class EventTracker
 ---@field private Frame Frame
@@ -27,8 +27,7 @@ function EventTracker:RegisterEvents()
         self.EventTimestamp = getTime()
         local handler = handlers[event]
         if handler then
-            local eventArgs = { ... }
-            handler(event, eventArgs)
+            handler(event, ...)
         end
     end)
     return self
@@ -58,44 +57,47 @@ end
 local handlers = {}
 
 ---loads saved setting
-function handlers.ADDON_LOADED(event, eventArgs)
-    local name = eventArgs[1]
+function handlers.ADDON_LOADED(event, ...)
+    local name = ...
     if name == "TopPriorityAction" then
         addon.SavedSettings:Load()
         addon.EventTracker:UnRegisterEvent(event)
     end
 end
 
-function handlers.PLAYER_ENTERING_WORLD(event, eventArgs)
-    addon.Initializer.NewEquipment()
-    addon:DetectRotation()
-    addon.EventTracker:UnRegisterEvent(event)
-end
-
-function handlers.PLAYER_SPECIALIZATION_CHANGED(event, eventArgs)
+function handlers.PLAYER_ENTERING_WORLD(event, ...)
+    local initialLogin, reloadingUi = ...
+    if (initialLogin or reloadingUi) then
+        addon.Initializer.NewEquipment()
+    end
     addon:DetectRotation()
 end
 
-function handlers.PLAYER_TALENT_UPDATE(event, eventArgs)
+function handlers.PLAYER_SPECIALIZATION_CHANGED(event, ...)
+    addon:DetectRotation()
+end
+
+function handlers.PLAYER_TALENT_UPDATE(event, ...)
     addon:UpdateTalents()
 end
 
-function handlers.PLAYER_EQUIPMENT_CHANGED(event, eventArgs)
+function handlers.PLAYER_EQUIPMENT_CHANGED(event, ...)
     addon:UpdateEquipment()
 end
 
 -- fired after spec change, talent change, spellbook change
-function handlers.SPELLS_CHANGED(event, eventArgs)
+function handlers.SPELLS_CHANGED(event, ...)
     addon:UpdateKnownSpells()
 end
 
-function handlers.MODIFIER_STATE_CHANGED(event, eventArgs)
-    if (eventArgs[1] == "RCTRL") then
+function handlers.MODIFIER_STATE_CHANGED(event, ...)
+    local key, isPressed = ...
+    if (key == "RCTRL") then
         local rotation = addon.Rotation
-        if (eventArgs[2] == 1) then
+        if (isPressed == 1) then
             rotation.IsPauseKeyDown = true
             rotation.PauseTimestamp = EventTracker.EventTimestamp + rotation.AddedPauseOnKey
-        elseif (eventArgs[2] == 0) then
+        elseif (isPressed == 0) then
             rotation.IsPauseKeyDown = false
         end
     end

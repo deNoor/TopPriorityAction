@@ -4,6 +4,7 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class Rotation
+---@field Name string
 ---@field Spells table<string, Spell>
 ---@field Items table<string, Item>
 ---@field Timestamp number @updated by framework before Pulse call.
@@ -192,10 +193,14 @@ function addon:AddRotation(class, spec, rotation)
     self.WowClass[class][spec] = rotation
 end
 
+local lastSpec = nil
 local IsPauseKeyDown = IsRightControlKeyDown
 function addon:DetectRotation()
-    local class = UnitClassBase("player")
     local specIndex = GetSpecialization()
+    if (specIndex and specIndex == lastSpec) then
+        return
+    end
+    local class = UnitClassBase("player")
     local knownClass = addon.WowClass[class]
     local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation
 
@@ -206,17 +211,21 @@ function addon:DetectRotation()
 
     if (not knownRotation) then
         addon.Helper.Print({ "unknown spec", class, specIndex, })
-        return
+    else
+        addon:UpdateKnownSpells()
+        addon:UpdateTalents()
+        addon:UpdateEquipment()
+        knownRotation:Activate()
+        addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
+        knownRotation.IsPauseKeyDown = IsPauseKeyDown()
+        knownRotation.Settings = addon.SavedSettings.Instance
+        addon.Rotation = knownRotation
     end
+    lastSpec = specIndex
+end
 
-    addon:UpdateKnownSpells()
-    addon:UpdateTalents()
-    addon:UpdateEquipment()
-    knownRotation:Activate()
-    addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
-    knownRotation.IsPauseKeyDown = IsPauseKeyDown()
-    knownRotation.Settings = addon.SavedSettings.Instance
-    addon.Rotation = knownRotation
+function Test()
+    return addon.Rotation
 end
 
 -- attach to addon
