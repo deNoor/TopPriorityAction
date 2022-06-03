@@ -137,12 +137,11 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     if (playerBuffs:Applied(spells.BearForm.Buff)
-        and (not self.InInstance or self.InCombatWithTarget)
         and self.CastingEndsIn <= self.ActionAdvanceWindow
         )
     then
         self:Utility()
-        if (self.CanAttackTarget) then
+        if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
             if (self.InRange) then
                 self:Base()
             elseif (self.InRange40) then

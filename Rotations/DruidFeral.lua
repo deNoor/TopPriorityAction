@@ -152,12 +152,11 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     if (playerBuffs:Applied(spells.CatForm.Buff)
-        and (not self.InInstance or self.InCombatWithTarget)
         and self.CastingEndsIn <= self.ActionAdvanceWindow
         )
     then
         self:Utility()
-        if (self.InRange and self.CanAttackTarget) then
+        if (self.InRange and self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
             if (self.Stealhed) then
                 self:StealthOpener()
             end
