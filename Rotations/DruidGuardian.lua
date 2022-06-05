@@ -143,6 +143,7 @@ function rotation:SelectAction()
     then
         self:Utility()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
+            self:Dispel()
             if (self.InRange) then
                 self:Base()
             elseif (self.InRange40) then
@@ -188,9 +189,20 @@ end
 
 local utilityList
 function rotation:Utility()
-    local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
+    utilityList = utilityList or
+        {
+            function() if (self.MyHealthPercent <= 20) then return spells.Renewal end end,
+            function() if ((self.MyHealthPercent <= 40 or self.MyHealAbsorb > 0) and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+
+        }
+    return rotation:RunPriorityList(utilityList)
+end
+
+local mouseoverList
+function rotation:Dispel()
+    local settings = self.Settings
     local mouseover = self.Player.Mouseover
     local function CanDispel()
         if (self.MouseoverIsFriend) then
@@ -202,18 +214,14 @@ function rotation:Utility()
         return false
     end
 
-    utilityList = utilityList or
-        {
-            function() if (self.MyHealthPercent <= 20) then return spells.Renewal end end,
-            function() if ((self.MyHealthPercent <= 40 or self.MyHealAbsorb > 0) and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
-            function()
-                if (settings.Dispel and spells.RemoveCorruption:IsInRange("mouseover") and CanDispel() and self.ManaPercent > 6.5) then
-                    if (self.MouseoverIsFriend) then return spells.RemoveCorruption end
-                    if (self.MouseoverIsEnemy) then return spells.Soothe end
-                end
-            end,
-        }
-    return rotation:RunPriorityList(utilityList)
+    mouseoverList = mouseoverList or {
+        function()
+            if (settings.Dispel and CanDispel() and self.ManaPercent > 6.5) then
+                if (self.MouseoverIsFriend and spells.RemoveCorruption:IsInRange("mouseover")) then return spells.RemoveCorruption end
+                if (self.MouseoverIsEnemy and spells.Soothe:IsInRange("mouseover")) then print("purging") return spells.Soothe end
+            end
+        end,
+    }
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy

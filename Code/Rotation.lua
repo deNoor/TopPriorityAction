@@ -224,9 +224,5 @@ function addon:DetectRotation()
     lastSpec = specIndex
 end
 
-function Test()
-    return addon.Rotation
-end
-
 -- attach to addon
 addon.Rotation = emptyRotation
