@@ -177,8 +177,13 @@ function rotation:Base()
             function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
             function() if (self.MyHealthPercentDeficit >= 40 and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
-            function() if (settings.Burst) then return spells.Maul end end,
-            function() if (player.Buffs:Remains(spells.Ironfur.Buff) < 0.27 or self.RageDeficit <= 14 + (player.Talents[spells.SoulOfTheForest.TalentId] and 5 or 0)) then return spells.Ironfur end end,
+            function()
+                if (settings.Burst) then
+                    return spells.Maul
+                elseif (player.Buffs:Remains(spells.Ironfur.Buff) < 0.27 or self.RageDeficit <= 14 + (player.Talents[spells.SoulOfTheForest.TalentId] and 5 or 0)) then
+                    return spells.Ironfur
+                end
+            end,
             function() return spells.Mangle end,
             function() return spells.Thrash end,
             function() if ((not settings.AOE and target.Debuffs:Remains(spells.Moonfire.Debuff) < 4.8) or player.Buffs:Applied(spells.GalacticGuardian.Buff)) then return spells.Moonfire end end,
