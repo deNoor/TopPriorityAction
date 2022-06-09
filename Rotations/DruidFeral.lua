@@ -259,10 +259,11 @@ function rotation:Dispel()
         function()
             if (settings.Dispel and CanDispel() and self.ManaPercent > 6.5) then
                 if (self.MouseoverIsFriend and spells.RemoveCorruption:IsInRange("mouseover")) then return spells.RemoveCorruption end
-                if (self.MouseoverIsEnemy and spells.Soothe:IsInRange("mouseover")) then print("purging") return spells.Soothe end
+                if (self.MouseoverIsEnemy and spells.Soothe:IsInRange("mouseover")) then return spells.Soothe end
             end
         end,
     }
+    return rotation:RunPriorityList(mouseoverList)
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
