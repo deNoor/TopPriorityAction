@@ -96,6 +96,7 @@ function Player:HealthPercent()
     local currentPercent = current * 100 / total
     return currentPercent, 100 - currentPercent
 end
+
 function Player:Health()
     local total = UnitHealthMax("player")
     local current = UnitHealth("player")

@@ -212,6 +212,7 @@ function addon:DetectRotation()
     if (not knownRotation) then
         addon.Helper.Print({ "unknown spec", class, specIndex, })
     else
+        addon.Rotation = knownRotation
         addon:UpdateKnownSpells()
         addon:UpdateTalents()
         addon:UpdateEquipment()
@@ -219,7 +220,6 @@ function addon:DetectRotation()
         addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
         knownRotation.IsPauseKeyDown = IsPauseKeyDown()
         knownRotation.Settings = addon.SavedSettings.Instance
-        addon.Rotation = knownRotation
     end
     lastSpec = specIndex
 end
