@@ -110,7 +110,7 @@ end
 function Rotation:ActionQueueAwailable()
     local spellId, endsInSec = addon.Player:NowCasting()
     if (spellId > 0) then
-        return endsInSec <= self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
+        return endsInSec < self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
     end
     return true
 end

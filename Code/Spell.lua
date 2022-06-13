@@ -11,6 +11,7 @@ local addon = TopPriorityAction
 ---@field ChargesBased boolean
 ---@field HardCast boolean
 ---@field Known boolean
+---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
 
 local max, pairs, ipairs = max, pairs, ipairs
@@ -88,9 +89,7 @@ local GetSpellLossOfControlCooldown = GetSpellLossOfControlCooldown
 function Spell:CCUnlockIn()
     local now = addon.Rotation.Timestamp
     local start, duration = GetSpellLossOfControlCooldown(self.Id)
-    if start then
-        return max(0, start + duration - now)
-    end
+    return start and max(0, start + duration - now) or 0
 end
 
 local GetSpellCharges = GetSpellCharges
@@ -101,6 +100,14 @@ function Spell:ActiveCharges()
     else
         return 0
     end
+end
+
+local emprtSpell = addon.Initializer.Empty.Action
+function Spell:ProtectFromDoubleCast()
+    if (self:IsQueued()) then
+        return emprtSpell
+    end
+    return self
 end
 
 function Spell:Report()
