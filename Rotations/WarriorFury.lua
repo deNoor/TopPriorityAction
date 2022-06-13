@@ -51,6 +51,7 @@ local rotation = {
     Rage                   = 0,
     RageDeficit            = 0,
     GcdReadyIn             = 0,
+    NowCasting             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
     ActionAdvanceWindow    = 0,
@@ -70,8 +71,7 @@ function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (self.CastingEndsIn <= self.ActionAdvanceWindow
-        )
+    if (true)
     then
         -- self:Utility()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
@@ -133,7 +133,7 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
-    self.CastingEndsIn = player:CastingEndsIn()
+    self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player:InCombatWithTarget()

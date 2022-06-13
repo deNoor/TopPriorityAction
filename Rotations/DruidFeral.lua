@@ -117,12 +117,13 @@ local rotation = {
     Items = items,
 
     -- instance fields, init nils in Activate
-    LocalEvents      = nil, ---@type EventTracker
-    EmptyAction      = addon.Initializer.Empty.Action,
-    Player           = addon.Player,
-    RangeChecker     = spells.Rake,
-    ComboCap         = 4,
-    DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
+    LocalEvents          = nil, ---@type EventTracker
+    EmptyAction          = addon.Initializer.Empty.Action,
+    Player               = addon.Player,
+    InterruptUndesirable = addon.WowClass.InterruptUndesirable,
+    RangeChecker         = spells.Rake,
+    ComboCap             = 4,
+    DispellableTypes     = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -133,6 +134,7 @@ local rotation = {
     ComboDeficit           = 0,
     ManaPercent            = 0,
     GcdReadyIn             = 0,
+    NowCasting             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
     ActionAdvanceWindow    = 0,
@@ -152,9 +154,7 @@ function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (playerBuffs:Applied(spells.CatForm.Buff)
-        and self.CastingEndsIn <= self.ActionAdvanceWindow
-        )
+    if (playerBuffs:Applied(spells.CatForm.Buff))
     then
         self:Utility()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
@@ -193,8 +193,8 @@ function rotation:SingleTarget()
             function() return spells.AdaptiveSwarm end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (settings.Burst) then return spells.Berserk end end,
+            function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end end,
             function() if (self.Combo >= self.ComboCap) then if (self.Energy < 50) then return self.EmptyAction else return spells.FerociousBite end end end,
@@ -217,8 +217,8 @@ function rotation:Aoe()
             function() return spells.AdaptiveSwarm end,
             function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (settings.Burst) then return spells.Berserk end end,
+            function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
             function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end end,
             function() if (self.Combo >= self.ComboCap) then return spells.PrimalWrath end end,
             function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end end,
@@ -284,7 +284,7 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
-    self.CastingEndsIn = player:CastingEndsIn()
+    self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player:InCombatWithTarget()

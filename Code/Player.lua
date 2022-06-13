@@ -13,6 +13,7 @@ local addon = TopPriorityAction
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
 ---@field CastingEndsIn fun(self:Player):number
+---@field NowCasting fun(self:Player):integer,number @spellId, endsInSec
 ---@field Resource fun(self:Player, index:integer):number,number @current, deficit
 ---@field ResourcePercent fun(self:Player, index:integer):number,number @current, deficit
 ---@field Health fun(self:Player):number,number @current, deficit
@@ -61,12 +62,21 @@ local function SecFromNow(endTimeMS)
 end
 
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
-function Player:CastingEndsIn()
+function Player:NowCasting()
     local name, text, texture, startTimeMS, endTimeMS, _, _, notInterruptible, spellId = UnitCastingInfo("player")
     if (not name) then
         name, text, texture, startTimeMS, endTimeMS, _, notInterruptible, spellId = UnitChannelInfo("player")
     end
-    return name and SecFromNow(endTimeMS) or 0
+    if (spellId) then
+        return spellId, SecFromNow(endTimeMS)
+    else
+        return 0, 0
+    end
+end
+
+function Player:CastingEndsIn()
+    local spellId, endsInSec = self:NowCasting()
+    return endsInSec
 end
 
 local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax

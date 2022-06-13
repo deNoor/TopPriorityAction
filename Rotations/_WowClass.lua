@@ -4,6 +4,7 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class WowClass
+---@field InterruptUndesirable table<integer,any>
 
 local WowClass = {
     DRUID = {
@@ -11,5 +12,9 @@ local WowClass = {
         [3] = nil, -- Guardian
     },
 }
+
+WowClass.InterruptUndesirable = addon.Helper.ToHashSet({
+    323764, -- ConvokeTheSpirits
+})
 
 addon.WowClass = WowClass

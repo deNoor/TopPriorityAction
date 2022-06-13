@@ -106,7 +106,7 @@ addon.DataQuery = DataQuery
 ---@class Helper
 ---@field Print fun(params:string[])
 ---@field Throw fun(params:string[])
----@field ToHashSet fun(table:string[]):table<string,string>
+---@field ToHashSet fun(table:string|integer[]):table<string|integer,string|integer>
 ---@field AddVirtualMethods fun(instance:table, classDefinition:table):table @adds methods to object instance
 
 local Helper = {}

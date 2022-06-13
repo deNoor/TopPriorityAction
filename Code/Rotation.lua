@@ -107,9 +107,18 @@ function Rotation:RunPriorityList(priorityList)
     return self
 end
 
+function Rotation:ActionQueueAwailable()
+    local spellId, endsInSec = addon.Player:NowCasting()
+    if (spellId > 0) then
+        return endsInSec <= self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
+    end
+    return true
+end
+
 function Rotation:ReduceActionSpam()
     local action = self.SelectedAction
-    if (action and action:IsQueued()) then
+    local nowCasting = addon.Player:NowCasting()
+    if (action and nowCasting ~= action.Id and action:IsQueued()) then
         self.SelectedAction = emptyAction
     end
     return self
@@ -159,7 +168,9 @@ function Rotation:Pulse()
         return emptyAction
     end
     self.SelectedAction = nil
-    self:SelectAction()
+    if (self:ActionQueueAwailable()) then
+        self:SelectAction()
+    end
     self:ReduceActionSpam():WaitForOpportunity()
     return self.SelectedAction or emptyAction
 end
