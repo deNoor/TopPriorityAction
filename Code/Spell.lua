@@ -66,9 +66,13 @@ end
 
 local IsUsableSpell = IsUsableSpell
 function Spell:IsUsableNow()
+    local actionAdvanceWindow = addon.Rotation.Settings.ActionAdvanceWindow
+    if (self:CCUnlockIn() > actionAdvanceWindow) then
+        return false, false
+    end
     local usable, noMana = IsUsableSpell(self.Id)
     if (usable) then
-        local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > addon.Rotation.Settings.ActionAdvanceWindow
+        local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > actionAdvanceWindow
         usable = not onCD
     end
     return usable, noMana
