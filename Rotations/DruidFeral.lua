@@ -236,7 +236,7 @@ function rotation:Utility()
     local player = self.Player
     utilityList = utilityList or
         {
-            function() if (player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5) then return spells.Regrowth:ProtectFromDoubleCast() end end,
+            function() if ((self.MyHealthPercentDeficit > 15 or self.MyHealAbsorb > 0) and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5) then return spells.Regrowth:ProtectFromDoubleCast() end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
