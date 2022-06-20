@@ -6,7 +6,7 @@ local addon = TopPriorityAction
 ---@type table<string,Spell>
 local spells = {
     Execute = {
-        Id = 5308,
+        Id = 280735,
     },
     Slam = {
         Id = 1464,
@@ -16,6 +16,7 @@ local spells = {
     },
     Whirlwind = {
         Id = 190411,
+        Buff = 85739,
     },
     Bloodthist = {
         Id = 23881,
@@ -29,6 +30,27 @@ local spells = {
     Enrage = {
         Id = 184361,
         Buff = 184362,
+    },
+    Recklessness = {
+        Id = 1719,
+    },
+    -- talents
+    ImpendingVictory = {
+        Id = 202168,
+        TalendId = 22625,
+    },
+    DragonRoar = {
+        Id = 118000,
+        TalendId = 22398,
+    },
+    Bladestorm = {
+        Id = 46924,
+        TalendId = 22400,
+    },
+    -- procs
+    Victorious = {
+        Id = 32216,
+        Buff = 32216,
     },
 }
 
@@ -65,6 +87,8 @@ local rotation = {
     LastCastSent           = 0,
     MouseoverIsFriend      = false,
     MouseoverIsEnemy       = false,
+
+    EnrageSec = 0,
 }
 
 function rotation:SelectAction()
@@ -93,12 +117,26 @@ function rotation:Base()
     baseList = baseList or
         {
             function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
+            function() if (settings.Burst) then return spells.Recklessness end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            function() if (self.MyHealthPercentDeficit > 25) then return spells.VictoryRush end end,
-            function() return spells.Rampage end,
+            function()
+                if (player.Talents[spells.ImpendingVictory.TalendId]) then
+                    if (self.MyHealthPercentDeficit > 40) then return spells.ImpendingVictory end
+                else
+                    if (self.MyHealthPercentDeficit > 20) then return spells.VictoryRush end
+                end
+            end,
+            function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
+            function() if (self.EnrageSec <= self.ActionAdvanceWindow) then return spells.Rampage end end,
             function() return spells.Execute end,
-            function() return spells.RagingBlow end,
+            function() if (self.EnrageSec > 2 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
+            function() if (self.EnrageSec > self.ActionAdvanceWindow) then return spells.DragonRoar end end,
+            function() return spells.Rampage end,
+            -- function() if (self.EnrageSec < self.ActionAdvanceWindow) then return spells.Bloodthist end end,
+            -- function() if (spells.RagingBlow:ActiveCharges() > 1) then return spells.RagingBlow end end,
             function() return spells.Bloodthist end,
+            function() return spells.RagingBlow end,
+            function() if (player.Buffs:Remains(spells.Victorious.Buff) > 0.5) then return player.Talents[spells.ImpendingVictory.TalendId] and spells.ImpendingVictory or spells.VictoryRush end end,
             function() return spells.Whirlwind end,
         }
     return rotation:RunPriorityList(baseList)
@@ -112,7 +150,7 @@ function rotation:Aoe()
     local equip = player.Equipment
     aoeList = aoeList or
         {
-            function() if (settings.AOE) then return spells.Whirlwind end end,
+            function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
         }
     return rotation:RunPriorityList(aoeList)
 end
@@ -139,8 +177,8 @@ function rotation:Refresh()
     self.InCombatWithTarget = player:InCombatWithTarget()
     self.CanAttackTarget = player:CanAttackTarget()
     self.CanDotTarget = player:CanDotTarget()
-    self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"),
-        UnitIsEnemy("player", "mouseover")
+    self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
+    self.EnrageSec = player.Buffs:Remains(spells.Enrage.Buff)
 end
 
 function rotation:Dispose()
@@ -173,8 +211,12 @@ function rotation:SetLayout()
     spells.RagingBlow.Key = "3"
     spells.Bloodthist.Key = "4"
     spells.Rampage.Key = "5"
+    spells.Recklessness.Key = "7"
     spells.Whirlwind.Key = "8"
+    spells.Bladestorm.Key = "9"
+    spells.DragonRoar.Key = "9"
     spells.VictoryRush.Key = "-"
+    spells.ImpendingVictory.Key = "-"
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
