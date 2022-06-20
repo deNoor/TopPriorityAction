@@ -54,7 +54,7 @@ function Rotation:SetDefaults()
     self.Timestamp = 0
     self.PauseTimestamp = 0
     self.IsPauseKeyDown = false
-    self.AddedPauseOnKey = 2
+    self.AddedPauseOnKey = 1
     return self
 end
 
