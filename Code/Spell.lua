@@ -13,6 +13,7 @@ local addon = TopPriorityAction
 ---@field Known boolean
 ---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
+---@field ActiveCharges fun(self:Spell):integer
 
 local max, pairs, ipairs = max, pairs, ipairs
 
