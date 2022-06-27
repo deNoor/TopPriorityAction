@@ -236,18 +236,18 @@ end
 function rotation:SetLayout()
     local spells = self.Spells
     spells.Execute.Key = "2"
-    spells.Condemn.Key = "2"
+    spells.Condemn.Key = spells.Execute.Key
     spells.RagingBlow.Key = "3"
-    spells.CrushingBlow.Key = "3"
+    spells.CrushingBlow.Key = spells.RagingBlow.Key
     spells.Bloodthist.Key = "4"
-    spells.Bloodbath.Key = "4"
+    spells.Bloodbath.Key = spells.Bloodthist.Key
     spells.Rampage.Key = "5"
     spells.Recklessness.Key = "7"
     spells.Whirlwind.Key = "8"
     spells.Bladestorm.Key = "9"
-    spells.DragonRoar.Key = "9"
+    spells.DragonRoar.Key = spells.Bladestorm.Key
     spells.VictoryRush.Key = "-"
-    spells.ImpendingVictory.Key = "-"
+    spells.ImpendingVictory.Key = spells.VictoryRush.Key
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"

@@ -341,7 +341,7 @@ function rotation:SetLayout()
     spells.Berserk.Key = "7"
     spells.Thrash.Key = "8"
     spells.Swipe.Key = "9"
-    spells.BrutalSlash.Key = "9"
+    spells.BrutalSlash.Key = spells.Swipe.Key
     spells.PrimalWrath.Key = "0"
     spells.Regrowth.Key = "-"
     spells.Soothe.Key = "F6"
