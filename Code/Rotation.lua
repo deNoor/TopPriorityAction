@@ -163,6 +163,7 @@ function Rotation:WaitForOpportunity()
     return self
 end
 
+local Print = addon.Helper.Print
 function Rotation:Pulse()
     if self:ShouldNotRun() then
         return emptyAction
@@ -171,8 +172,14 @@ function Rotation:Pulse()
     if (self:ActionQueueAwailable()) then
         self:SelectAction()
     end
-    self:ReduceActionSpam():WaitForOpportunity()
-    return self.SelectedAction or emptyAction
+    self:WaitForOpportunity() --:ReduceActionSpam()
+    local action = self.SelectedAction or emptyAction
+    if action ~= emptyAction then
+        if (not action.Key) then
+            Print({ action.Name, "has no key", })
+        end
+    end
+    return action
 end
 
 function Rotation:AddSpells(class, spec)
