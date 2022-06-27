@@ -21,8 +21,14 @@ local spells = {
     Bloodthist = {
         Id = 23881,
     },
+    Bloodbath = {
+        Id = 335096,
+    },
     RagingBlow = {
         Id = 85288,
+    },
+    CrushingBlow = {
+        Id = 335097,
     },
     Rampage = {
         Id = 184367,
@@ -33,6 +39,7 @@ local spells = {
     },
     Recklessness = {
         Id = 1719,
+        Buff = 1719,
     },
     -- talents
     ImpendingVictory = {
@@ -47,10 +54,22 @@ local spells = {
         Id = 46924,
         TalendId = 22400,
     },
+    RecklessAbandon = {
+        Id = 202751,
+        TalendId = 22402,
+    },
     -- procs
     Victorious = {
         Id = 32216,
         Buff = 32216,
+    },
+    -- Shadowlands specials
+    Condemn = {
+        Id = 330325,
+    },
+    -- racials
+    LightsJudgment = {
+        Id = 255647,
     },
 }
 
@@ -101,7 +120,6 @@ function rotation:SelectAction()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
             -- self:Dispel()
             if (self.InRange) then
-                self:Aoe()
                 self:Base()
             end
         end
@@ -116,7 +134,7 @@ function rotation:Base()
     local equip = player.Equipment
     baseList = baseList or
         {
-            function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
+            function() if (settings.Burst) then return spells.LightsJudgment end end,
             function() if (settings.Burst) then return spells.Recklessness end end,
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
             function()
@@ -127,15 +145,13 @@ function rotation:Base()
                 end
             end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
-            function() if (self.EnrageSec <= self.ActionAdvanceWindow) then return spells.Rampage end end,
-            function() return spells.Execute end,
+            function() return spells.Rampage end,
+            function() if (spells.Condemn.Known) then return spells.Condemn else return spells.Execute end end,
             function() if (self.EnrageSec > 2 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
             function() if (self.EnrageSec > self.ActionAdvanceWindow) then return spells.DragonRoar end end,
-            function() return spells.Rampage end,
-            -- function() if (self.EnrageSec < self.ActionAdvanceWindow) then return spells.Bloodthist end end,
-            -- function() if (spells.RagingBlow:ActiveCharges() > 1) then return spells.RagingBlow end end,
-            function() return spells.Bloodthist end,
-            function() return spells.RagingBlow end,
+            function() if (self.EnrageSec > self.ActionAdvanceWindow) then return self:RagingAndCrushingBlow() end end,
+            function() return self:BloodThristOrBath() end,
+            function() return self:RagingAndCrushingBlow() end,
             function() if (player.Buffs:Remains(spells.Victorious.Buff) > 0.5) then return player.Talents[spells.ImpendingVictory.TalendId] and spells.ImpendingVictory or spells.VictoryRush end end,
             function() return spells.Whirlwind end,
         }
@@ -150,9 +166,21 @@ function rotation:Aoe()
     local equip = player.Equipment
     aoeList = aoeList or
         {
-            function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
         }
     return rotation:RunPriorityList(aoeList)
+end
+
+function rotation:ImproovedRecklessness()
+    local player = self.Player
+    return player.Talents[spells.RecklessAbandon.TalendId] and player.Buffs:Remains(spells.Recklessness.Buff) > self.ActionAdvanceWindow
+end
+
+function rotation:RagingAndCrushingBlow()
+    return self:ImproovedRecklessness() and spells.CrushingBlow or spells.RagingBlow
+end
+
+function rotation:BloodThristOrBath()
+    return self:ImproovedRecklessness() and spells.Bloodbath or spells.Bloodthist
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
@@ -208,8 +236,11 @@ end
 function rotation:SetLayout()
     local spells = self.Spells
     spells.Execute.Key = "2"
+    spells.Condemn.Key = "2"
     spells.RagingBlow.Key = "3"
+    spells.CrushingBlow.Key = "3"
     spells.Bloodthist.Key = "4"
+    spells.Bloodbath.Key = "4"
     spells.Rampage.Key = "5"
     spells.Recklessness.Key = "7"
     spells.Whirlwind.Key = "8"
@@ -220,6 +251,7 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
+    spells.LightsJudgment.Key = "F12"
 end
 
 addon:AddRotation("WARRIOR", 2, rotation)
