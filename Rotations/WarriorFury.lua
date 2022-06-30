@@ -58,6 +58,10 @@ local spells = {
         Id = 202751,
         TalendId = 22402,
     },
+    Siegebreaker = {
+        Id = 280772,
+        TalendId = 16037,
+    },
     -- procs
     Victorious = {
         Id = 32216,
@@ -145,9 +149,10 @@ function rotation:Base()
                 end
             end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
+            function() if (self.EnrageSec > 1 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
+            function() return spells.Siegebreaker end,
             function() return spells.Rampage end,
             function() if (spells.Condemn.Known) then return spells.Condemn else return spells.Execute end end,
-            function() if (self.EnrageSec > 2 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
             function() if (self.EnrageSec > self.ActionAdvanceWindow) then return spells.DragonRoar end end,
             function() if (self.EnrageSec > self.ActionAdvanceWindow) then return self:RagingAndCrushingBlow() end end,
             function() return self:BloodThristOrBath() end,
@@ -242,6 +247,7 @@ function rotation:SetLayout()
     spells.Bloodthist.Key = "4"
     spells.Bloodbath.Key = spells.Bloodthist.Key
     spells.Rampage.Key = "5"
+    spells.Siegebreaker.Key = "6"
     spells.Recklessness.Key = "7"
     spells.Whirlwind.Key = "8"
     spells.Bladestorm.Key = "9"
