@@ -115,10 +115,17 @@ function Rotation:ActionQueueAwailable()
     return true
 end
 
+local buggedCurrentSpellCastDetection = { [330325] = "Condemn", }
+---@param action Action
+---@return boolean
+local function ForcedSpam(action)
+    return action.Type == "Spell" and buggedCurrentSpellCastDetection[action.Id]
+end
+
 function Rotation:ReduceActionSpam()
     local action = self.SelectedAction
     local nowCasting = addon.Player:NowCasting()
-    if (action and nowCasting ~= action.Id and action:IsQueued()) then
+    if (action and nowCasting ~= action.Id and (action:IsQueued() or ForcedSpam(action))) then
         self.SelectedAction = emptyAction
     end
     return self
@@ -172,7 +179,7 @@ function Rotation:Pulse()
     if (self:ActionQueueAwailable()) then
         self:SelectAction()
     end
-    self:WaitForOpportunity() --:ReduceActionSpam()
+    self:WaitForOpportunity() -- :ReduceActionSpam()
     local action = self.SelectedAction or emptyAction
     if action ~= emptyAction then
         if (not action.Key) then
