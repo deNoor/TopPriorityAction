@@ -59,7 +59,7 @@ local handlers = {}
 ---loads saved setting
 function handlers.ADDON_LOADED(event, ...)
     local name = ...
-    if name == "TopPriorityAction" then
+    if name == addonName then
         addon.SavedSettings:Load()
         addon.EventTracker:UnRegisterEvent(event)
     end
