@@ -139,6 +139,7 @@ function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil
 end
 
+local wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS = wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS
 function addon:UpdateTalents()
     local rotation = self.Rotation
     local emptyRotation = self.Initializer.Empty.Rotation
