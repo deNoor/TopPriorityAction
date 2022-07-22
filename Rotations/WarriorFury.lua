@@ -41,6 +41,11 @@ local spells = {
         Id = 1719,
         Buff = 1719,
     },
+    -- defensives
+    EnragedRegeneration = {
+        Id = 184364,
+        Buff = 184364,
+    },
     -- talents
     ImpendingVictory = {
         Id = 202168,
@@ -122,7 +127,6 @@ function rotation:SelectAction()
     then
         -- self:Utility()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
-            -- self:Dispel()
             if (self.InRange) then
                 self:Base()
             end
@@ -148,6 +152,7 @@ function rotation:Base()
                     if (self.MyHealthPercentDeficit > 20) then return spells.VictoryRush end
                 end
             end,
+            function() if (self.MyHealthPercentDeficit > 23 and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return self:BloodThristOrBath() end end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
             function() if (self.EnrageSec > 1 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
             function() return spells.Siegebreaker end,
