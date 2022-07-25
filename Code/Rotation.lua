@@ -61,8 +61,8 @@ end
 ---@param self Rotation
 ---@return boolean
 local
-SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasOverrideActionBar =
-SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasOverrideActionBar
+SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar =
+SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar
 function Rotation:ShouldNotRun()
     return not self.Settings.Enabled
         or not self.RangeChecker.Name
@@ -73,6 +73,7 @@ function Rotation:ShouldNotRun()
         or SpellIsTargeting()
         or GetCursorInfo()
         or IsMounted()
+        or HasVehicleActionBar()
         or HasOverrideActionBar()
         or UnitOnTaxi("player")
         or ACTIVE_CHAT_EDIT_BOX
