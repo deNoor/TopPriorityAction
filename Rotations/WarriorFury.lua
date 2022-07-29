@@ -147,12 +147,12 @@ function rotation:Base()
             function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
             function()
                 if (player.Talents[spells.ImpendingVictory.TalendId]) then
-                    if (self.MyHealthPercentDeficit > 40) then return spells.ImpendingVictory end
+                    if (self.MyHealthPercentDeficit > 40 or self.MyHealAbsorb > 0) then return spells.ImpendingVictory end
                 else
-                    if (self.MyHealthPercentDeficit > 20) then return spells.VictoryRush end
+                    if (self.MyHealthPercentDeficit > 20 or self.MyHealAbsorb > 0) then return spells.VictoryRush end
                 end
             end,
-            function() if (self.MyHealthPercentDeficit > 23 and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return self:BloodThristOrBath() end end,
+            function() if ((self.MyHealthPercentDeficit > 23 or self.MyHealAbsorb > 0) and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return self:BloodThristOrBath() end end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
             function() if (self.EnrageSec > 1 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
             function() return spells.Siegebreaker end,
