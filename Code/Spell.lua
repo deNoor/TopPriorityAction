@@ -39,6 +39,7 @@ function Spell:ReadyIn()
     if start then
         return max(0, start + duration - now) -- seconds
     end
+    addon.Helper.Throw({ "Spell returned no cooldown", self.Id, self.Name, })
 end
 
 local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges
