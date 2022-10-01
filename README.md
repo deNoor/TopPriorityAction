@@ -1,9 +1,9 @@
 # TopPriorityAction
-WoW addon to propose actions. Implements combat action priority list (APL).\
+WoW addon to propose combat actions (spells, items). Implements combat action priority list (APL).\
 Uses retail WoW UI Lua.
 
 ## Current
-- Game version: 9.2.5
+- Game version: 9.2.7 (Shadowlands)
 - Specs: feral, guardian, fury
 
 ## Description
