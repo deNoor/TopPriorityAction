@@ -2,7 +2,7 @@
 WoW addon to propose combat actions (spells, items). Implements combat action priority list (APL).\
 Uses retail WoW UI Lua.
 
-## Current
+## Current state
 - Game version: 9.2.7 (Shadowlands)
 - Specs: feral, guardian, fury
 
