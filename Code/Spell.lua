@@ -108,10 +108,10 @@ function Spell:ActiveCharges()
     end
 end
 
-local emprtSpell = addon.Initializer.Empty.Action
+local emptySpell = addon.Initializer.Empty.Action
 function Spell:ProtectFromDoubleCast()
     if (self:IsQueued()) then
-        return emprtSpell
+        return emptySpell
     end
     return self
 end
