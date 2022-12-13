@@ -17,15 +17,41 @@ local spells = {
     Ambush = {
         Id = 8676,
     },
+    Garrote = {
+        Id = 703,
+        Debuff = 703,
+        Pandemic = 18 * 0.3
+    },
     Eviscerate = {
         Id = 196819,
+    },
+    Envenom = {
+        Id = 32645,
+        Buff = 32645,
     },
     SliceAndDice = {
         Id = 315496,
         Buff = 315496,
     },
+    Rupture = {
+        Id = 1943,
+        Debuff = 1943,
+        Pandemic = 16 * 0.3
+    },
     Shiv = {
         Id = 5938,
+        Debuff = 319504,
+        Pandemic = 8 * 0.3,
+    },
+    Deathmark = {
+        Id = 360194,
+        Debuff = 360194,
+    },
+    Vanish = {
+        Id = 1856,
+    },
+    FanOfKnives = {
+        Id = 51723,
     },
     CrimsonVial = {
         Id = 185311,
@@ -47,7 +73,7 @@ local rotation = {
     Player               = addon.Player,
     InterruptUndesirable = addon.WowClass.InterruptUndesirable,
     RangeChecker         = spells.SinisterStrike,
-    ComboCap             = 5,
+    ComboFinisherToMax   = 2,
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -56,6 +82,7 @@ local rotation = {
     EnergyDeficit          = 0,
     Combo                  = 0,
     ComboDeficit           = 0,
+    ComboFinisherAllowed   = false,
     GcdReadyIn             = 0,
     NowCasting             = 0,
     CastingEndsIn          = 0,
@@ -86,11 +113,12 @@ function rotation:SelectAction()
             end
             if (self.InRange) then
                 self:AutoAttack()
-                if (not self.Settings.AOE) then
-                    self:SingleTarget()
-                else
-                    self:Aoe()
-                end
+                self:SingleTarget()
+                -- if (not self.Settings.AOE) then
+                --     self:SingleTarget()
+                -- else
+                --     self:Aoe()
+                -- end
             end
         end
     end
@@ -113,9 +141,14 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
-            function() if (self.Combo >= self.ComboCap) then return spells.Eviscerate end end,
-            function() return spells.Mutilate end,
+            function() if (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < self.ActionAdvanceWindow) then return spells.SliceAndDice end end,
+            function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
+            function() if (self.CanDotTarget and self.ComboFinisherAllowed and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
+            function() if (self.ComboFinisherAllowed) then return spells.Envenom end end,
+            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return (self.GcdReadyIn < 30) and spells.Vanish or self.EmptyAction end end, -- self.GcdReadyIn < self.ActionAdvanceWindow and spells.Vanish or self.EmptyAction
+            function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic) then return spells.Garrote end end,
+            function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
+            function() if (self.Settings.AOE) then return spells.FanOfKnives end return spells.Mutilate end,
             -- function() return spells.AdaptiveSwarm end,
             -- function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
             -- function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
@@ -162,7 +195,7 @@ function rotation:Utility()
     local player = self.Player
     utilityList = utilityList or
         {
-            -- function() if ((self.MyHealthPercentDeficit > 15 or self.MyHealAbsorb > 0) and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5) then return spells.Regrowth:ProtectFromDoubleCast() end end,
+            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -190,6 +223,7 @@ function rotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange("target")
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
+    self.ComboFinisherAllowed = self.ComboDeficit <= self.ComboFinisherToMax
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
@@ -200,6 +234,8 @@ function rotation:Refresh()
     self.CanAttackTarget = player:CanAttackTarget()
     self.CanDotTarget = player:CanDotTarget()
     self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
+
+    spells.Rupture.Pandemic = (4 + 4 * self.Combo) * 0.3
 end
 
 function rotation:Dispose()
@@ -234,12 +270,21 @@ end
 function rotation:SetLayout()
     local spells = self.Spells
     spells.SliceAndDice.Key = "1"
-    spells.Shiv.Key = "2"
+    spells.Garrote.Key = "2"
     spells.SinisterStrike.Key = "3"
     spells.Ambush.Key = spells.SinisterStrike.Key
     spells.Mutilate.Key = spells.SinisterStrike.Key
-    spells.AutoAttack.Key = "F12"
     spells.Eviscerate.Key = "4"
+    spells.Envenom.Key = spells.Eviscerate.Key
+    spells.Rupture.Key = "5"
+    spells.Shiv.Key = "6"
+    spells.Deathmark.Key = "7"
+
+    spells.FanOfKnives.Key = "8"
+
+    spells.CrimsonVial.Key = "F6"
+    spells.Vanish.Key = "F10"
+    spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
