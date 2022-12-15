@@ -56,6 +56,12 @@ local spells = {
     CrimsonVial = {
         Id = 185311,
     },
+    MarkedForDeath = {
+        Id = 137619,
+    },
+    ThistleTea = {
+        Id = 381623,
+    },
 }
 
 ---@type table<string,Item>
@@ -145,10 +151,14 @@ function rotation:SingleTarget()
             function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
             function() if (self.CanDotTarget and self.ComboFinisherAllowed and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
             function() if (self.ComboFinisherAllowed) then return spells.Envenom end end,
-            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return (self.GcdReadyIn < 30) and spells.Vanish or self.EmptyAction end end, -- self.GcdReadyIn < self.ActionAdvanceWindow and spells.Vanish or self.EmptyAction
+            function() if (self.Combo < 2) then return spells.MarkedForDeath end end,
+            function() if (self.EnergyDeficit > 120) then return spells.ThistleTea end end,
+            function() if (settings.Burst and self.InInstance and self:VanishConditions()) then return self:VanishAmbush() end end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic) then return spells.Garrote end end,
             function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
-            function() if (self.Settings.AOE) then return spells.FanOfKnives end return spells.Mutilate end,
+            function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
+            function() return spells.Ambush end,
+            function() return spells.Mutilate end,
             -- function() return spells.AdaptiveSwarm end,
             -- function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
             -- function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
@@ -207,6 +217,18 @@ function rotation:AutoAttack()
             function() if (not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
+end
+
+function rotation:VanishConditions()
+    return spells.Vanish:ReadyIn() <= self.GcdReadyIn
+end
+
+function rotation:VanishAmbush()
+    if (self.Energy > 50 and self.GcdReadyIn < 10) then
+        return spells.Vanish
+    else
+        return self.EmptyAction
+    end
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
@@ -272,22 +294,24 @@ function rotation:SetLayout()
     spells.SliceAndDice.Key = "1"
     spells.Garrote.Key = "2"
     spells.SinisterStrike.Key = "3"
-    spells.Ambush.Key = spells.SinisterStrike.Key
     spells.Mutilate.Key = spells.SinisterStrike.Key
     spells.Eviscerate.Key = "4"
     spells.Envenom.Key = spells.Eviscerate.Key
     spells.Rupture.Key = "5"
     spells.Shiv.Key = "6"
     spells.Deathmark.Key = "7"
-
     spells.FanOfKnives.Key = "8"
 
+    spells.ThistleTea.Key = "s-1"
+    spells.MarkedForDeath.Key = "s-2"
+    spells.Ambush.Key = "s-3"
+    spells.Vanish.Key = "s-9"
+    spells.AutoAttack.Key = "s-="
+
     spells.CrimsonVial.Key = "F6"
-    spells.Vanish.Key = "F10"
-    spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
-    equip.Trinket13.Key = "F11"
+    equip.Trinket13.Key = "s-"
 end
 
 function test()
