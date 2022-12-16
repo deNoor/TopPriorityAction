@@ -4,7 +4,7 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class Player
----@field Talents integer[]
+---@field Talents table<integer,boolean>
 ---@field Equipment Equipment
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection

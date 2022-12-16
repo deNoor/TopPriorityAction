@@ -15,6 +15,10 @@ local addon = TopPriorityAction
 ---@field IsPauseKeyDown boolean @updated by eventTracker outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
 ---@field AddedPauseOnKey integer @constant from defaults
 ---@field RangeChecker Spell @must be configured by custom rotation
+---@field VerifyAbstractsOverriden fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
+---@field SetDefaults fun(self:Rotation):Rotation @keep unchanged
+---@field AddSpells fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
+---@field AddItems fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
 ---@field RunPriorityList fun(self:Rotation, priorityList:(fun():Action)[]):Rotation @framework implements
 ---@field Pulse fun(self:Rotation):Action @framework implements and exposes to addon, do not call in custom rotation
 ---@field SelectAction fun(self:Rotation):Rotation @abstract, custom rotation must override
@@ -30,12 +34,13 @@ local emptyRotation = addon.Initializer.Empty.Rotation
 
 ---@type Rotation
 local Rotation = {
-    SelectedAction = nil, ---@type Action
+    SelectedAction = nil, ---@type Spell|Item|Action|EquipItem
     Activate = function(_) end,
     Dispose = function(_) end,
 }
 
-
+---@param class string
+---@param spec integer
 function Rotation:VerifyAbstractsOverriden(class, spec)
     local notOverriden = {}
     for index, methodName in ipairs(abstractMethods) do
@@ -44,7 +49,7 @@ function Rotation:VerifyAbstractsOverriden(class, spec)
         end
     end
     if (#notOverriden > 0) then
-        addon.Helper.Throw({ class, spec, "forgot to override", table.concat(notOverriden, " "), })
+        addon.Helper.Throw(class, spec, "forgot to override", table.concat(notOverriden, " "))
     end
     return self
 end
@@ -58,7 +63,6 @@ function Rotation:SetDefaults()
     return self
 end
 
----@param self Rotation
 ---@return boolean
 local
 SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar =
@@ -165,7 +169,7 @@ function Rotation:WaitForOpportunity()
         if (case) then
             case()
         else
-            addon.Helper.Print({ "Undefined swith label", action.Type, })
+            addon.Helper.Print("Undefined swith label", action.Type)
         end
     end
     return self
@@ -191,7 +195,7 @@ function Rotation:Pulse()
 end
 
 function Rotation:AddSpells(class, spec)
-    local spells = self.Spells or addon.Helper.Throw({ "attempt to add nil spells for", class, spec })
+    local spells = self.Spells or addon.Helper.Throw("attempt to add nil spells for", class, spec)
     for name, spell in pairs(spells) do
         addon.Initializer.NewSpell(spell)
     end
@@ -199,7 +203,7 @@ function Rotation:AddSpells(class, spec)
 end
 
 function Rotation:AddItems(class, spec)
-    local items = self.Items or addon.Helper.Throw({ "attempt to add nil items for", class, spec })
+    local items = self.Items or addon.Helper.Throw("attempt to add nil items for", class, spec)
     for name, item in pairs(items) do
         addon.Initializer.NewItem(item)
     end
@@ -207,14 +211,14 @@ function Rotation:AddItems(class, spec)
 end
 
 function addon:AddRotation(class, spec, rotation)
-    rotation = rotation or addon.Helper.Throw({ "attempt to add nil rotation for", class, spec })
+    rotation = rotation or addon.Helper.Throw("attempt to add nil rotation for", class, spec)
     addon.Helper.AddVirtualMethods(rotation, Rotation)
-    rotation:VerifyAbstractsOverriden():SetDefaults():AddSpells(class, spec):AddItems(class, spec)
+    rotation:VerifyAbstractsOverriden(class, spec):SetDefaults():AddSpells(class, spec):AddItems(class, spec)
     if (not self.WowClass[class]) then
         self.WowClass[class] = {}
     end
     if (self.WowClass[class][spec]) then
-        addon.Helper.Throw({ "Attempt to overwrite rotation for", class, spec, })
+        addon.Helper.Throw("Attempt to overwrite rotation for", class, spec)
     end
     self.WowClass[class][spec] = rotation
 end
@@ -228,7 +232,7 @@ function addon:DetectRotation()
     end
     local class = UnitClassBase("player")
     local knownClass = addon.WowClass[class]
-    local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation
+    local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation|nil
 
     local currentRotation = addon.Rotation or emptyRotation
     addon.Rotation = emptyRotation
@@ -236,7 +240,7 @@ function addon:DetectRotation()
     currentRotation:Dispose()
 
     if (not knownRotation) then
-        addon.Helper.Print({ "unknown spec", class, specIndex, })
+        addon.Helper.Print("unknown spec", class, specIndex)
     else
         addon.Rotation = knownRotation
         addon:UpdateKnownSpells()

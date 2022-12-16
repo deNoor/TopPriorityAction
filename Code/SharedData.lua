@@ -11,7 +11,7 @@ local addon = TopPriorityAction
 
 ---@class SharedData
 ---@field CurrentAction PlayerAction
----@field RangeCheckSpell Spell
+---@field RangeCheckSpell PlayerAction
 
 -- shared by name with other addonds. Need to be global
 ---@type SharedData

@@ -19,6 +19,7 @@ local addon = TopPriorityAction
 ---@field UpdateEquipment fun(self:TopPriorityAction)
 ---@field Player Player
 ---@field EventTracker EventTracker
+---@field CmdBus CmdBus
 
 local Program = {
     UpdateEverySec = 1 / 60,

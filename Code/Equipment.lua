@@ -27,7 +27,7 @@ local EquipItem = {}
 ---@return EquipItem
 local function NewEquipItem(inventorySlotId)
     if (not (inventorySlotId and type(inventorySlotId) == "number" and INVSLOT_AMMO <= inventorySlotId and inventorySlotId <= INVSLOT_TABARD)) then
-        addon.Helper.Throw({ "attempt to initialize invalid inventory slot", inventorySlotId })
+        addon.Helper.Throw("attempt to initialize invalid inventory slot", inventorySlotId)
     end
     local equipItem = { SlotId = inventorySlotId, Type = "EquipItem", } ---@type EquipItem
     addon.Helper.AddVirtualMethods(equipItem, EquipItem)

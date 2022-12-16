@@ -23,9 +23,9 @@ local Spell = {}
 ---@param spell Spell
 ---@return Spell
 local function NewSpell(spell)
-    local spell = spell or addon.Helper.Throw({ "attempt to initialize nil player spell" })
+    local spell = spell or addon.Helper.Throw("attempt to initialize nil player spell")
     if (spell.Id < 1) then
-        addon.Helper.Throw({ "attempt to initialize empty player spell", spell.Id, })
+        addon.Helper.Throw("attempt to initialize empty player spell", spell.Id)
     end
     spell.Type = "Spell"
     addon.Helper.AddVirtualMethods(spell, Spell)
@@ -39,7 +39,7 @@ function Spell:ReadyIn()
     if start then
         return max(0, start + duration - now) -- seconds
     end
-    addon.Helper.Throw({ "Spell returned no cooldown", self.Id, self.Name, })
+    addon.Helper.Throw("Spell returned no cooldown", self.Id, self.Name)
 end
 
 local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges
@@ -117,7 +117,7 @@ function Spell:ProtectFromDoubleCast()
 end
 
 function Spell:Report()
-    addon.Helper.Print({ "Id", self.Id, "Name", self.Name, "Key", self.Key })
+    addon.Helper.Print("Id", self.Id, "Name", self.Name, "Key", self.Key)
 end
 
 -- attach to addon

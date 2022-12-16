@@ -21,7 +21,7 @@ end
 -- slash commands --------------------
 SLASH_TPrioS1 = "/tpa"
 local tonumber = tonumber
----@type table<string,fun()>
+---@type table<string,fun(...)>
 local cmdHandlers = {
     switch = function(...)
         addon.SavedSettings.Instance.Enabled = not addon.SavedSettings.Instance.Enabled
@@ -51,8 +51,11 @@ local cmdHandlers = {
         local ms = tonumber(arg) or 400
         ms = max(0, min(ms, 400))
         addon.SavedSettings.Instance.ActionAdvanceWindow = (ms / 1000)
-        addon.Helper.Print({ "action advance window", ms })
-        addon.Helper.Print({ "spell queue window", GetSpellQueueWindow() })
+        addon.Helper.Print("action advance window", ms)
+        addon.Helper.Print("spell queue window", GetSpellQueueWindow())
+    end,
+    cmd = function(...)
+        addon.CmdBus:Add(...)
     end,
 }
 local toLower = strlower
@@ -104,34 +107,39 @@ addon.DataQuery = DataQuery
 
 -- helper functions ------------------
 ---@class Helper
----@field Print fun(params:string[])
----@field Throw fun(params:string[])
----@field ToHashSet fun(table:string|integer[]):table<string|integer,string|integer>
+---@field Print fun(...)
+---@field Throw fun(...)
+---@field ToHashSet fun(table:string[]|integer[]):table<string|integer,string|integer>
 ---@field AddVirtualMethods fun(instance:table, classDefinition:table):table @adds methods to object instance
 
 local Helper = {}
-local concat = table.concat
-local function prepare(table)
-    if (type(table) ~= "table") then
-        table = { table }
+local tconcat, tinsert = table.concat, tinsert
+
+local function prepare(...)
+    local first = ...
+    local args = nil
+    if (type(first) == "table") then
+        args = first
+    else
+        args = { ... }
     end
-    tinsert(table, "")
-    for i = 1, #table do
-        local value = table[i]
+    for i = 1, select("#", args) do
+        local value = args[i]
         value = value == nil and "nil" or value
-        table[i] = tostring(value)
+        args[i] = tostring(value)
     end
-    return table
+    tinsert(args, "")
+    return args
 end
 
 local print = print
-function Helper.Print(params)
-    print(concat(prepare(params), " "))
+function Helper.Print(...)
+    print(tconcat(prepare(...), " "))
 end
 
 local error = error
-function Helper.Throw(params)
-    error(concat(prepare(params), " "))
+function Helper.Throw(...)
+    error(tconcat(prepare(...), " "))
 end
 
 function Helper.ToHashSet(table)
@@ -180,7 +188,7 @@ local emptyRotation = {
     Spells = {},
     Items = {},
     Pulse = function(_) return emptyAction end,
-    SelectAction = function(_) return nil end,
+    SelectAction = function(_) return _ end,
     ShouldNotRun = function(_) return true end,
     Activate = function(_) end,
     Dispose = function(_) end,
@@ -190,7 +198,7 @@ local emptyRotation = {
 ---@field Empty Empty
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewItem fun(spell:Item):Item
----@field NewAuraCollection fun(unit:string,filter:WowUnit):AuraCollection
+---@field NewAuraCollection fun(unit:string,filter:UnitId):AuraCollection
 ---@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
 ---@field NewEquipment fun():Equipment
 

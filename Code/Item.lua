@@ -15,9 +15,9 @@ local Item = {}
 ---@param item Item
 ---@return Item
 local function NewItem(item)
-    local item = item or addon.Helper.Throw({ "attempt to initialize nil player item" })
+    local item = item or addon.Helper.Throw("attempt to initialize nil player item")
     if (item.Id < 1) then
-        addon.Helper.Throw({ "attempt to initialize empty player item", item.Id, })
+        addon.Helper.Throw("attempt to initialize empty player item", item.Id)
     end
     item.Type = "Item"
     addon.Helper.AddVirtualMethods(item, Item)
