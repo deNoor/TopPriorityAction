@@ -3,5 +3,8 @@
         "ACTIVE_CHAT_EDIT_BOX",
         "MAX_TALENT_TIERS",
         "NUM_TALENT_COLUMNS"
+    ],
+    "Lua.diagnostics.disable": [
+        "invisible"
     ]
 }
