@@ -17,6 +17,10 @@ local spells = {
     Ambush = {
         Id = 8676,
     },
+    Blindside = {
+        Id = 328085,
+        Buff = 121153,
+    },
     Garrote = {
         Id = 703,
         Debuff = 703,
@@ -151,26 +155,14 @@ function rotation:SingleTarget()
             function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
             function() if (self.CanDotTarget and self.ComboFinisherAllowed and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
             function() if (self.ComboFinisherAllowed) then return spells.Envenom end end,
-            function() if (self.Combo < 2) then return spells.MarkedForDeath end end,
-            function() if (self.EnergyDeficit > 120) then return spells.ThistleTea end end,
+            function() if (self.Combo < 1 and player.Buffs:Remains(spells.SliceAndDice.Buff) > 2) then return spells.MarkedForDeath end end,
+            function() if (self.Energy < 30) then return spells.ThistleTea end end,
             function() if (settings.Burst and self.InInstance and self:VanishConditions()) then return self:VanishAmbush() end end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic) then return spells.Garrote end end,
             function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
             function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
             function() return spells.Ambush end,
             function() return spells.Mutilate end,
-            -- function() return spells.AdaptiveSwarm end,
-            -- function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
-            -- function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            -- function() if (settings.Burst) then return spells.Berserk end end,
-            -- function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
-            -- function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end end,
-            -- function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end end,
-            -- function() if (self.Combo >= self.ComboCap) then if (self.Energy < 50) then return self.EmptyAction else return spells.FerociousBite end end end,
-            -- function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end end,
-            -- function() if (player.Buffs:Applied(spells.OmenOfClarity.Buff)) then return spells.Shred end end,
-            -- function() if (player.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash end end,
-            -- function() return spells.Shred end,
         }
     return rotation:RunPriorityList(singleTargetList)
 end
@@ -183,19 +175,6 @@ function rotation:Aoe()
     local equip = player.Equipment
     aoeList = aoeList or
         {
-            -- function() return spells.AdaptiveSwarm end,
-            -- function() if (self.EnergyDeficit > 55) then return spells.TigersFury end end,
-            -- function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            -- function() if (settings.Burst) then return spells.Berserk end end,
-            -- function() if (settings.Burst) then return spells.ConvokeTheSpirits end end,
-            -- function() if (self.Combo >= self.ComboCap and player.Buffs:Remains(spells.SavageRoar.Buff) < 10.8) then return spells.SavageRoar end end,
-            -- function() if (self.Combo >= self.ComboCap) then return spells.PrimalWrath end end,
-            -- function() if (self.CanDotTarget and self.Combo >= self.ComboCap and target.Debuffs:Remains(spells.Rip.Debuff) < 7.2) then return spells.Rip end end,
-            -- function() if (self.Combo >= self.ComboCap) then return spells.FerociousBite end end,
-            -- function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Rake.Debuff) < 4.5) then return spells.Rake end end,
-            -- function() if (target.Debuffs:Remains(spells.Thrash.Debuff) < 4.5) then return spells.Thrash end end,
-            -- function() if (player.Talents[spells.BrutalSlash.TalentId]) then return spells.BrutalSlash else return spells.Swipe end end,
-            -- function() return spells.Thrash end, -- dump energy when Slash is out ouf charges
         }
     return rotation:RunPriorityList(aoeList)
 end
@@ -312,10 +291,6 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "s-"
-end
-
-function test()
-    return spells.AutoAttack:IsQueued()
 end
 
 addon:AddRotation("ROGUE", 1, rotation)
