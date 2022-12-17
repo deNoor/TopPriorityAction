@@ -60,12 +60,27 @@ local spells = {
     CrimsonVial = {
         Id = 185311,
     },
+    Feint = {
+        Id = 1966,
+    },
     MarkedForDeath = {
         Id = 137619,
     },
     ThistleTea = {
         Id = 381623,
     },
+    KidneyShot = {
+        Id = 408,
+    },
+}
+
+local cmds = {
+    Kidney = {
+        Name = "kidney",
+    },
+    Feint = {
+        Name = "feint"
+    }
 }
 
 ---@type table<string,Item>
@@ -76,14 +91,17 @@ local rotation = {
     Name = "Rogue-Assassination",
     Spells = spells,
     Items = items,
+    Cmds = cmds,
 
     -- instance fields, init nils in Activate
     LocalEvents          = nil, ---@type EventTracker
+    CmdBus               = addon.CmdBus,
     EmptyAction          = addon.Initializer.Empty.Action,
     Player               = addon.Player,
     InterruptUndesirable = addon.WowClass.InterruptUndesirable,
     RangeChecker         = spells.SinisterStrike,
     ComboFinisherToMax   = 2,
+    ComboKidneyToMax     = 1,
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -151,13 +169,14 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < self.ActionAdvanceWindow) then return spells.SliceAndDice end end,
+            function() if (self.ComboFinisherAllowed and self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+            function() if (self.Energy < 30) then return spells.ThistleTea end end,
             function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
-            function() if (self.CanDotTarget and self.ComboFinisherAllowed and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
+            function() if (self.ComboFinisherAllowed and self.Combo > 0 and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
+            function() if (self.ComboFinisherAllowed and self.CanDotTarget and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
             function() if (self.ComboFinisherAllowed) then return spells.Envenom end end,
             function() if (self.Combo < 1 and player.Buffs:Remains(spells.SliceAndDice.Buff) > 2) then return spells.MarkedForDeath end end,
-            function() if (self.Energy < 30) then return spells.ThistleTea end end,
-            function() if (settings.Burst and self.InInstance and self:VanishConditions()) then return self:VanishAmbush() end end,
+            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
             function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic) then return spells.Garrote end end,
             function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
             function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
@@ -184,6 +203,7 @@ function rotation:Utility()
     local player = self.Player
     utilityList = utilityList or
         {
+            function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
         }
     return rotation:RunPriorityList(utilityList)
@@ -198,15 +218,24 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
-function rotation:VanishConditions()
-    return spells.Vanish:ReadyIn() <= self.GcdReadyIn
-end
-
-function rotation:VanishAmbush()
-    if (self.Energy > 50 and self.GcdReadyIn < 10) then
+function rotation:AwaitedVanishAmbush()
+    if (self.GcdReadyIn < 10 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
         return spells.Vanish
     else
         return self.EmptyAction
+    end
+end
+
+function rotation:KidneyOnCommand()
+    local readyIn = spells.KidneyShot:ReadyIn()
+    if (readyIn < 2) then
+        if (self.ComboDeficit > self.ComboKidneyToMax) then
+            self.ComboFinisherAllowed = false -- stack more combo for KidneyShot
+        elseif (readyIn > self.ActionAdvanceWindow) then
+            return self.EmptyAction
+        else
+            return spells.KidneyShot
+        end
     end
 end
 
@@ -268,6 +297,30 @@ function rotation:CreateLocalEventTracker()
     return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
 end
 
+-- function rotation:ReceiveCommands()
+--     local handlers = {} ---@type table<string,fun(cmd:Cmd)>
+
+
+
+--     function handlers.kidney(cmd)
+--         if (cmd and spells.KidneyShot:ReadyIn() > cmd.Expiration - self.Timestamp) then
+--             self.CmdBus:Remove("kidney");
+--         end
+--         cmds.kidney = cmd
+--     end
+
+--     function handlers.feint(cmd)
+--         if (cmd and spells.Feint:ReadyIn() > cmd.Expiration - self.Timestamp) then
+--             cmds.feint = nil
+--         end
+--         cmds.feint = cmd
+--     end
+
+--     for name, cmd in pairs(cmds) do
+--         cmds[name] = self.CmdBus[name]
+--     end
+-- end
+
 function rotation:SetLayout()
     local spells = self.Spells
     spells.SliceAndDice.Key = "1"
@@ -284,6 +337,8 @@ function rotation:SetLayout()
     spells.ThistleTea.Key = "s-1"
     spells.MarkedForDeath.Key = "s-2"
     spells.Ambush.Key = "s-3"
+    spells.Feint.Key = "s-7"
+    spells.KidneyShot.Key = "s-8"
     spells.Vanish.Key = "s-9"
     spells.AutoAttack.Key = "s-="
 

@@ -21,7 +21,7 @@ local addon = TopPriorityAction
 ---@field AddItems fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
 ---@field RunPriorityList fun(self:Rotation, priorityList:(fun():Action)[]):Rotation @framework implements
 ---@field Pulse fun(self:Rotation):Action @framework implements and exposes to addon, do not call in custom rotation
----@field SelectAction fun(self:Rotation):Rotation @abstract, custom rotation must override
+---@field SelectAction fun(self:Rotation) @abstract, custom rotation must override
 ---@field Activate fun(self:Rotation) @virtual, custom rotation may override
 ---@field Dispose fun(self:Rotation) @virtual, custom rotation may override
 

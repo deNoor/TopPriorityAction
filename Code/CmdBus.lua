@@ -12,7 +12,7 @@ local addon = TopPriorityAction
 ---@class Cmd
 ---@field private Frame Frame
 ---@field Name string
----@field Expiration number @GetTime() number units
+---@field Expiration number @GetTime() seconds
 ---@field Arg1 any
 ---@field Arg2 any
 ---@field Arg3 any
@@ -89,7 +89,7 @@ function CmdBus:Register()
         local now = getTime()
         for name, cmd in pairs(activeCommands) do
             if (cmd.Expiration < now) then
-                activeCommands:Remove(name)
+                self:Remove(name)
             end
         end
     end)
