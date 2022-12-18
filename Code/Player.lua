@@ -27,10 +27,12 @@ local addon = TopPriorityAction
 ---@class Target
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection
+---@field IsTotem fun(self:Target):boolean
 
 ---@class Mouseover
 ---@field Buffs AuraCollection
 ---@field Debuffs AuraCollection
+---@field IsTotem fun(self:Target):boolean
 
 ---@type Player
 local Player = {
@@ -41,10 +43,12 @@ local Player = {
     Target = {
         Buffs = nil,
         Debuffs = nil,
+        IsTotem = nil,
     },
     Mouseover = {
         Buffs = nil,
         Debuffs = nil,
+        IsTotem = nil,
     },
 }
 
@@ -134,9 +138,19 @@ function Player:CanAttackTarget()
     return UnitCanAttack("player", "target") and not UnitIsDead("target")
 end
 
+local UnitClassification, UnitCreatureType = UnitClassification, UnitCreatureType
 local goodUnitClassifications = addon.Helper.ToHashSet({ "worldboss", "rareelite", "elite", "rare", "normal", })
+local badCreatureTypes = addon.Helper.ToHashSet({ "Totem", }) -- "Not specified",
+function Player.Target:IsTotem()
+    return badCreatureTypes[UnitCreatureType("target")] ~= nil
+end
+
+function Player.Mouseover:IsTotem()
+    return badCreatureTypes[UnitCreatureType("target")] ~= nil
+end
+
 function Player:CanDotTarget()
-    return goodUnitClassifications[UnitClassification("target")] ~= nil
+    return goodUnitClassifications[UnitClassification("target")] ~= nil and not self.Target:IsTotem()
 end
 
 local wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS = wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS

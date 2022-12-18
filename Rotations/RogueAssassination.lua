@@ -24,7 +24,7 @@ local spells = {
     Garrote = {
         Id = 703,
         Debuff = 703,
-        Pandemic = 18 * 0.3
+        Pandemic = 18 * 0.3,
     },
     Eviscerate = {
         Id = 196819,
@@ -32,6 +32,7 @@ local spells = {
     Envenom = {
         Id = 32645,
         Buff = 32645,
+        Pandmic = 4 * 0.3,
     },
     SliceAndDice = {
         Id = 315496,
@@ -40,7 +41,7 @@ local spells = {
     Rupture = {
         Id = 1943,
         Debuff = 1943,
-        Pandemic = 16 * 0.3
+        Pandemic = 16 * 0.3,
     },
     Shiv = {
         Id = 5938,
@@ -56,6 +57,11 @@ local spells = {
     },
     FanOfKnives = {
         Id = 51723,
+    },
+    CrimsonTempest = {
+        Id = 121411,
+        Debuff = 121411,
+        Pandemic = 8 * 0.3,
     },
     CrimsonVial = {
         Id = 185311,
@@ -111,6 +117,7 @@ local rotation = {
     Combo                  = 0,
     ComboDeficit           = 0,
     ComboFinisherAllowed   = false,
+    ComboHolding           = false,
     GcdReadyIn             = 0,
     NowCasting             = 0,
     CastingEndsIn          = 0,
@@ -169,17 +176,23 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.ComboFinisherAllowed and self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (self.Energy < 30) then return spells.ThistleTea end end,
-            function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
-            function() if (self.ComboFinisherAllowed and self.Combo > 0 and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
-            function() if (self.ComboFinisherAllowed and self.CanDotTarget and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic) then return spells.Rupture end end,
-            function() if (self.ComboFinisherAllowed) then return spells.Envenom end end,
-            function() if (self.Combo < 1 and player.Buffs:Remains(spells.SliceAndDice.Buff) > 2) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
-            function() if (self.CanDotTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic) then return spells.Garrote end end,
-            function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
+            function() if (settings.Burst and not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
+            function() if (self.Combo > 0 and not self.ComboHolding and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
+            function()
+                if (self.ComboFinisherAllowed and not self.ComboHolding and self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic or
+                    (self.EnergyDeficit > 50 and not target.Debuffs:Applied(spells.Rupture.Debuff)))) then
+                    return spells.Rupture
+                end
+            end,
+            function() if (self.ComboFinisherAllowed and not self.ComboHolding and self.Settings.AOE) then return spells.CrimsonTempest end end,
+            function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.Envenom end end,
+            function() if (self.Combo < 1 and player.Buffs:Remains(spells.SliceAndDice.Buff) > 2 and not target:IsTotem()) then return spells.MarkedForDeath end end,
+            function() if (settings.Burst and not self.Settings.AOE and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
+            function() if (self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic or (not target.Debuffs:Applied(spells.Garrote.Debuff)))) then return spells.Garrote end end,
             function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
+            function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
             function() return spells.Ambush end,
             function() return spells.Mutilate end,
         }
@@ -218,6 +231,13 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
+function rotation:DelayedEnvenom()
+    local player = self.Player
+    if (player.Buffs:Remains(spells.Envenom.Buff) < spells.Envenom.Pandmic or self.ComboDeficit <= 1) then
+        return spells.Envenom
+    end
+end
+
 function rotation:AwaitedVanishAmbush()
     if (self.GcdReadyIn < 10 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
         return spells.Vanish
@@ -230,12 +250,10 @@ function rotation:KidneyOnCommand()
     local readyIn = spells.KidneyShot:ReadyIn()
     if (readyIn < 2) then
         if (self.ComboDeficit > self.ComboKidneyToMax) then
-            self.ComboFinisherAllowed = false -- stack more combo for KidneyShot
-        elseif (readyIn > self.ActionAdvanceWindow) then
-            return self.EmptyAction
-        else
-            return spells.KidneyShot
+            self.ComboHolding = true
+            return nil
         end
+        return (readyIn > self.ActionAdvanceWindow) and self.EmptyAction or spells.KidneyShot
     end
 end
 
@@ -254,6 +272,7 @@ function rotation:Refresh()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
     self.ComboFinisherAllowed = self.ComboDeficit <= self.ComboFinisherToMax
+    self.ComboHolding = false
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
@@ -265,7 +284,9 @@ function rotation:Refresh()
     self.CanDotTarget = player:CanDotTarget()
     self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
 
-    spells.Rupture.Pandemic = (4 + 4 * self.Combo) * 0.3
+    spells.Rupture.Pandemic = 4 * (1 + self.Combo) * 0.3
+    spells.Envenom.Pandmic = 1 * (1 + self.Combo) * 0.3
+    spells.CrimsonTempest.Pandemic = 2 * (1 + self.Combo) * 0.3
 end
 
 function rotation:Dispose()
@@ -297,30 +318,6 @@ function rotation:CreateLocalEventTracker()
     return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
 end
 
--- function rotation:ReceiveCommands()
---     local handlers = {} ---@type table<string,fun(cmd:Cmd)>
-
-
-
---     function handlers.kidney(cmd)
---         if (cmd and spells.KidneyShot:ReadyIn() > cmd.Expiration - self.Timestamp) then
---             self.CmdBus:Remove("kidney");
---         end
---         cmds.kidney = cmd
---     end
-
---     function handlers.feint(cmd)
---         if (cmd and spells.Feint:ReadyIn() > cmd.Expiration - self.Timestamp) then
---             cmds.feint = nil
---         end
---         cmds.feint = cmd
---     end
-
---     for name, cmd in pairs(cmds) do
---         cmds[name] = self.CmdBus[name]
---     end
--- end
-
 function rotation:SetLayout()
     local spells = self.Spells
     spells.SliceAndDice.Key = "1"
@@ -333,6 +330,7 @@ function rotation:SetLayout()
     spells.Shiv.Key = "6"
     spells.Deathmark.Key = "7"
     spells.FanOfKnives.Key = "8"
+    spells.CrimsonTempest.Key = "9"
 
     spells.ThistleTea.Key = "s-1"
     spells.MarkedForDeath.Key = "s-2"
