@@ -72,6 +72,7 @@ function CmdBus:Add(...)
     cmd.Arg2 = arg2
     cmd.Arg3 = arg3
     self.Commands[name] = cmd
+    -- addon.Helper.Print("added " .. name)
 end
 
 function CmdBus:Find(name)
@@ -90,6 +91,7 @@ function CmdBus:Register()
         for name, cmd in pairs(activeCommands) do
             if (cmd.Expiration < now) then
                 self:Remove(name)
+                -- addon.Helper.Print("removed " .. name)
             end
         end
     end)
