@@ -13,7 +13,6 @@ local addon = TopPriorityAction
 ---@field Rotation Rotation
 ---@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, rotation:Rotation)
 ---@field DetectRotation fun(self:TopPriorityAction)
----@field UpdateTalents fun(self:TopPriorityAction)
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
 ---@field UpdateKnownItems fun(self:TopPriorityAction)
 ---@field UpdateEquipment fun(self:TopPriorityAction)

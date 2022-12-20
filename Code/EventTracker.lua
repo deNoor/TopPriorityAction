@@ -77,10 +77,6 @@ function handlers.PLAYER_SPECIALIZATION_CHANGED(event, ...)
     addon:DetectRotation()
 end
 
-function handlers.PLAYER_TALENT_UPDATE(event, ...)
-    addon:UpdateTalents()
-end
-
 function handlers.PLAYER_EQUIPMENT_CHANGED(event, ...)
     addon:UpdateEquipment()
 end

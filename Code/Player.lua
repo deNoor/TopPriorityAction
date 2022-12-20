@@ -153,28 +153,5 @@ function Player:CanDotTarget()
     return goodUnitClassifications[UnitClassification("target")] ~= nil and not self.Target:IsTotem()
 end
 
-local wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS = wipe, MAX_TALENT_TIERS, NUM_TALENT_COLUMNS
-function addon:UpdateTalents()
-    local rotation = self.Rotation
-    local emptyRotation = self.Initializer.Empty.Rotation
-    if (rotation == emptyRotation) then
-        return
-    end
-    local talents = self.Player.Talents
-    wipe(talents)
-    local specGroupIndex = GetActiveSpecGroup()
-    for tier = 1, MAX_TALENT_TIERS do
-        for column = 1, NUM_TALENT_COLUMNS do
-            local talentID, name, texture, selected, available, spellID = GetTalentInfo(tier, column, specGroupIndex)
-            if (selected) then
-                talents[talentID] = true
-            end
-        end
-    end
-    for slotN, talentID in ipairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs()) do
-        talents[talentID] = true
-    end
-end
-
 -- attach to addon
 addon.Player = Player

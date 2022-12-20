@@ -244,7 +244,6 @@ function addon:DetectRotation()
     else
         addon.Rotation = knownRotation
         addon:UpdateKnownSpells()
-        addon:UpdateTalents()
         addon:UpdateEquipment()
         knownRotation:Activate()
         addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
