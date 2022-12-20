@@ -11,6 +11,7 @@ local addon = TopPriorityAction
 ---@field ChargesBased boolean
 ---@field HardCast boolean
 ---@field Known boolean
+---@field UserId integer
 ---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field ActiveCharges fun(self:Spell):integer
@@ -42,22 +43,44 @@ function Spell:ReadyIn()
     addon.Helper.Throw("Spell returned no cooldown", self.Id, self.Name)
 end
 
-local GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges = GetSpellInfo, IsSpellKnownOrOverridesKnown, GetSpellBaseCooldown, GetSpellCharges
+local GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, GetOverrideSpell = GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, C_SpellBook.GetOverrideSpell
 function addon:UpdateKnownSpells()
+    ---@param key string
+    ---@param spell Spell
+    ---@param overriden nil|boolean
+    ---@return fun()
+    local function MakeSpellUpdater(key, spell, overriden)
+        return function()
+            local overrideId = GetOverrideSpell(spell.Id)
+            if (overrideId ~= spell.Id) then
+                spell.Id = overrideId
+                addon.DataQuery.OnSpellLoaded(spell.Id, MakeSpellUpdater(key, spell, true))
+                return
+            end
+            local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
+            if (not name) then
+                addon.Helper.Throw(key, "GetSpellInfo failed")
+            end
+            if (overriden) then
+                addon.Helper.Print(key, "is overriden by", name)
+            end
+            spell.Name = name
+            spell.Icon = icon
+            spell.HardCast = castTime > 0
+            spell.Known = IsPlayerSpell(spell.Id) -- name ~= nil, IsPlayerSpell(spell.Id), IsSpellKnownOrOverridesKnown(spell.Id)
+            local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
+            spell.NoGCD = gcdMS == 0
+            spell.HasCD = cooldownMS > 0
+            spell.ChargesBased = (GetSpellCharges(spell.Id)) ~= nil
+        end
+    end
+
     local spells = self.Rotation.Spells
     for key, spell in pairs(spells) do
         if (spell.Id > 0) then
-            addon.DataQuery.OnSpellLoaded(spell.Id, function()
-                local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
-                spell.Name = name
-                spell.Icon = icon
-                spell.HardCast = castTime > 0
-                spell.Known = IsSpellKnownOrOverridesKnown(spell.Id)
-                local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
-                spell.NoGCD = gcdMS == 0
-                spell.HasCD = cooldownMS > 0
-                spell.ChargesBased = (GetSpellCharges(spell.Id)) ~= nil
-            end)
+            spell.UserId = spell.UserId and spell.UserId or spell.Id
+            spell.Id = spell.UserId and spell.UserId or spell.Id
+            addon.DataQuery.OnSpellLoaded(spell.Id, MakeSpellUpdater(key, spell))
         end
     end
 end
