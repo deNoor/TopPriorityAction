@@ -12,6 +12,8 @@ local addon = TopPriorityAction
 ---@field HardCast boolean
 ---@field Known boolean
 ---@field UserId integer
+---@field SpellBookType string
+---@field SpellBookSlot integer
 ---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field ActiveCharges fun(self:Spell):integer
@@ -43,7 +45,7 @@ function Spell:ReadyIn()
     addon.Helper.Throw("Spell returned no cooldown", self.Id, self.Name)
 end
 
-local GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, GetOverrideSpell = GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, C_SpellBook.GetOverrideSpell
+local GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, GetOverrideSpell, FindSpellBookSlotBySpellID = GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsPassiveSpell, C_SpellBook.GetOverrideSpell, FindSpellBookSlotBySpellID
 function addon:UpdateKnownSpells()
     ---@param key string
     ---@param spell Spell
@@ -68,6 +70,8 @@ function addon:UpdateKnownSpells()
             spell.Icon = icon
             spell.HardCast = castTime > 0
             spell.Known = IsPlayerSpell(spell.Id) -- name ~= nil, IsPlayerSpell(spell.Id), IsSpellKnownOrOverridesKnown(spell.Id)
+            spell.SpellBookType = BOOKTYPE_SPELL -- also BOOKTYPE_PET if added some time
+            spell.SpellBookSlot = FindSpellBookSlotBySpellID(spell.Id)
             local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
             spell.NoGCD = gcdMS == 0
             spell.HasCD = cooldownMS > 0
@@ -95,7 +99,7 @@ function Spell:IsUsableNow()
     if (self:CCUnlockIn() > actionAdvanceWindow) then
         return false, false
     end
-    local usable, noMana = IsUsableSpell(self.Id)
+    local usable, noMana = IsUsableSpell(self.SpellBookSlot, self.SpellBookType)
     if (usable) then
         local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > actionAdvanceWindow
         usable = not onCD
@@ -106,7 +110,11 @@ end
 local IsSpellInRange = IsSpellInRange
 function Spell:IsInRange(unit)
     unit = unit or "target"
-    return (IsSpellInRange(self.Name, unit) or 0) == 1
+    if (self.SpellBookSlot and self.SpellBookType) then
+        return (IsSpellInRange(self.SpellBookSlot, self.SpellBookType, unit) or 0) == 1
+    else
+        return false
+    end
 end
 
 local IsCurrentSpell = IsCurrentSpell
