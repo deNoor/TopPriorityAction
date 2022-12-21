@@ -49,22 +49,18 @@ local GetSpellInfo, IsSpellKnownOrOverridesKnown, IsPlayerSpell, GetSpellBaseCoo
 function addon:UpdateKnownSpells()
     ---@param key string
     ---@param spell Spell
-    ---@param overriden nil|boolean
     ---@return fun()
-    local function MakeSpellUpdater(key, spell, overriden)
+    local function MakeSpellUpdater(key, spell)
         return function()
             local overrideId = GetOverrideSpell(spell.Id)
             if (overrideId ~= spell.Id) then
                 spell.Id = overrideId
-                addon.DataQuery.OnSpellLoaded(spell.Id, MakeSpellUpdater(key, spell, true))
+                addon.DataQuery.OnSpellLoaded(spell.Id, MakeSpellUpdater(key, spell))
                 return
             end
             local name, rank, icon, castTime, minRange, maxRange, spellID = GetSpellInfo(spell.Id)
             if (not name) then
                 addon.Helper.Throw(key, "GetSpellInfo failed")
-            end
-            if (overriden) then
-                addon.Helper.Print(key, "is overriden by", name)
             end
             spell.Name = name
             spell.Icon = icon
