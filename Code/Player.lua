@@ -140,12 +140,8 @@ end
 
 local UnitClassification, UnitCreatureType = UnitClassification, UnitCreatureType
 local goodUnitClassifications = addon.Helper.ToHashSet({ "worldboss", "rareelite", "elite", "rare", "normal", })
-local badCreatureTypes = addon.Helper.ToHashSet({ "Totem", }) -- "Not specified",
+local badCreatureTypes = addon.Helper.ToHashSet({ "Totem", "Not specified", })
 function Player.Target:IsTotem()
-    return badCreatureTypes[UnitCreatureType("target")] ~= nil
-end
-
-function Player.Mouseover:IsTotem()
     return badCreatureTypes[UnitCreatureType("target")] ~= nil
 end
 
