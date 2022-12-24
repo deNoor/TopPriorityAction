@@ -6,6 +6,7 @@ local addon = TopPriorityAction
 ---@class Aura
 ---@field Remains number
 ---@field Stacks integer
+---@field FullDuration number
 ---@field DispelType string?
 ---@field CanPurge boolean
 
