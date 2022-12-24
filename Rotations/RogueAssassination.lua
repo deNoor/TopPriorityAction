@@ -107,7 +107,7 @@ local rotation = {
     InterruptUndesirable = addon.WowClass.InterruptUndesirable,
     RangeChecker         = spells.SinisterStrike,
     ComboFinisherToMax   = 2,
-    ComboKidneyToMax     = 1,
+    ComboKidney          = 4,
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -249,12 +249,16 @@ end
 function rotation:KidneyOnCommand()
     local readyIn = spells.KidneyShot:ReadyIn()
     if (readyIn < 2) then
-        if (self.ComboDeficit > self.ComboKidneyToMax) then
+        if (self.Combo < self.ComboKidney) then
             self.ComboHolding = true
             return nil
         end
         return (readyIn > self.ActionAdvanceWindow) and self.EmptyAction or spells.KidneyShot
     end
+end
+
+function rotation:ComboPandemic(initialDuration)
+    return initialDuration * (1 + self.Combo) * 0.3
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
@@ -284,9 +288,9 @@ function rotation:Refresh()
     self.CanDotTarget = player:CanDotTarget()
     self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
 
-    spells.Rupture.Pandemic = 4 * (1 + self.Combo) * 0.3
-    spells.Envenom.Pandmic = 1 * (1 + self.Combo) * 0.3
-    spells.CrimsonTempest.Pandemic = 2 * (1 + self.Combo) * 0.3
+    spells.Rupture.Pandemic = self:ComboPandemic(4)
+    spells.Envenom.Pandmic = self:ComboPandemic(1)
+    spells.CrimsonTempest.Pandemic = self:ComboPandemic(2)
 end
 
 function rotation:Dispose()
@@ -343,7 +347,7 @@ function rotation:SetLayout()
     spells.CrimsonVial.Key = "F6"
 
     local equip = addon.Player.Equipment
-    equip.Trinket13.Key = "s-"
+    equip.Trinket13.Key = "s--"
 end
 
 addon:AddRotation("ROGUE", 1, rotation)
