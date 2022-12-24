@@ -184,7 +184,7 @@ function Rotation:Pulse()
     if (self:ActionQueueAwailable()) then
         self:SelectAction()
     end
-    self:WaitForOpportunity() -- :ReduceActionSpam()
+    self:WaitForOpportunity():ReduceActionSpam()
     local action = self.SelectedAction or emptyAction
     if action ~= emptyAction then
         if (not action.Key) then
@@ -232,7 +232,7 @@ function addon:DetectRotation()
     end
     local class = UnitClassBase("player")
     local knownClass = addon.WowClass[class]
-    local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation|nil
+    local knownRotation = knownClass and knownClass[specIndex] or nil ---@type Rotation?
 
     local currentRotation = addon.Rotation or emptyRotation
     addon.Rotation = emptyRotation
