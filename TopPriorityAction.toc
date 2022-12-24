@@ -24,6 +24,7 @@ Rotations\_WowClass.lua
 Rotations\DruidFeral.lua
 Rotations\DruidGuardian.lua
 Rotations\RogueAssassination.lua
+Rotations\RogueOutlaw.lua
 Rotations\WarriorFury.lua
 
 TopPriorityAction.lua

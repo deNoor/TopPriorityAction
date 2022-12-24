@@ -13,6 +13,7 @@ local WowClass = {
     },
     ROGUE = {
         [1] = nil, -- Assassination
+        [2] = nil, -- Outlaw
     },
     WARRIOR = {
         [2] = nil, -- Fury
