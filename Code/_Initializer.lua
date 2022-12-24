@@ -123,7 +123,11 @@ local function prepare(...)
     else
         args = { ... }
     end
-    for i = 1, select("#", args) do
+    local count = 0
+    for _, _ in pairs(args) do
+        count = count + 1
+    end
+    for i = 1, count do
         local value = args[i]
         value = value == nil and "nil" or value
         args[i] = tostring(value)
