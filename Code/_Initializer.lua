@@ -202,9 +202,11 @@ local emptyRotation = {
 ---@field Empty Empty
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewItem fun(spell:Item):Item
----@field NewAuraCollection fun(unit:string,filter:UnitId):AuraCollection
+---@field NewAuraCollection fun(unitId:UnitId,filter:string):AuraCollection
 ---@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
+---@field NewPlayer fun():Player
 ---@field NewEquipment fun():Equipment
+---@field NewUnit fun(unit:Unit):Unit
 
 ---@type Initializer
 local Initializer = {
@@ -217,6 +219,7 @@ local Initializer = {
     NewAuraCollection = nil,
     NewEventTracker = nil,
     NewEquipment = nil,
+    NewUnit = nil,
 }
 
 -- attach to addon

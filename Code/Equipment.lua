@@ -101,15 +101,14 @@ function addon:UpdateEquipment()
 end
 
 local function NewEquipment()
-    addon.Player.Equipment = addon.Player.Equipment or {}
-    local equipment = addon.Player.Equipment
-    wipe(equipment)
+    local equipment = {}
     for key, value in pairs(Equipment) do
         if (type(value) == "number") then
             local slotId = value
             equipment[key] = NewEquipItem(slotId)
         end
     end
+    return equipment
 end
 
 -- attach to addon

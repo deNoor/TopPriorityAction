@@ -116,14 +116,9 @@ local rotation = {
     Spells = spells,
     Items = items,
 
-    -- instance fields, init nils in Activate
-    LocalEvents          = nil, ---@type EventTracker
-    EmptyAction          = addon.Initializer.Empty.Action,
-    Player               = addon.Player,
-    InterruptUndesirable = addon.WowClass.InterruptUndesirable,
-    RangeChecker         = spells.Rake,
-    ComboCap             = 4,
-    DispellableTypes     = addon.Helper.ToHashSet({ "Curse", "Poison", }),
+    RangeChecker     = spells.Rake,
+    ComboCap         = 4,
+    DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -267,7 +262,6 @@ function rotation:Dispel()
     return rotation:RunPriorityList(mouseoverList)
 end
 
-local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -278,7 +272,7 @@ function rotation:Refresh()
     player.Mouseover.Buffs:Refresh(timestamp)
     player.Mouseover.Debuffs:Refresh(timestamp)
 
-    self.InRange = self.RangeChecker:IsInRange("target")
+    self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
     self.ManaPercent = player:ResourcePercent(Enum.PowerType.Mana)
@@ -288,10 +282,10 @@ function rotation:Refresh()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
-    self.InCombatWithTarget = player:InCombatWithTarget()
-    self.CanAttackTarget = player:CanAttackTarget()
-    self.CanDotTarget = player:CanDotTarget()
-    self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
+    self.InCombatWithTarget = player.Target:InCombatWithMe()
+    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanDotTarget = player.Target:CanDot()
+    self.MouseoverIsFriend, self.MouseoverIsEnemy = player.Mouseover:IsFriend(), player.Mouseover:IsEnemy()
 end
 
 function rotation:Dispose()
@@ -300,14 +294,10 @@ function rotation:Dispose()
 end
 
 function rotation:Activate()
-    addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
-    addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
-    addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
-    addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
-    addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
-    addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
-
     self.WaitForResource = true
+    self.EmptyAction = addon.Initializer.Empty.Action
+    self.Player = addon.Player
+    self.InterruptUndesirable = addon.WowClass.InterruptUndesirable
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end

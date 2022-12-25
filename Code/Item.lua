@@ -10,7 +10,6 @@ local addon = TopPriorityAction
 
 local pairs, ipairs = pairs, ipairs
 
--- ===== NOT SUPPORTED YET ======
 ---@type Item
 local Item = {}
 

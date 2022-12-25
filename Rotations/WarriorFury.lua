@@ -91,9 +91,6 @@ local rotation = {
     Spells = spells,
     Items = items,
 
-    -- instance fields, init nils in Activate
-    EmptyAction  = addon.Initializer.Empty.Action,
-    Player       = addon.Player,
     RangeChecker = spells.Execute,
 
     -- locals
@@ -113,8 +110,6 @@ local rotation = {
     CanAttackTarget        = false,
     CanDotTarget           = false,
     LastCastSent           = 0,
-    MouseoverIsFriend      = false,
-    MouseoverIsEnemy       = false,
 
     EnrageSec = 0,
 }
@@ -199,10 +194,8 @@ function rotation:Refresh()
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
-    player.Mouseover.Buffs:Refresh(timestamp)
-    player.Mouseover.Debuffs:Refresh(timestamp)
 
-    self.InRange = self.RangeChecker:IsInRange("target")
+    self.InRange = self.RangeChecker:IsInRange()
     self.Rage, self.RageDeficit = player:Resource(Enum.PowerType.Rage)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
@@ -210,10 +203,9 @@ function rotation:Refresh()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
-    self.InCombatWithTarget = player:InCombatWithTarget()
-    self.CanAttackTarget = player:CanAttackTarget()
-    self.CanDotTarget = player:CanDotTarget()
-    self.MouseoverIsFriend, self.MouseoverIsEnemy = UnitIsFriend("player", "mouseover"), UnitIsEnemy("player", "mouseover")
+    self.InCombatWithTarget = player.Target:InCombatWithMe()
+    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanDotTarget = player.Target:CanDot()
     self.EnrageSec = player.Buffs:Remains(spells.Enrage.Buff)
 end
 
@@ -223,15 +215,10 @@ function rotation:Dispose()
 end
 
 function rotation:Activate()
-    addon.Player.Buffs = addon.Initializer.NewAuraCollection("player", "PLAYER|HELPFUL")
-    addon.Player.Debuffs = addon.Initializer.NewAuraCollection("player", "HARMFUL")
-    addon.Player.Target.Buffs = addon.Initializer.NewAuraCollection("target", "HELPFUL")
-    addon.Player.Target.Debuffs = addon.Initializer.NewAuraCollection("target", "PLAYER|HARMFUL")
-    addon.Player.Mouseover.Buffs = addon.Initializer.NewAuraCollection("mouseover", "HELPFUL")
-    addon.Player.Mouseover.Debuffs = addon.Initializer.NewAuraCollection("mouseover", "RAID|HARMFUL")
-
     self.WaitForResource = false
-    self.LocalEvents = self:CreateLocalEventTracker()
+    self.Player          = addon.Player
+    self.EmptyAction     = addon.Initializer.Empty.Action
+    self.LocalEvents     = self:CreateLocalEventTracker()
     self:SetLayout()
 end
 

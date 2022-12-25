@@ -54,10 +54,10 @@ local function UpdateAuras(auras, unit, filter, timestamp)
     end)
 end
 
----@param unit string
+---@param unitId UnitId
 ---@param filter string
 ---@return AuraCollection
-local function NewAuraCollection(unit, filter)
+local function NewAuraCollection(unitId, filter)
     local UnitExists = UnitExists
     local newCollection = {
         Auras = {},
@@ -66,8 +66,8 @@ local function NewAuraCollection(unit, filter)
             for spellId, aura in pairs(auras) do
                 auras[spellId] = nil
             end
-            if (UnitExists(unit)) then
-                UpdateAuras(auras, unit, filter, timestamp)
+            if (UnitExists(unitId)) then
+                UpdateAuras(auras, unitId, filter, timestamp)
             end
         end,
         Find = function(collection, spellId)

@@ -9,7 +9,7 @@ local addon = TopPriorityAction
 ---@field IsAvailable fun(self:Action):boolean
 ---@field IsUsableNow fun(self:Action):boolean,boolean @usable, noMana
 ---@field IsQueued fun(self:Action):boolean
----@field IsInRange fun(self:Action, unit:UnitId):boolean
+---@field IsInRange fun(self:Action, unit:UnitId?):boolean
 ---@field ReadyIn fun(self:Action):number
 
 ---@alias ActionType

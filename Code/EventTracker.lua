@@ -68,7 +68,7 @@ end
 function handlers.PLAYER_ENTERING_WORLD(event, ...)
     local initialLogin, reloadingUi = ... -- if not (initialLogin or reloadingUi) then entering an instance
     if (initialLogin or reloadingUi) then
-        addon.Initializer.NewEquipment()
+        addon.Initializer.NewPlayer()
     end
     addon:DetectRotation()
 end
@@ -85,6 +85,11 @@ end
 function handlers.SPELLS_CHANGED(event, ...)
     addon:UpdateKnownSpells()
 end
+
+-- function handlers.UNIT_DISPLAYPOWER(event, ...)
+--     local unitId, arg1, arg2 = ...
+--     addon.Helper.Print("unit display power", UnitPowerType(unitId), unitId, arg1, arg2)
+-- end
 
 function handlers.MODIFIER_STATE_CHANGED(event, ...)
     local key, isPressed = ...

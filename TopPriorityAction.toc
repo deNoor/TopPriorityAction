@@ -20,6 +20,7 @@ Code\Rotation.lua
 Code\SavedSettings.lua
 Code\SharedData.lua
 Code\Spell.lua
+Code\Unit.lua
 
 Rotations\_WowClass.lua
 Rotations\DruidFeral.lua
