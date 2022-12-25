@@ -14,7 +14,8 @@ local addon = TopPriorityAction
 ---@field CanAttack fun(self:Unit):boolean @from Player perspective
 ---@field InCombatWithMe fun(self:Unit):boolean
 ---@field CastingEndsIn fun(self:Unit):number
----@field NowCasting fun(self:Unit):integer,number,number,boolean @spellId, leftSec, elapsedSec, kickable
+---@field NowCasting fun(self:Unit):integer,number,number,boolean,boolean @spellId, leftSec, elapsedSec, channeling, kickable
+---@field CanKick fun(self:Unit, advanced:boolean?):boolean
 ---@field Resource fun(self:Unit, index:integer):number,number @current, deficit
 ---@field ResourcePercent fun(self:Unit, index:integer):number,number @current, deficit
 ---@field Health fun(self:Unit):number,number @current, deficit
@@ -59,16 +60,19 @@ local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
 ---@return number @spellId
 ---@return number @timeLeft
 ---@return number @timeElapsed
+---@return boolean @channelling
 ---@return boolean @kickable
 local function NowCasting(unit)
+    local channelling = false
     local name, text, texture, startTimeMS, endTimeMS, _, _, notInterruptible, spellId = UnitCastingInfo(unit)
     if (not name) then
         name, text, texture, startTimeMS, endTimeMS, _, notInterruptible, spellId = UnitChannelInfo(unit)
+        channelling = true
     end
     if (spellId) then
-        return spellId, SecFromNow(endTimeMS), SecFromNow(startTimeMS), (notInterruptible == false)
+        return spellId, SecFromNow(endTimeMS), -SecFromNow(startTimeMS), channelling, (notInterruptible == false)
     else
-        return 0, 0, 0, false
+        return 0, 0, 0, false, false
     end
 end
 
@@ -83,6 +87,18 @@ end
 
 function Unit:CastingEndsIn()
     return CastingEndsIn(self.Id)
+end
+
+function Unit:CanKick(advanced)
+    local _, leftSec, elapsedSec, channeling, kickable = self:NowCasting()
+    if (not kickable or leftSec < 0.06) then
+        return false
+    end
+    if (advanced) then
+        return channeling or leftSec < 0.55
+    else
+        return true
+    end
 end
 
 local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax

@@ -9,6 +9,9 @@ local spells = {
     SinisterStrike = {
         Id = 1752,
     },
+    Kick = {
+        Id = 1766,
+    },
     Mutilate = {
         Id = 1329,
     },
@@ -84,6 +87,9 @@ local cmds = {
     },
     Feint = {
         Name = "feint"
+    },
+    Kick = {
+        Name = "kick",
     }
 }
 
@@ -138,11 +144,6 @@ function rotation:SelectAction()
             if (self.InRange) then
                 self:AutoAttack()
                 self:SingleTarget()
-                -- if (not self.Settings.AOE) then
-                --     self:SingleTarget()
-                -- else
-                --     self:Aoe()
-                -- end
             end
         end
     end
@@ -165,6 +166,7 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick(true)) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (self.Combo > 0 and not self.ComboHolding and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
             function() if (settings.Burst and not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
@@ -186,18 +188,6 @@ function rotation:SingleTarget()
             function() return spells.Mutilate end,
         }
     return rotation:RunPriorityList(singleTargetList)
-end
-
-local aoeList
-function rotation:Aoe()
-    local settings = self.Settings
-    local player = self.Player
-    local target = self.Player.Target
-    local equip = player.Equipment
-    aoeList = aoeList or
-        {
-        }
-    return rotation:RunPriorityList(aoeList)
 end
 
 local utilityList
@@ -326,6 +316,7 @@ function rotation:SetLayout()
     spells.AutoAttack.Key = "s-="
 
     spells.CrimsonVial.Key = "F6"
+    spells.Kick.Key = "F9"
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "s--"

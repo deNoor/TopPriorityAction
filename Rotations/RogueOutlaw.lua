@@ -9,6 +9,9 @@ local spells = {
     SinisterStrike = {
         Id = 1752,
     },
+    Kick = {
+        Id = 1766,
+    },
     PistolShot = {
         Id = 185763,
         Opportunity = 195627,
@@ -88,6 +91,9 @@ local cmds = {
     },
     Feint = {
         Name = "feint"
+    },
+    Kick = {
+        Name = "kick",
     }
 }
 
@@ -164,6 +170,7 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick(true)) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() return self:RollTheBones() end,
             function() if (self.Combo > 0 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
@@ -360,6 +367,7 @@ function rotation:SetLayout()
     spells.AutoAttack.Key = "s-="
 
     spells.CrimsonVial.Key = "F6"
+    spells.Kick.Key = "F9"
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "s--"
