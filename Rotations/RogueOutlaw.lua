@@ -15,12 +15,16 @@ local spells = {
     },
     Ambush = {
         Id = 8676,
+        Audacity = 386270,
     },
     Eviscerate = {
         Id = 196819,
     },
     Dispatch = {
         Id = 2098,
+    },
+    SummarilyDispatched = {
+        Id = 381990,
     },
     SliceAndDice = {
         Id = 315496,
@@ -30,6 +34,12 @@ local spells = {
     RollTheBones = {
         Id = 315508,
         Pandemic = 30 * 0.3,
+        TrueBearing = 193359,
+        SkullAndCrossbones = 199603,
+        Broadside = 193356,
+        RuthlessPrecision = 193357,
+        BuriedTreasure = 199600,
+        GrandMelee = 193358,
     },
     Shiv = {
         Id = 5938,
@@ -212,7 +222,6 @@ function rotation:AwaitedVanishAmbush()
     end
 end
 
-local wipe = table.wipe
 local activeRtb = {
     TrueBearing = false, -- CDR
     SkullAndCrossbones = false, -- 25% Double SS
@@ -221,21 +230,14 @@ local activeRtb = {
     BuriedTreasure = false, -- energy regen
     GrandMelee = false, -- SnD increase and leech
 }
-local rtbBuffsIds = {
-    TrueBearing = 193359,
-    SkullAndCrossbones = 199603,
-    Broadside = 193356,
-    RuthlessPrecision = 193357,
-    BuriedTreasure = 199600,
-    GrandMelee = 193358,
-}
 ---@return Spell?
 function rotation:RollTheBones()
     local rtb = spells.RollTheBones
     local buffs = self.Player.Buffs
     local inPandemic = false
     local count = 0
-    for name, id in pairs(rtbBuffsIds) do
+    for name, _ in pairs(activeRtb) do
+        local id = rtb[name] or addon.Helper.Print("RollTheBones buff id is missing for", name)
         local aura = buffs:Find(id)
         if (aura and aura.FullDuration > 20 and aura.Remains > self.ActionAdvanceWindow) then
             activeRtb[name] = true
@@ -283,7 +285,9 @@ end
 ---@return boolean
 function rotation:FinisherAllowed()
     local comboFinisher = self.ComboFinisher
-    if (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
+    if (spells.SummarilyDispatched.Known) then
+        comboFinisher = 5
+    elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
         comboFinisher = 5
     elseif (self.Player.Buffs:Applied(spells.RollTheBones.Broadside)) then
         comboFinisher = 4
