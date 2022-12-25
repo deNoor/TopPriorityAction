@@ -239,7 +239,7 @@ function rotation:DelayedEnvenom()
 end
 
 function rotation:AwaitedVanishAmbush()
-    if (self.GcdReadyIn < 10 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
+    if (self.GcdReadyIn < 0.01 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
         return spells.Vanish
     else
         return self.EmptyAction
