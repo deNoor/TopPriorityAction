@@ -93,7 +93,7 @@ function Rotation:RunPriorityList(priorityList)
         if (action) then
             if (action:IsAvailable()) then
                 local usable, noMana = action:IsUsableNow()
-                if (self.WaitForResource) then
+                if (self.WaitForResource and action.Type == "Spell") then
                     if (usable or noMana) then
                         self.SelectedAction = noMana and emptyAction or action
                         return self
@@ -173,7 +173,6 @@ function Rotation:WaitForOpportunity()
     return self
 end
 
-local Print = addon.Helper.Print
 function Rotation:Pulse()
     if self:ShouldNotRun() then
         return emptyAction
@@ -186,7 +185,7 @@ function Rotation:Pulse()
     local action = self.SelectedAction or emptyAction
     if action ~= emptyAction then
         if (not action.Key) then
-            Print({ action.Name, "has no key", })
+            addon.Helper.Print(action.Name, "has no key")
         end
     end
     return action
