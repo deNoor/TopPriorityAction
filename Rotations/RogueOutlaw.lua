@@ -164,7 +164,7 @@ function rotation:SingleTarget()
         {
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (self.Energy < 30) then return spells.ThistleTea end end,
-            function() if (self.Combo > 0 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
+            function() if (self.Combo > 2 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
             function() return self:RollTheBones() end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (self.Settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
@@ -202,7 +202,7 @@ function rotation:AutoAttack()
 end
 
 function rotation:AwaitedVanishAmbush()
-    if (self.GcdReadyIn < 10 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
+    if (self.GcdReadyIn < 0.01 and self.Energy > 50) then
         return spells.Vanish
     else
         return self.EmptyAction
