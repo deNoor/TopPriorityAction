@@ -46,6 +46,9 @@ local spells = {
         Id = 13877,
         Buff = 13877,
     },
+    BladeRush = {
+        Id = 271877,
+    },
     BetweenTheEyes = {
         Id = 315341,
     },
@@ -163,14 +166,16 @@ function rotation:SingleTarget()
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (self.Energy < 30) then return spells.ThistleTea end end,
             function() if (self.Combo > 2 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
+            function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
             function() return self:RollTheBones() end,
-            function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (self.Settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
+            function() if (self.Settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
             function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.BetweenTheEyes end end,
             -- function() if (self.ComboFinisherAllowed and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then return spells.SliceAndDice end end,
             function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.Dispatch end end,
+            function() if (not self.Settings.AOE) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 4 and not target:IsTotem()) then return spells.MarkedForDeath end end,
-            function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
+            function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
             function() if (player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.PistolShot end end,
             function() return spells.Ambush end,
@@ -356,6 +361,7 @@ function rotation:SetLayout()
     spells.BetweenTheEyes.Key = "6"
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
+    spells.BladeRush.Key = "9"
 
     spells.ThistleTea.Key = "s-1"
     spells.MarkedForDeath.Key = "s-2"
