@@ -66,7 +66,7 @@ function handlers.ADDON_LOADED(event, ...)
 end
 
 function handlers.PLAYER_ENTERING_WORLD(event, ...)
-    local initialLogin, reloadingUi = ...
+    local initialLogin, reloadingUi = ... -- if not (initialLogin or reloadingUi) then entering an instance
     if (initialLogin or reloadingUi) then
         addon.Initializer.NewEquipment()
     end

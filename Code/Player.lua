@@ -53,7 +53,7 @@ local Player = {
 }
 
 function Player:GCDReadyIn()
-    return addon.Rotation.GCDSpell:ReadyIn()
+    return addon.Rotation.Spells.Gcd:ReadyIn()
 end
 
 local UnitPowerType, max, GetHaste = UnitPowerType, max, GetHaste

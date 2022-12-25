@@ -4,9 +4,13 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class TopPriorityAction
----@field Initializer Initializer
+---@field CmdBus CmdBus
+---@field Common Common
 ---@field DataQuery DataQuery
+---@field EventTracker EventTracker
 ---@field Helper Helper
+---@field Initializer Initializer
+---@field Player Player
 ---@field Shared SharedData
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
@@ -16,9 +20,6 @@ local addon = TopPriorityAction
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
 ---@field UpdateKnownItems fun(self:TopPriorityAction)
 ---@field UpdateEquipment fun(self:TopPriorityAction)
----@field Player Player
----@field EventTracker EventTracker
----@field CmdBus CmdBus
 
 local Program = {
     UpdateEverySec = 1 / 60,

@@ -10,7 +10,6 @@ local addon = TopPriorityAction
 ---@field Timestamp number @updated by framework before Pulse call.
 ---@field Settings Settings @updated by framework on rotation load.
 ---@field WaitForResource boolean @set by custom rotation
----@field GCDSpell Spell @updated by framework on init.
 ---@field PauseTimestamp number @updated by eventTracker outside rotation.
 ---@field IsPauseKeyDown boolean @updated by eventTracker outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
 ---@field AddedPauseOnKey integer @constant from defaults
@@ -55,7 +54,6 @@ function Rotation:VerifyAbstractsOverriden(class, spec)
 end
 
 function Rotation:SetDefaults()
-    self.GCDSpell = addon.Initializer.NewSpell({ Id = 61304, })
     self.Timestamp = 0
     self.PauseTimestamp = 0
     self.IsPauseKeyDown = false
@@ -196,7 +194,12 @@ end
 
 function Rotation:AddSpells(class, spec)
     local spells = self.Spells or addon.Helper.Throw("attempt to add nil spells for", class, spec)
-    for name, spell in pairs(spells) do
+    if (spells ~= addon.Common.Spells) then
+        for key, spell in pairs(addon.Common.Spells) do
+            spells[key] = spell
+        end
+    end
+    for key, spell in pairs(spells) do
         addon.Initializer.NewSpell(spell)
     end
     return self
@@ -204,7 +207,12 @@ end
 
 function Rotation:AddItems(class, spec)
     local items = self.Items or addon.Helper.Throw("attempt to add nil items for", class, spec)
-    for name, item in pairs(items) do
+    if (items ~= addon.Common.Items) then
+        for key, item in pairs(addon.Common.Items) do
+            items[key] = item
+        end
+    end
+    for key, item in pairs(items) do
         addon.Initializer.NewItem(item)
     end
     return self
@@ -245,6 +253,7 @@ function addon:DetectRotation()
         addon.Rotation = knownRotation
         addon:UpdateKnownSpells()
         addon:UpdateEquipment()
+        addon:UpdateKnownItems()
         knownRotation:Activate()
         addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
         knownRotation.IsPauseKeyDown = IsPauseKeyDown()

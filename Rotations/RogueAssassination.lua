@@ -5,11 +5,9 @@ local addon = TopPriorityAction
 
 ---@type table<string,Spell>
 local spells = {
+    AutoAttack = addon.Common.Spells.AutoAttack,
     SinisterStrike = {
         Id = 1752,
-    },
-    AutoAttack = {
-        Id = 6603,
     },
     Mutilate = {
         Id = 1329,

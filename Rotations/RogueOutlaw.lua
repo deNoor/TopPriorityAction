@@ -5,11 +5,9 @@ local addon = TopPriorityAction
 
 ---@type table<string,Spell>
 local spells = {
+    AutoAttack = addon.Common.Spells.AutoAttack,
     SinisterStrike = {
         Id = 1752,
-    },
-    AutoAttack = {
-        Id = 6603,
     },
     PistolShot = {
         Id = 185763,
@@ -81,7 +79,7 @@ local cmds = {
 }
 
 ---@type table<string,Item>
-local items = {}
+local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
