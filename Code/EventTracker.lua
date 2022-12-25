@@ -86,10 +86,12 @@ function handlers.SPELLS_CHANGED(event, ...)
     addon:UpdateKnownSpells()
 end
 
--- function handlers.UNIT_DISPLAYPOWER(event, ...)
---     local unitId, arg1, arg2 = ...
---     addon.Helper.Print("unit display power", UnitPowerType(unitId), unitId, arg1, arg2)
--- end
+function handlers.UNIT_DISPLAYPOWER(event, ...)
+    local unitId = ...
+    if (unitId == "player") then
+        addon:UpdateRotationResource()
+    end
+end
 
 function handlers.MODIFIER_STATE_CHANGED(event, ...)
     local key, isPressed = ...

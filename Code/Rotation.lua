@@ -118,12 +118,6 @@ function Rotation:ActionQueueAwailable()
     return true
 end
 
-local UnitPowerType = UnitPowerType
-local powersWithAutoRegen = addon.Helper.ToHashSet({ Enum.PowerType.Energy, })
-local function CanWaitResouceRegen()
-    return powersWithAutoRegen[(UnitPowerType("player"))] ~= nil
-end
-
 local buggedCurrentSpellCastDetection = { [330325] = "Condemn", }
 ---@param action Action
 ---@return boolean
@@ -223,6 +217,15 @@ function Rotation:AddItems(class, spec)
     return self
 end
 
+local UnitPowerType = UnitPowerType
+local powersWithAutoRegen = addon.Helper.ToHashSet({ Enum.PowerType.Energy, })
+function addon:UpdateRotationResource()
+    local rotation = addon.Rotation
+    if (rotation) then
+        rotation.WaitForResource = powersWithAutoRegen[(UnitPowerType("player"))] ~= nil
+    end
+end
+
 function addon:AddRotation(class, spec, rotation)
     rotation = rotation or addon.Helper.Throw("attempt to add nil rotation for", class, spec)
     addon.Helper.AddVirtualMethods(rotation, Rotation)
@@ -259,7 +262,7 @@ function addon:DetectRotation()
         addon:UpdateKnownSpells()
         addon:UpdateEquipment()
         addon:UpdateKnownItems()
-        knownRotation.WaitForResource = CanWaitResouceRegen()
+        addon:UpdateRotationResource()
         knownRotation:Activate()
         addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
         knownRotation.IsPauseKeyDown = IsPauseKeyDown()

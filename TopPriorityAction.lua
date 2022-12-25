@@ -20,6 +20,7 @@ local addon = TopPriorityAction
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
 ---@field UpdateKnownItems fun(self:TopPriorityAction)
 ---@field UpdateEquipment fun(self:TopPriorityAction)
+---@field UpdateRotationResource fun(self:TopPriorityAction)
 
 local Program = {
     UpdateEverySec = 1 / 60,

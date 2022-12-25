@@ -319,7 +319,6 @@ function rotation:Dispose()
 end
 
 function rotation:Activate()
-    self.WaitForResource = true
     self.Player = addon.Player
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action

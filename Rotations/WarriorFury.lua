@@ -215,10 +215,9 @@ function rotation:Dispose()
 end
 
 function rotation:Activate()
-    self.WaitForResource = false
-    self.Player          = addon.Player
-    self.EmptyAction     = addon.Initializer.Empty.Action
-    self.LocalEvents     = self:CreateLocalEventTracker()
+    self.Player = addon.Player
+    self.EmptyAction = addon.Initializer.Empty.Action
+    self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end
 

@@ -294,7 +294,6 @@ function rotation:Dispose()
 end
 
 function rotation:Activate()
-    self.WaitForResource = true
     self.EmptyAction = addon.Initializer.Empty.Action
     self.Player = addon.Player
     self.InterruptUndesirable = addon.WowClass.InterruptUndesirable
