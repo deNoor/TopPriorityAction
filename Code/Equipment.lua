@@ -70,6 +70,8 @@ end
 
 local function SetDefaults(equipItem)
     equipItem.Id = -1
+    equipItem.Name = ""
+    equipItem.Icon = -1
     equipItem.Active = false
     equipItem.SpellId = -1
     equipItem.SpellName = ""

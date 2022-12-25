@@ -88,7 +88,7 @@ local cmds = {
 }
 
 ---@type table<string,Item>
-local items = {}
+local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
@@ -175,9 +175,9 @@ function rotation:SingleTarget()
     singleTargetList = singleTargetList or
         {
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-            function() if (self.Energy < 30) then return spells.ThistleTea end end,
-            function() if (settings.Burst and not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
             function() if (self.Combo > 0 and not self.ComboHolding and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
+            function() if (settings.Burst and not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
+            function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
             function()
                 if (self.ComboFinisherAllowed and not self.ComboHolding and self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic or
                     (self.EnergyDeficit > 50 and not target.Debuffs:Applied(spells.Rupture.Debuff)))) then
@@ -216,6 +216,7 @@ function rotation:Utility()
         {
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
+            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -346,6 +347,9 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "s--"
+
+    local items = self.Items
+    items.Healthstone.Key = "F12"
 end
 
 addon:AddRotation("ROGUE", 1, rotation)

@@ -83,7 +83,7 @@ local spells = {
 }
 
 ---@type table<string,Item>
-local items = {}
+local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
@@ -125,7 +125,7 @@ function rotation:SelectAction()
     local targetDebuffs = self.Player.Target.Debuffs
     if (true)
     then
-        -- self:Utility()
+        self:Utility()
         if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
             if (self.InRange) then
                 self:Base()
@@ -168,16 +168,14 @@ function rotation:Base()
     return rotation:RunPriorityList(baseList)
 end
 
-local aoeList
-function rotation:Aoe()
-    local settings = self.Settings
+local utilityList
+function rotation:Utility()
     local player = self.Player
-    local target = self.Player.Target
-    local equip = player.Equipment
-    aoeList = aoeList or
+    utilityList = utilityList or
         {
+            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
         }
-    return rotation:RunPriorityList(aoeList)
+    return rotation:RunPriorityList(utilityList)
 end
 
 function rotation:ImproovedRecklessness()
@@ -262,7 +260,10 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
-    spells.LightsJudgment.Key = "F12"
+    spells.LightsJudgment.Key = nil
+
+    local items = self.Items
+    items.Healthstone.Key = "F12"
 end
 
 addon:AddRotation("WARRIOR", 2, rotation)

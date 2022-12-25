@@ -96,7 +96,7 @@ local spells = {
 }
 
 ---@type table<string,Item>
-local items = {}
+local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
@@ -199,6 +199,7 @@ function rotation:Utility()
         {
             function() if (self.MyHealthPercent <= 20) then return spells.Renewal end end,
             function() if ((self.MyHealthPercent <= 40 or self.MyHealAbsorb > 0) and not player.Buffs:Applied(spells.FrenziedRegeneration.Buff)) then return spells.FrenziedRegeneration end end,
+            function() if (self.MyHealthPercentDeficit > 75) then return items.Healthstone end end,
 
         }
     return rotation:RunPriorityList(utilityList)
@@ -297,6 +298,9 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
+
+    local items = self.Items
+    items.Healthstone.Key = "F12"
 end
 
 addon:AddRotation("DRUID", 3, rotation)

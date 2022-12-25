@@ -174,10 +174,10 @@ function rotation:SingleTarget()
     singleTargetList = singleTargetList or
         {
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-            function() if (self.Energy < 30) then return spells.ThistleTea end end,
-            function() if (self.Combo > 2 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
-            function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
             function() return self:RollTheBones() end,
+            function() if (self.Combo > 0 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
+            function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
+            function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
             function() if (self.Settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (self.Settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
             function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.BetweenTheEyes end end,
@@ -201,6 +201,7 @@ function rotation:Utility()
         {
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
+            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -380,6 +381,9 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "s--"
+
+    local items = self.Items
+    items.Healthstone.Key = "F12"
 end
 
 addon:AddRotation("ROGUE", 2, rotation)

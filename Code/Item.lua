@@ -4,7 +4,9 @@ local _G = _G
 local addon = TopPriorityAction
 
 ---@class Item : Action
----@field EquipLoc string
+---@field Active boolean
+---@field SpellId integer
+---@field SpellName string
 
 local pairs, ipairs = pairs, ipairs
 
@@ -24,23 +26,74 @@ local function NewItem(item)
     return item
 end
 
-local strlen, GetItemInfo = strlen, GetItemInfo
+local function SetDefaults(item)
+    item.Name = ""
+    item.Icon = -1
+    item.Active = false
+    item.SpellId = -1
+    item.SpellName = ""
+end
+
+local GetItemInfo, GetItemSpell = GetItemInfo, GetItemSpell
 function addon:UpdateKnownItems()
     local items = self.Rotation.Items
     for key, item in pairs(items) do
-        -- local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, texture, sellPrice, classID, subclassID = GetItemInfo(item.Id)
-        -- item.Name = name
-        -- item.EquipLoc = strlen(equipLoc) > 1 and equipLoc or nil -- https://wowpedia.fandom.com/wiki/Enum.InventoryType
-        -- item.Known = IsSpellKnownOrOverridesKnown(item.Id)
-        -- local cooldownMS, gcdMS = GetSpellBaseCooldown(item.Id)
-        -- item.NoGCD = gcdMS == 0
-        -- item.HasCD = cooldownMS > 0
-        -- item.ChargesBased = (GetSpellCharges(item.Id)) ~= nil
+        if (item.Id > 0) then
+            SetDefaults(item)
+            addon.DataQuery.OnItemLoaded(item.Id, function()
+                local itemId = item.Id
+                if (itemId and itemId > 0) then
+                    local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID = GetItemInfo(itemId)
+                    if (not name) then
+                        addon.Helper.Throw(key, "GetItemInfo failed")
+                    end
+                    item.Name = name
+                    item.Icon = icon
+                    local spellName, spellId = GetItemSpell(itemId)
+                    if (spellId) then
+                        item.Active = true
+                        item.SpellId = spellId
+                        item.SpellName = spellName
+                    end
+                end
+            end)
+        end
     end
 end
 
-function Spell:IsAvailable()
-    return false -- self.Known -- todo:
+function Item:IsAvailable()
+    return self.Active
+end
+
+local max, GetItemCooldown = max, GetItemCooldown
+function Item:ReadyIn()
+    local now = addon.Rotation.Timestamp
+    local start, duration, enabled = GetItemCooldown(self.Id)
+    if start then
+        return max(0, start + duration - now) -- seconds
+    end
+    addon.Helper.Throw("Item returned no cooldown", self.Id, self.Name)
+end
+
+local IsUsableItem = IsUsableItem
+function Item:IsUsableNow()
+    local usable, noMana = IsUsableItem(self.Id)
+    if (usable) then
+        local onCD = self:ReadyIn() > addon.Rotation.Settings.ActionAdvanceWindow
+        usable = not onCD
+    end
+    return usable, noMana
+end
+
+local IsItemInRange = IsItemInRange
+function Item:IsInRange(unit)
+    unit = unit or "target"
+    return IsItemInRange(self.Id, unit) ~= false
+end
+
+local IsCurrentItem = IsCurrentItem
+function Item:IsQueued()
+    return IsCurrentItem(self.Id)
 end
 
 -- attach to addon

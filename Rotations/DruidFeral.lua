@@ -108,7 +108,7 @@ local spells = {
 }
 
 ---@type table<string,Item>
-local items = {}
+local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
@@ -237,6 +237,7 @@ function rotation:Utility()
     utilityList = utilityList or
         {
             function() if ((self.MyHealthPercentDeficit > 15 or self.MyHealAbsorb > 0) and player.Buffs:Remains(spells.PredatorySwiftness.Buff) > self.GcdReadyIn + 0.5) then return spells.Regrowth:ProtectFromDoubleCast() end end,
+            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -350,6 +351,9 @@ function rotation:SetLayout()
 
     local equip = addon.Player.Equipment
     equip.Trinket13.Key = "F11"
+
+    local items = self.Items
+    items.Healthstone.Key = "F12"
 end
 
 addon:AddRotation("DRUID", 2, rotation)
