@@ -38,7 +38,7 @@ function EquipItem:IsAvailable()
     return self.Active
 end
 
-local max, GetItemCooldown = max, GetItemCooldown
+local max, GetItemCooldown = max, C_Container.GetItemCooldown
 function EquipItem:ReadyIn()
     local now = addon.Rotation.Timestamp
     local start, duration, enabled = GetItemCooldown(self.Id)
