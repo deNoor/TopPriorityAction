@@ -260,7 +260,7 @@ function rotation:RollTheBones()
             return false
         elseif (activeRtb.TrueBearing or activeRtb.SkullAndCrossbones) then
             return false
-        elseif (count > 1 and (activeRtb.GrandMelee or activeRtb.BuriedTreasure)) then
+        elseif (count > 1 and not (activeRtb.GrandMelee and activeRtb.BuriedTreasure)) then
             return false
         else
             return true
