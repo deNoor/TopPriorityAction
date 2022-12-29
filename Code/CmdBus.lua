@@ -23,7 +23,8 @@ local getTime = GetTime
 local CmdBus = {
     Commands = {},
     Add = function(...) end,
-    Frame = CreateFrame("Frame"),
+    UpdateEverySec = 1 / 120,
+    Ticker = nil,
 }
 
 local default = {
@@ -86,15 +87,17 @@ end
 function CmdBus:Register()
     local getTime = getTime
     local activeCommands = self.Commands
-    self.Frame:SetScript("OnUpdate", function()
-        local now = getTime()
-        for name, cmd in pairs(activeCommands) do
-            if (cmd.Expiration < now) then
-                self:Remove(name)
-                -- addon.Helper.Print("removed " .. name)
+    self.Ticker = C_Timer.NewTicker(
+        self.UpdateEverySec,
+        function()
+            local now = getTime()
+            for name, cmd in pairs(activeCommands) do
+                if (cmd.Expiration < now) then
+                    self:Remove(name)
+                    -- addon.Helper.Print("removed " .. name)
+                end
             end
-        end
-    end)
+        end)
     return self
 end
 

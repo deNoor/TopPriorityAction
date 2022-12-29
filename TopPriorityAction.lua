@@ -23,26 +23,24 @@ local addon = TopPriorityAction
 ---@field UpdateRotationResource fun(self:TopPriorityAction)
 
 local Program = {
-    UpdateEverySec = 1 / 60,
-    Frame = CreateFrame("Frame"),
+    UpdateEverySec = 1 / 61,
+    Ticker = nil,
 }
 
 function Program:RegisterActionUpdater()
     local updateLimit = self.UpdateEverySec
-    local lastUpdate = 0
     local getTime = GetTime
     local addon = addon
     local shared = addon.Shared
     local emptyAction = addon.Initializer.Empty.Action
-    self.Frame:SetScript("OnUpdate", function()
-        local now = getTime()
-        local rotation = addon.Rotation
-        rotation.Timestamp = now
-        if (now - lastUpdate >= updateLimit) then
-            lastUpdate = now
+    self.Ticker = C_Timer.NewTicker(
+        self.UpdateEverySec,
+        function()
+            local now = getTime()
+            local rotation = addon.Rotation
+            rotation.Timestamp = now
             shared.CurrentAction = rotation:Pulse() or emptyAction
-        end
-    end)
+        end)
     return self
 end
 
