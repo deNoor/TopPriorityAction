@@ -6,6 +6,7 @@ local addon = TopPriorityAction
 ---@class TopPriorityAction
 ---@field CmdBus CmdBus
 ---@field Common Common
+---@field Convenience Convenience
 ---@field DataQuery DataQuery
 ---@field EventTracker EventTracker
 ---@field Helper Helper

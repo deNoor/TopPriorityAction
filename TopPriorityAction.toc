@@ -14,6 +14,7 @@ Code\Equipment.lua
 Code\EventTracker.lua
 Code\CmdBus.lua
 Code\Common.lua
+Code\Convenience.lua
 Code\Item.lua
 Code\Player.lua
 Code\Rotation.lua

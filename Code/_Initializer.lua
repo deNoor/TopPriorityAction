@@ -57,6 +57,9 @@ local cmdHandlers = {
     cmd = function(...)
         addon.CmdBus:Add(...)
     end,
+    thanksbye = function(...)
+        addon.Convenience:ThanksBye()
+    end,
 }
 local toLower = strlower
 SlashCmdList.TPrioS = function(msg, editBox)
