@@ -7,7 +7,7 @@ local addon = TopPriorityAction
 ---@field private Commands table<string, Cmd>
 ---@field Add fun(self:CmdBus, ...)
 ---@field Remove fun(self:CmdBus, name:string)
----@field Find fun(self:CmdBus, name:string):Cmd
+---@field Find fun(self:CmdBus, name:string):Cmd?
 
 ---@class Cmd
 ---@field private Frame Frame
@@ -23,13 +23,11 @@ local getTime = GetTime
 local CmdBus = {
     Commands = {},
     Add = function(...) end,
-    UpdateEverySec = 1 / 120,
-    Ticker = nil,
 }
 
 local default = {
     Command = {
-        DirationMax = 10000,
+        DirationMax = 10,
     }
 }
 
@@ -73,11 +71,13 @@ function CmdBus:Add(...)
     cmd.Arg2 = arg2
     cmd.Arg3 = arg3
     self.Commands[name] = cmd
-    -- addon.Helper.Print("added " .. name)
 end
 
 function CmdBus:Find(name)
-    return self.Commands[name]
+    local cmd = self.Commands[name]
+    if (cmd and cmd.Expiration > addon.Rotation.Timestamp) then
+        return cmd
+    end
 end
 
 function CmdBus:Remove(name)
@@ -85,19 +85,6 @@ function CmdBus:Remove(name)
 end
 
 function CmdBus:Register()
-    local getTime = getTime
-    local activeCommands = self.Commands
-    self.Ticker = C_Timer.NewTicker(
-        self.UpdateEverySec,
-        function()
-            local now = getTime()
-            for name, cmd in pairs(activeCommands) do
-                if (cmd.Expiration < now) then
-                    self:Remove(name)
-                    -- addon.Helper.Print("removed " .. name)
-                end
-            end
-        end)
     return self
 end
 

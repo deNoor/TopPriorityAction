@@ -46,7 +46,7 @@ local function NewEventTracker(handlers)
     local eventTracker = {
         Frame = CreateFrame("Frame"),
         Handlers = handlers or {},
-        Timestamp = 0,
+        EventTimestamp = 0,
     }
     addon.Helper.AddVirtualMethods(eventTracker, EventTracker)
     eventTracker:RegisterEvents()
