@@ -179,7 +179,7 @@ function rotation:SingleTarget()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick(true)) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() return self:RollTheBones() end,
-            function() if (self.Combo > 0 and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then return spells.SliceAndDice end end,
+            function() if (not self.ComboHolding and (spells.RollTheBones.Known and (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) or (self.ComboFinisherAllowed and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic))) then return spells.SliceAndDice end end,
             function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
             function() if (self.Settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
