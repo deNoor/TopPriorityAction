@@ -74,6 +74,9 @@ local spells = {
     GreenskinsWickers = {
         Id = 386823,
     },
+    FanTheHammer = {
+        Id = 381846,
+    },
     CrimsonVial = {
         Id = 185311,
     },
@@ -184,7 +187,7 @@ function rotation:SingleTarget()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() return self:RollTheBones() end,
-            function() if (not self.ComboHolding and (spells.RollTheBones.Known and (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) or (self.ComboFinisherAllowed and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic))) then return spells.SliceAndDice end end,
+            function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
@@ -199,7 +202,7 @@ function rotation:SingleTarget()
             function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.Dreadblades end end,
             function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
-            function() if (player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.PistolShot end end,
+            function() return self:PistolShot() end,
             function() return spells.Ambush end,
             function() if (settings.Burst) then return spells.ShadowDance end end,
             function() return spells.SinisterStrike end,
@@ -233,6 +236,31 @@ function rotation:AwaitedVanishAmbush()
         return spells.Vanish
     else
         return self.EmptyAction
+    end
+end
+
+function rotation:SliceAndDice()
+    if (spells.RollTheBones.Known) then
+        if (self.Combo > 0 and addon.Player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then
+            return spells.SliceAndDice
+        end
+    else
+        if (self.ComboFinisherAllowed and addon.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
+            return spells.SliceAndDice
+        end
+    end
+end
+
+function rotation:PistolShot()
+    if (spells.FanTheHammer.Known) then
+        local stacks = addon.Player.Buffs:Stacks(spells.PistolShot.Opportunity)
+        if (self.Combo < 3 and stacks > 0 or stacks > 3) then
+            return spells.PistolShot
+        end
+    else
+        if (addon.Player.Buffs:Applied(spells.PistolShot.Opportunity)) then
+            return spells.PistolShot
+        end
     end
 end
 

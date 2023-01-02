@@ -15,6 +15,7 @@ local addon = TopPriorityAction
 ---@field Find fun(self:AuraCollection, spellId:integer):Aura
 ---@field Applied fun(self:AuraCollection, spellId:integer):boolean
 ---@field Remains fun(self:AuraCollection, spellId:integer):number
+---@field Stacks fun(self:AuraCollection, spellId:integer):integer
 ---@field HasPurgeable fun(self:AuraCollection):boolean
 ---@field HasDispelable fun(self:AuraCollection, dispelTypes:table<string,any>):boolean
 
@@ -80,6 +81,10 @@ local function NewAuraCollection(unitId, filter)
         Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
             return aura.Remains
+        end,
+        Stacks = function(collection, spellId)
+            local aura = collection.Auras[spellId] or emptyAura
+            return aura.Remains > addon.SavedSettings.Instance.ActionAdvanceWindow and aura.Stacks or 0
         end,
         HasPurgeable = function(collection)
             local auras = collection.Auras
