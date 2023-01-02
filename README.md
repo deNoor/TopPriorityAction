@@ -5,8 +5,8 @@ Uses retail WoW UI Lua.
 ## Current state
 - Game version: 10.0.2 (Dragonflight)
 - Specs:
-  - Active: assa (in progress 10.0.2)
-  - Inactive: feral (9.2.7), guardian (9.2.7), fury (9.2.7)
+  - Active: outlaw (10.0.2)
+  - Inactive: assa (10.0.2), feral (9.2.7), guardian (9.2.7), fury (9.2.7)
 
 ## Description
 
