@@ -86,6 +86,9 @@ local spells = {
     ThistleTea = {
         Id = 381623,
     },
+    ShadowDance = {
+        Id = 185313,
+    },
     KidneyShot = {
         Id = 408,
     },
@@ -114,8 +117,8 @@ local rotation = {
     Cmds = cmds,
 
     RangeChecker  = spells.SinisterStrike,
-    ComboFinisher = 4,
-    ComboKidney   = 4,
+    ComboFinisher = 5,
+    ComboKidney   = 5,
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -161,8 +164,10 @@ end
 
 local stealthOpenerList
 function rotation:StealthOpener()
+    local player = self.Player
     stealthOpenerList = stealthOpenerList or
         {
+            function() if ((self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) or (self.ComboFinisherAllowed and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic)) then return spells.SliceAndDice end end,
             function() return spells.Ambush end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
@@ -176,25 +181,27 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick(true)) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() return self:RollTheBones() end,
             function() if (not self.ComboHolding and (spells.RollTheBones.Known and (self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) or (self.ComboFinisherAllowed and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic))) then return spells.SliceAndDice end end,
             function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable()) then return spells.Shiv end end,
-            function() if (self.Settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
+            function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
+            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.KillingSpree end end,
-            function() if (self.Settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
+            function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
             function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.BetweenTheEyes end end,
             -- function() if (self.ComboFinisherAllowed and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then return spells.SliceAndDice end end,
             function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.Dispatch end end,
-            function() if (not self.Settings.AOE) then return spells.BladeRush end end,
+            function() if (not settings.AOE) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 4 and not target:IsTotem()) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.Dreadblades end end,
             function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
             function() if (player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.PistolShot end end,
             function() return spells.Ambush end,
+            function() if (settings.Burst) then return spells.ShadowDance end end,
             function() return spells.SinisterStrike end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -207,7 +214,7 @@ function rotation:Utility()
         {
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
-            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -226,6 +233,24 @@ function rotation:AwaitedVanishAmbush()
         return spells.Vanish
     else
         return self.EmptyAction
+    end
+end
+
+local aoeTrinkets = addon.Helper.ToHashSet({
+    198451, -- 10y healing/damage aoe
+})
+
+---@return EquipItem?
+function rotation:UseTrinket()
+    local equip = self.Player.Equipment
+    ---@param ids integer[]
+    ---@return EquipItem
+    local trinketFrom = function(ids)
+        return (ids[equip.Trinket13.Id] and equip.Trinket13) or (ids[equip.Trinket14.Id] and equip.Trinket14)
+    end
+    local aoeTrinket = trinketFrom(aoeTrinkets)
+    if (aoeTrinket and self.Settings.AOE) then
+        return aoeTrinket
     end
 end
 
@@ -366,6 +391,7 @@ function rotation:SetLayout()
     spells.BladeRush.Key = "9"
 
     spells.ThistleTea.Key = "s-1"
+    spells.ShadowDance.Key = spells.ThistleTea.Key
     spells.MarkedForDeath.Key = "s-2"
     spells.Ambush.Key = "s-3"
     spells.KillingSpree.Key = "s-4"
@@ -377,9 +403,10 @@ function rotation:SetLayout()
     spells.AutoAttack.Key = "s-="
 
     spells.CrimsonVial.Key = "F6"
-    spells.Kick.Key = "F9"
+    spells.Kick.Key = "F7"
 
     local equip = addon.Player.Equipment
+    equip.Trinket14.Key = "s-0"
     equip.Trinket13.Key = "s--"
 
     local items = self.Items
