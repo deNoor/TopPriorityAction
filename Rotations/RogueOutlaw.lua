@@ -77,6 +77,10 @@ local spells = {
     FanTheHammer = {
         Id = 381846,
     },
+    TakeThemBySurprise = {
+        Id = 382742,
+        Buff = 385907,
+    },
     CrimsonVial = {
         Id = 185311,
     },
@@ -201,7 +205,7 @@ function rotation:SingleTarget()
             function() if (self.ComboDeficit > 4 and not target:IsTotem()) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.Dreadblades end end,
-            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
+            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return self:PistolShot() end,
             function() return spells.Ambush end,
             function() if (settings.Burst) then return spells.ShadowDance end end,
@@ -342,6 +346,7 @@ function rotation:ComboPandemic(initialDuration)
     return initialDuration * (1 + self.Combo) * 0.3
 end
 
+local max = max
 ---@return boolean
 function rotation:FinisherAllowed()
     local comboFinisher = self.ComboFinisher
@@ -350,7 +355,7 @@ function rotation:FinisherAllowed()
     elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
         comboFinisher = 5
     elseif (self.Player.Buffs:Applied(spells.RollTheBones.Broadside)) then
-        comboFinisher = 4
+        comboFinisher = max(4, comboFinisher - 1)
     end
     return self.Combo >= comboFinisher
 end
@@ -366,7 +371,7 @@ function rotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
-    self.ComboFinisherAllowed = self:FinisherAllowed() -- self.ComboDeficit <= self.ComboFinisherToMax
+    self.ComboFinisherAllowed = self:FinisherAllowed()
     self.ComboHolding = false
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
