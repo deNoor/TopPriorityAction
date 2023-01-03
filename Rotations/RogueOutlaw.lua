@@ -84,6 +84,9 @@ local spells = {
     SwiftSlasher = {
         Id = 381988,
     },
+    ImprovedAdrenalineRush = {
+        Id = 395422,
+    },
     CrimsonVial = {
         Id = 185311,
     },
@@ -205,7 +208,7 @@ function rotation:SingleTarget()
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
             function() if (not settings.AOE) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 4 and not target:IsTotem()) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
+            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 4)) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.Dreadblades end end,
             function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return self:PistolShot() end,
