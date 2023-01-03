@@ -81,6 +81,9 @@ local spells = {
         Id = 382742,
         Buff = 385907,
     },
+    SwiftSlasher = {
+        Id = 381988,
+    },
     CrimsonVial = {
         Id = 185311,
     },
@@ -174,7 +177,7 @@ function rotation:StealthOpener()
     local player = self.Player
     stealthOpenerList = stealthOpenerList or
         {
-            function() if ((self.Combo > 0 and player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) or (self.ComboFinisherAllowed and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic)) then return spells.SliceAndDice end end,
+            function() return self:SliceAndDice() end,
             function() return spells.Ambush end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
@@ -198,14 +201,13 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.KillingSpree end end,
             function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
-            function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.BetweenTheEyes end end,
-            -- function() if (self.ComboFinisherAllowed and not self.ComboHolding and player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then return spells.SliceAndDice end end,
-            function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.Dispatch end end,
+            function() if (self.ComboFinisherAllowed) then return spells.BetweenTheEyes end end,
+            function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
             function() if (not settings.AOE) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 4 and not target:IsTotem()) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding) then return spells.Dreadblades end end,
-            function() if (settings.Burst and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
+            function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return self:PistolShot() end,
             function() return spells.Ambush end,
             function() if (settings.Burst) then return spells.ShadowDance end end,
@@ -244,28 +246,38 @@ function rotation:AwaitedVanishAmbush()
 end
 
 function rotation:SliceAndDice()
-    if (spells.RollTheBones.Known) then
-        if (self.Combo > 0 and addon.Player.Buffs:Remains(spells.SliceAndDice.Buff) < 3) then
-            return spells.SliceAndDice
-        end
-    else
-        if (self.ComboFinisherAllowed and addon.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
-            return spells.SliceAndDice
-        end
+    if (self.Player.Buffs:Applied(spells.RollTheBones.GrandMelee)) then
+        return nil
     end
+    if (spells.SwiftSlasher.Known) then
+        if (self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
+            if (self.ComboDeficit > 0) then
+                self.ComboFinisherAllowed = false
+                return nil
+            else
+                return spells.SliceAndDice
+            end
+        end
+        return nil
+    end
+    if (self.ComboFinisherAllowed and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
+        return spells.SliceAndDice
+    end
+    return nil
 end
 
 function rotation:PistolShot()
     if (spells.FanTheHammer.Known) then
-        local stacks = addon.Player.Buffs:Stacks(spells.PistolShot.Opportunity)
+        local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity)
         if (self.Combo < 3 and stacks > 0 or stacks > 3) then
             return spells.PistolShot
         end
-    else
-        if (addon.Player.Buffs:Applied(spells.PistolShot.Opportunity)) then
-            return spells.PistolShot
-        end
+        return nil
     end
+    if (self.Player.Buffs:Applied(spells.PistolShot.Opportunity)) then
+        return spells.PistolShot
+    end
+    return nil
 end
 
 local aoeTrinkets = addon.Helper.ToHashSet({
@@ -296,6 +308,10 @@ local activeRtb = {
 }
 ---@return Spell?
 function rotation:RollTheBones()
+    if (spells.SwiftSlasher.Known and not self.Player.Buffs:Applied(spells.SliceAndDice.Buff)) then
+        return nil
+    end
+
     local rtb = spells.RollTheBones
     local buffs = self.Player.Buffs
     local inPandemic = false
@@ -334,6 +350,7 @@ function rotation:KidneyOnCommand()
     if (readyIn < 2) then
         if (self.Combo < self.ComboKidney) then
             self.ComboHolding = true
+            self.ComboFinisherAllowed = false
             return nil
         end
         return (readyIn > self.ActionAdvanceWindow) and self.EmptyAction or spells.KidneyShot
