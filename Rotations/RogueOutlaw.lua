@@ -310,6 +310,9 @@ end
 local aoeTrinkets = addon.Helper.ToHashSet({
     198451, -- 10y healing/damage aoe
 })
+local burstTrinkets = addon.Helper.ToHashSet({
+    133642, -- +stats
+})
 
 ---@return EquipItem?
 function rotation:UseTrinket()
@@ -322,6 +325,10 @@ function rotation:UseTrinket()
     local aoeTrinket = trinketFrom(aoeTrinkets)
     if (aoeTrinket and self.Settings.AOE) then
         return aoeTrinket
+    end
+    local burstTrinket = trinketFrom(burstTrinkets)
+    if (burstTrinket and self.Settings.Burst) then
+        return burstTrinket
     end
 end
 
@@ -489,8 +496,8 @@ function rotation:SetLayout()
     spells.Vanish.Key = "s-9"
     spells.AutoAttack.Key = "s-="
 
-    spells.CrimsonVial.Key = "F6"
     spells.Kick.Key = "F7"
+    spells.CrimsonVial.Key = "F11"
 
     local equip = addon.Player.Equipment
     equip.Trinket14.Key = "s-0"
