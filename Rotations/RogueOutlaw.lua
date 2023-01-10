@@ -212,24 +212,28 @@ function rotation:SingleTarget()
         {
             function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+            function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
+            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
+            function()
+                if (settings.Burst and not self.ComboHolding and not self.ShortBursting and not player.Buffs:Applied(spells.AdrenalineRush.Buff))
+                then return spells.KillingSpree
+                end
+            end,
             function() return self:RollTheBones() end,
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (self.Energy < 40 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
-            function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
-            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
-            function() if (settings.Burst and not self.ComboHolding and not self.ShortBursting) then return spells.KillingSpree end end,
             function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and not player.Buffs:Applied(spells.ShadowDance.Buff) and not player.Debuffs:Applied(spells.Dreadblades.Debuff)) then return spells.BladeRush end end,
             function() if (self.ComboFinisherAllowed) then return spells.BetweenTheEyes end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
             function() if (not settings.AOE and self.EnergyDeficit > 50 and not self.ShortBursting) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self.ShortBursting) then return spells.AdrenalineRush end end,
-            function() if (settings.Burst and not self.ComboHolding and self.ComboDeficit > 3) then return spells.Dreadblades end end,
+            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self.ShortBursting and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
             function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return spells.Ambush end,
             function() return self:PistolShot() end,
-            function() if (settings.Burst and spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedShadowDance() end end,
+            function() if (settings.Burst and spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance() end end,
             function() return spells.SinisterStrike end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -305,6 +309,10 @@ function rotation:PistolShot()
         return spells.PistolShot
     end
     return nil
+end
+
+function rotation:KillingSpreeSoon()
+    return spells.KillingSpree.Known and spells.KillingSpree:ReadyIn() <= self.GcdReadyIn
 end
 
 local aoeTrinkets = addon.Helper.ToHashSet({
