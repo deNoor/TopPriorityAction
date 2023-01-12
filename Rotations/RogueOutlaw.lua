@@ -107,6 +107,9 @@ local spells = {
     Feint = {
         Id = 1966,
     },
+    TricksOfTheTrade = {
+        Id = 57934,
+    },
     MarkedForDeath = {
         Id = 137619,
     },
@@ -242,10 +245,11 @@ end
 local utilityList
 function rotation:Utility()
     local player = self.Player
+    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     utilityList = utilityList or
         {
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
-            function() if (not self.ShortBursting and self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
+            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
@@ -428,6 +432,44 @@ function rotation:ShortBurstEffects()
     return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff)
 end
 
+local InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, IsInGroup, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT = InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, IsInGroup, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT
+local tricksMacro = { Exists = false, Name = "TricksNamed", CurrentTank = "", PendingUpdate = false, }
+function tricksMacro:Update()
+    if (InCombatLockdown()) then
+        self.PendingUpdate = true
+    else
+        if (not tricksMacro.Exists) then
+            if (not GetMacroInfo(self.Name)) then
+                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. spells.TricksOfTheTrade.Name, true)) then
+                    addon.Helper.Print("Failed to create Tricks macro")
+                else
+                    self.Exists = true
+                end
+            else
+                self.Exists = true
+            end
+        end
+        if (self.Exists and spells.TricksOfTheTrade.Known and IsInGroup()) then
+            for i = 1, 4 do
+                local unit = "party" .. i
+                if (UnitExists(unit) and UnitGroupRolesAssigned(unit) == "TANK") then
+                    local tankName = UnitNameUnmodified(unit)
+                    if (tankName and tankName ~= UNKNOWNOBJECT and tankName ~= self.CurrentTank) then
+                        local tricks = spells.TricksOfTheTrade.Name
+                        local macroText = "#showtooltip " .. tricks .. "\n/cast [@" .. tankName .. "] " .. tricks
+                        if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
+                            self.CurrentTank = tankName
+                            addon.Helper.Print("Tricks on", tankName)
+                        end
+                        break;
+                    end
+                end
+            end
+        end
+        self.PendingUpdate = false
+    end
+end
+
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -465,6 +507,7 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
+    tricksMacro:Update()
     self:SetLayout()
 end
 
@@ -474,6 +517,16 @@ function rotation:CreateLocalEventTracker()
     local IsStealthed = IsStealthed
     function handlers.UPDATE_STEALTH(event, ...)
         self.Stealhed = IsStealthed()
+    end
+
+    function handlers.GROUP_ROSTER_UPDATE(event, ...)
+        tricksMacro:Update()
+    end
+
+    function handlers.PLAYER_REGEN_ENABLED(event, ...)
+        if (tricksMacro.PendingUpdate) then
+            tricksMacro:Update()
+        end
     end
 
     return addon.Initializer.NewEventTracker(handlers):RegisterEvents()

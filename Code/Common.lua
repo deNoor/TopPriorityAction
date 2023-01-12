@@ -16,6 +16,10 @@ local Common = {
         AutoAttack = {
             Id = 6603,
         },
+        GrievousWound = {
+            Id = 240559,
+            Debuff = 240559,
+        },
     },
     Items = {
         Healthstone = {
