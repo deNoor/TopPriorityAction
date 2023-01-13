@@ -17,7 +17,14 @@ local addon = TopPriorityAction
 
 local SavedSettings = { Instance = nil }
 function SavedSettings:Load()
-    TopPriorityActionSettings = TopPriorityActionSettings or {} -- saved variable from .toc file
+    TopPriorityActionSettings = TopPriorityActionSettings -- saved variable from .toc file
+        or
+        {
+            Enabled = false,
+            Burst = false,
+            AOE = false,
+            Dispel = false,
+        }
     TopPriorityActionSettings.ActionAdvanceWindow = TopPriorityActionSettings.ActionAdvanceWindow or (GetSpellQueueWindow() / 1000)
     self.Instance = TopPriorityActionSettings
     self:RaiseSettingUpdate()

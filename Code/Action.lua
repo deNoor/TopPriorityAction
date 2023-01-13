@@ -3,6 +3,11 @@ local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
 
+---@class PlayerAction
+---@field Id integer
+---@field Key string
+---@field Name string
+---@field Icon integer
 
 ---@class Action : PlayerAction
 ---@field Type ActionType

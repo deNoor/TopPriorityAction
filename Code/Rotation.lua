@@ -67,7 +67,6 @@ SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, 
 SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar
 function Rotation:ShouldNotRun()
     return not self.Settings.Enabled
-        or not self.RangeChecker.Name
         or self.IsPauseKeyDown
         or self.PauseTimestamp - self.Timestamp > 0
         or UnitIsDeadOrGhost("player")
@@ -173,7 +172,9 @@ function Rotation:WaitForOpportunity()
     return self
 end
 
+local currentInRange = false
 function Rotation:Pulse()
+    addon.Shared:InRangeSet(self.RangeChecker:IsInRange())
     if self:ShouldNotRun() then
         return emptyAction
     end
@@ -252,21 +253,24 @@ function addon:DetectRotation()
 
     local currentRotation = addon.Rotation or emptyRotation
     addon.Rotation = emptyRotation
-    addon.Shared.RangeCheckSpell = emptyAction
+    addon.Shared:InRangeSet(false)
     currentRotation:Dispose()
 
     if (not knownRotation) then
         addon.Helper.Print("unknown spec", class, specIndex)
     else
-        addon.Rotation = knownRotation
-        addon:UpdateKnownSpells()
-        addon:UpdateEquipment()
-        addon:UpdateKnownItems()
-        addon:UpdateRotationResource()
-        knownRotation:Activate()
-        addon.Shared.RangeCheckSpell = knownRotation.RangeChecker or emptyAction
-        knownRotation.IsPauseKeyDown = IsPauseKeyDown()
-        knownRotation.Settings = addon.SavedSettings.Instance
+        if (not knownRotation.RangeChecker or knownRotation.RangeChecker.Id < 1) then
+            addon.Helper.Print("RangeChecker not defined for rotation ", knownRotation.Name)
+        else
+            addon.Rotation = knownRotation
+            addon:UpdateKnownSpells()
+            addon:UpdateEquipment()
+            addon:UpdateKnownItems()
+            addon:UpdateRotationResource()
+            knownRotation:Activate()
+            knownRotation.IsPauseKeyDown = IsPauseKeyDown()
+            knownRotation.Settings = addon.SavedSettings.Instance
+        end
     end
     lastSpec = specIndex
 end

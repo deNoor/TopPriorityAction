@@ -193,7 +193,7 @@ local emptyAction = {
     IsAvailable = function() return true end,
     IsUsableNow = function() return true, false end,
     IsQueued = function() return false end,
-    IsInRange = function() return true end,
+    IsInRange = function() return false end,
     ReadyIn = function() return 0 end,
 }
 ---@type Rotation
@@ -201,6 +201,7 @@ local emptyRotation = {
     Name = "Empty-Nospec",
     Spells = {},
     Items = {},
+    RangeChecker = emptyAction,
     Pulse = function(_) return emptyAction end,
     SelectAction = function(_) end,
     ShouldNotRun = function(_) return true end,
