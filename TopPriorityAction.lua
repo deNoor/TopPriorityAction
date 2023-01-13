@@ -29,18 +29,23 @@ local Program = {
 }
 
 function Program:RegisterActionUpdater()
-    local updateLimit = self.UpdateEverySec
     local getTime = GetTime
+    local eventRegistry = EventRegistry
     local addon = addon
-    local shared = addon.Shared
+    local event = addon.Shared.CustomEvents.ADDON_TPA_ACTION_UPDATE
     local emptyAction = addon.Initializer.Empty.Action
+    local currentAction = emptyAction
     self.Ticker = C_Timer.NewTicker(
         self.UpdateEverySec,
         function()
             local now = getTime()
             local rotation = addon.Rotation
             rotation.Timestamp = now
-            shared.CurrentAction = rotation:Pulse() or emptyAction
+            local action = rotation:Pulse() or emptyAction
+            if (action ~= currentAction) then
+                currentAction = action
+                eventRegistry:TriggerEvent(event, action)
+            end
         end)
     return self
 end

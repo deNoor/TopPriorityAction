@@ -9,20 +9,24 @@ local addon = TopPriorityAction
 ---@field Name string
 ---@field Icon integer
 
+---@class CustomEvents
+---@field ADDON_TPA_ACTION_UPDATE string
+---@field ADDON_TPA_SETTINGS_UPDATE string
+
 ---@class SharedData
 ---@field CurrentAction PlayerAction
 ---@field RangeCheckSpell PlayerAction
+---@field CustomEvents CustomEvents
 
 -- shared by name with other addonds. Need to be global
 ---@type SharedData
 TopPriorityActionSharedData = {
-    CurrentAction = {
-        Id = 0,
-        Key = "",
-        Name = "Empty",
-        Icon = 0,
-    },
+    CurrentAction = addon.Initializer.Empty.Action,
     RangeCheckSpell = {},
+    CustomEvents = {
+        ADDON_TPA_ACTION_UPDATE = "ADDON_TPA_ACTION_UPDATE",
+        ADDON_TPA_SETTINGS_UPDATE = "ADDON_TPA_SETTINGS_UPDATE",
+    },
 }
 
 -- attach to addon

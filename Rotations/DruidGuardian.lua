@@ -266,9 +266,9 @@ function rotation:Activate()
 end
 
 function rotation:CreateLocalEventTracker()
-    local handlers = {}
+    local frameHandlers = {}
 
-    return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
+    return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
 function rotation:SetLayout()

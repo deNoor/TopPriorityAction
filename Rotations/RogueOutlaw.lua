@@ -512,24 +512,24 @@ function rotation:Activate()
 end
 
 function rotation:CreateLocalEventTracker()
-    local handlers = {}
+    local frameHandlers = {}
 
     local IsStealthed = IsStealthed
-    function handlers.UPDATE_STEALTH(event, ...)
+    function frameHandlers.UPDATE_STEALTH(event, ...)
         self.Stealhed = IsStealthed()
     end
 
-    function handlers.GROUP_ROSTER_UPDATE(event, ...)
+    function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
         tricksMacro:Update()
     end
 
-    function handlers.PLAYER_REGEN_ENABLED(event, ...)
+    function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
         if (tricksMacro.PendingUpdate) then
             tricksMacro:Update()
         end
     end
 
-    return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
+    return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
 function rotation:SetLayout()

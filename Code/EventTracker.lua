@@ -6,46 +6,59 @@ local addon = TopPriorityAction
 ---@alias EventHandler fun(event:string, ...)
 
 ---@class EventTracker
----@field private Frame Frame
----@field Handlers table<string, EventHandler>
+---@field FrameHandlers table<string, EventHandler>
+---@field CustomHandlers table<string, EventHandler>
 ---@field EventTimestamp number
----@field private RegisterEvents fun(self:EventTracker)
----@field UnRegisterEvent fun(self:EventTracker, event:string)
+---@field private RegisterEvents fun(self:EventTracker):EventTracker
+---@field UnRegisterEvent fun(self:EventTracker, event:string):EventTracker
 ---@field Dispose fun(self:EventTracker)
 
+---@type EventTracker
 local EventTracker = {
     EventTimestamp = 0
 }
+local EventRegistry, C_EventUtils = EventRegistry, C_EventUtils
+
+local addonCallbackRegistry = CreateFromMixins(CallbackRegistryMixin)
+addonCallbackRegistry:OnLoad()
+addonCallbackRegistry:SetUndefinedEventsAllowed(true)
 
 function EventTracker:RegisterEvents()
-    for event, _ in pairs(self.Handlers) do
-        self.Frame:RegisterEvent(event)
-    end
     local getTime = GetTime
-    local handlers = self.Handlers
-    self.Frame:SetScript("OnEvent", function(_, event, ...)
-        self.EventTimestamp = getTime()
-        local handler = handlers[event]
-        if handler then
-            handler(event, ...)
+    for event, handler in pairs(self.FrameHandlers) do
+        if (C_EventUtils.IsEventValid(event)) then
+            EventRegistry:RegisterFrameEventAndCallback(event, function(ownerId, ...)
+                self.EventTimestamp = getTime()
+                handler(event, ...)
+            end, self)
+        else
+            addon.Helper.Print("Invalid frame event", event)
         end
-    end)
+    end
+    for event, handler in pairs(self.CustomHandlers) do
+        EventRegistry:RegisterCallback(event, function(ownerId, ...)
+            self.EventTimestamp = getTime()
+            handler(event, ...)
+        end, self)
+    end
     return self
 end
 
 function EventTracker:UnRegisterEvent(event)
-    self.Frame:UnregisterEvent(event)
+    EventRegistry:UnregisterCallback(event, self)
     return self
 end
 
 function EventTracker:Dispose()
-    self.Frame:UnregisterAllEvents()
+    for event, _ in pairs(self.FrameHandlers) do
+        EventRegistry:UnregisterFrameEventAndCallback(event, self)
+    end
 end
 
-local function NewEventTracker(handlers)
+local function NewEventTracker(frameHandlers, customHandlers)
     local eventTracker = {
-        Frame = CreateFrame("Frame"),
-        Handlers = handlers or {},
+        FrameHandlers = frameHandlers or {},
+        CustomHandlers = customHandlers or {},
         EventTimestamp = 0,
     }
     addon.Helper.AddVirtualMethods(eventTracker, EventTracker)
@@ -54,10 +67,10 @@ local function NewEventTracker(handlers)
 end
 
 -- addon global handlers
-local handlers = {}
+local frameHandlers = {}
 
 ---loads saved setting
-function handlers.ADDON_LOADED(event, ...)
+function frameHandlers.ADDON_LOADED(event, ...)
     local name = ...
     if name == addonName then
         addon.SavedSettings:Load()
@@ -65,7 +78,7 @@ function handlers.ADDON_LOADED(event, ...)
     end
 end
 
-function handlers.PLAYER_ENTERING_WORLD(event, ...)
+function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
     local initialLogin, reloadingUi = ... -- if not (initialLogin or reloadingUi) then entering an instance
     if (initialLogin or reloadingUi) then
         addon.Initializer.NewPlayer()
@@ -73,27 +86,27 @@ function handlers.PLAYER_ENTERING_WORLD(event, ...)
     addon:DetectRotation()
 end
 
-function handlers.PLAYER_SPECIALIZATION_CHANGED(event, ...)
+function frameHandlers.PLAYER_SPECIALIZATION_CHANGED(event, ...)
     addon:DetectRotation()
 end
 
-function handlers.PLAYER_EQUIPMENT_CHANGED(event, ...)
+function frameHandlers.PLAYER_EQUIPMENT_CHANGED(event, ...)
     addon:UpdateEquipment()
 end
 
 -- fired after spec change, talent change, spellbook change
-function handlers.SPELLS_CHANGED(event, ...)
+function frameHandlers.SPELLS_CHANGED(event, ...)
     addon:UpdateKnownSpells()
 end
 
-function handlers.UNIT_DISPLAYPOWER(event, ...)
+function frameHandlers.UNIT_DISPLAYPOWER(event, ...)
     local unitId = ...
     if (unitId == "player") then
         addon:UpdateRotationResource()
     end
 end
 
-function handlers.MODIFIER_STATE_CHANGED(event, ...)
+function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
     local key, isPressed = ...
     if (key == "RCTRL") then
         local rotation = addon.Rotation
@@ -106,6 +119,8 @@ function handlers.MODIFIER_STATE_CHANGED(event, ...)
     end
 end
 
+local customHandlers = {}
+
 -- attach to addon
 addon.Initializer.NewEventTracker = NewEventTracker
-addon.EventTracker = NewEventTracker(handlers)
+addon.EventTracker = NewEventTracker(frameHandlers, customHandlers)

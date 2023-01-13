@@ -14,6 +14,7 @@ BINDING_NAME_DISPEL = "Dispel"
 TpaKeys = {}
 function TpaKeys.Toggle(toggle)
     addon.SavedSettings.Instance[toggle] = not addon.SavedSettings.Instance[toggle]
+    addon.SavedSettings:RaiseSettingUpdate()
 end
 
 --------------------------------------
@@ -25,21 +26,27 @@ local tonumber = tonumber
 local cmdHandlers = {
     switch = function(...)
         addon.SavedSettings.Instance.Enabled = not addon.SavedSettings.Instance.Enabled
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     start = function(...)
         addon.SavedSettings.Instance.Enabled = true
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     stop = function(...)
         addon.SavedSettings.Instance.Enabled = false
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     aoe = function(...)
         addon.SavedSettings.Instance.AOE = not addon.SavedSettings.Instance.AOE
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     burst = function(...)
         addon.SavedSettings.Instance.Burst = not addon.SavedSettings.Instance.Burst
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     dispel = function(...)
         addon.SavedSettings.Instance.Dispel = not addon.SavedSettings.Instance.Dispel
+        addon.SavedSettings:RaiseSettingUpdate()
     end,
     pause = function(arg, ...)
         local seconds = tonumber(arg)
@@ -206,7 +213,7 @@ local emptyRotation = {
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewItem fun(spell:Item):Item
 ---@field NewAuraCollection fun(unitId:UnitId,filter:string):AuraCollection
----@field NewEventTracker fun(handlers:table<string, EventHandler>):EventTracker
+---@field NewEventTracker fun(frameHandlers:table<string, EventHandler>, customHandlers:table<string, EventHandler>?):EventTracker
 ---@field NewPlayer fun():Player
 ---@field NewEquipment fun():Equipment
 ---@field NewUnit fun(unit:Unit):Unit

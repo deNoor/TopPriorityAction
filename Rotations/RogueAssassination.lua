@@ -283,14 +283,14 @@ function rotation:Activate()
 end
 
 function rotation:CreateLocalEventTracker()
-    local handlers = {}
+    local frameHandlers = {}
 
     local IsStealthed = IsStealthed
-    function handlers.UPDATE_STEALTH(event, ...)
+    function frameHandlers.UPDATE_STEALTH(event, ...)
         self.Stealhed = IsStealthed()
     end
 
-    return addon.Initializer.NewEventTracker(handlers):RegisterEvents()
+    return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
 function rotation:SetLayout()
