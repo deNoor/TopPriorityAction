@@ -36,10 +36,10 @@ function Player:FullGCDTime()
     return (UnitPowerType(self.Id) == Enum.PowerType.Energy and 1 or max(0.75, 1.5 * 100 / (100 + GetHaste())))
 end
 
-local select, GetInstanceInfo = select, GetInstanceInfo
+local select, GetInstanceInfo, GetNumGroupMembers = select, GetInstanceInfo, GetNumGroupMembers
 local instanceTypes = addon.Helper.ToHashSet({ "raid", "party", "pvp", "arena", })
 function Player:InInstance()
-    return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil
+    return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil and GetNumGroupMembers() > 0
 end
 
 -- attach to addon
