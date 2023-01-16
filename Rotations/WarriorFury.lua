@@ -118,13 +118,10 @@ function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (true)
-    then
-        self:Utility()
-        if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
-            if (self.InRange) then
-                self:Base()
-            end
+    self:Utility()
+    if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
+        if (self.InRange) then
+            self:Base()
         end
     end
 end
