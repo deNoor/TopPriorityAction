@@ -178,17 +178,14 @@ function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (true)
-    then
-        self:Utility()
-        if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
-            if (self.InRange and self.Stealhed) then
-                self:StealthOpener()
-            end
-            if (self.InRange) then
-                self:AutoAttack()
-                self:SingleTarget()
-            end
+    self:Utility()
+    if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
+        if (self.InRange and self.Stealhed) then
+            self:StealthOpener()
+        end
+        if (self.InRange) then
+            self:AutoAttack()
+            self:SingleTarget()
         end
     end
 end
@@ -432,7 +429,7 @@ function rotation:ShortBurstEffects()
     return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff)
 end
 
-local InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, IsInGroup, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT = InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, IsInGroup, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT
+local InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT = InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT
 local tricksMacro = { Exists = false, Name = "TricksNamed", CurrentTank = "", PendingUpdate = false, }
 function tricksMacro:Update()
     if (InCombatLockdown()) then
@@ -449,7 +446,7 @@ function tricksMacro:Update()
                 self.Exists = true
             end
         end
-        if (self.Exists and spells.TricksOfTheTrade.Known and IsInGroup()) then
+        if (self.Exists and spells.TricksOfTheTrade.Known and GetNumGroupMembers() > 0) then
             for i = 1, 4 do
                 local unit = "party" .. i
                 if (UnitExists(unit) and UnitGroupRolesAssigned(unit) == "TANK") then
@@ -539,8 +536,8 @@ function rotation:SetLayout()
     spells.SinisterStrike.Key = "3"
     spells.Eviscerate.Key = "4"
     spells.Dispatch.Key = spells.Eviscerate.Key
-    spells.RollTheBones.Key = "5"
-    spells.BetweenTheEyes.Key = "6"
+    spells.BetweenTheEyes.Key = "5"
+    spells.RollTheBones.Key = "6"
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
     spells.BladeRush.Key = "9"
