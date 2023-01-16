@@ -11,6 +11,9 @@ local WowClass = {
         [2] = nil, -- Feral
         [3] = nil, -- Guardian
     },
+    HUNTER = {
+        [1] = nil, -- BeastMastery
+    },
     ROGUE = {
         [1] = nil, -- Assassination
         [2] = nil, -- Outlaw

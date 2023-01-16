@@ -16,6 +16,9 @@ local Common = {
         AutoAttack = {
             Id = 6603,
         },
+        AutoShot = {
+            Id = 75,
+        },
         GrievousWound = {
             Id = 240559,
             Debuff = 240559,

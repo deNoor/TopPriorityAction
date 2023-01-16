@@ -26,6 +26,7 @@ Code\Unit.lua
 Rotations\_WowClass.lua
 Rotations\DruidFeral.lua
 Rotations\DruidGuardian.lua
+Rotations\HunterBeastMastery.lua
 Rotations\RogueAssassination.lua
 Rotations\RogueOutlaw.lua
 Rotations\WarriorFury.lua
