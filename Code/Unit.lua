@@ -23,6 +23,7 @@ local addon = TopPriorityAction
 ---@field HealAbsorb fun(self:Unit):number @amount
 ---@field IsFriend fun(self:Unit):boolean @with player
 ---@field IsEnemy fun(self:Unit):boolean @with player
+---@field IsTiny fun(self:Unit):boolean
 
 ---@type Unit
 local Unit = {}
@@ -168,6 +169,11 @@ end
 
 function Unit:IsEnemy()
     return UnitIsEnemy("player", self.Id)
+end
+
+local PlayerEffectiveAttackPower, UnitHealthMax = PlayerEffectiveAttackPower, UnitHealthMax
+function Unit:IsTiny()
+    return (UnitHealthMax(self.Id) < PlayerEffectiveAttackPower())
 end
 
 -- attach to addon

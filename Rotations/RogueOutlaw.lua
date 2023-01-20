@@ -69,6 +69,9 @@ local spells = {
     BladeRush = {
         Id = 271877,
     },
+    Sepsis = {
+        Id = 385408,
+    },
     BetweenTheEyes = {
         Id = 315341,
     },
@@ -171,6 +174,7 @@ local rotation = {
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
     CanDotTarget           = false,
+    TinyTarget             = false,
     ShortBursting          = false,
 }
 
@@ -230,6 +234,7 @@ function rotation:SingleTarget()
             function() if (self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self.ShortBursting and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
+            function() if (settings.Burst) then return spells.Sepsis end end,
             function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return spells.Ambush end,
             function() return self:PistolShot() end,
@@ -254,9 +259,10 @@ end
 
 local autoAttackList
 function rotation:AutoAttack()
+    local
     autoAttackList = autoAttackList or
         {
-            function() if (not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
+            function() if (not spells.AutoAttack:IsQueued() or self.TinyTarget) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
 end
@@ -270,7 +276,7 @@ function rotation:AwaitedVanishAmbush()
 end
 
 function rotation:AwaitedShadowDance()
-    if (self.Energy > 80) then
+    if (self.Energy > 80 and self.GcdReadyIn < 0.05) then
         return spells.ShadowDance
     else
         return self.EmptyAction
@@ -432,13 +438,14 @@ end
 local InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT = InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT
 local tricksMacro = { Exists = false, Name = "TricksNamed", CurrentTank = "", PendingUpdate = false, }
 function tricksMacro:Update()
+    local spell = spells.TricksOfTheTrade
     if (InCombatLockdown()) then
         self.PendingUpdate = true
     else
         if (not tricksMacro.Exists) then
             if (not GetMacroInfo(self.Name)) then
-                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. spells.TricksOfTheTrade.Name, true)) then
-                    addon.Helper.Print("Failed to create Tricks macro")
+                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. spell.Name, true)) then
+                    addon.Helper.Print("Failed to create" .. self.Name .. "macro")
                 else
                     self.Exists = true
                 end
@@ -446,19 +453,21 @@ function tricksMacro:Update()
                 self.Exists = true
             end
         end
-        if (self.Exists and spells.TricksOfTheTrade.Known and GetNumGroupMembers() > 0) then
-            for i = 1, 4 do
-                local unit = "party" .. i
-                if (UnitExists(unit) and UnitGroupRolesAssigned(unit) == "TANK") then
-                    local tankName = UnitNameUnmodified(unit)
-                    if (tankName and tankName ~= UNKNOWNOBJECT and tankName ~= self.CurrentTank) then
-                        local tricks = spells.TricksOfTheTrade.Name
-                        local macroText = "#showtooltip " .. tricks .. "\n/cast [@" .. tankName .. "] " .. tricks
-                        if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
-                            self.CurrentTank = tankName
-                            addon.Helper.Print("Tricks on", tankName)
+        if (self.Exists and spell.Known) then
+            if (GetNumGroupMembers() > 0) then
+                for i = 1, 4 do
+                    local unit = "party" .. i
+                    if (UnitExists(unit) and UnitGroupRolesAssigned(unit) == "TANK") then
+                        local tankName = UnitNameUnmodified(unit)
+                        if (tankName and tankName ~= UNKNOWNOBJECT and tankName ~= self.CurrentTank) then
+                            local spellName = spell.Name
+                            local macroText = "#showtooltip " .. spellName .. "\n/cast [@" .. tankName .. "] " .. spellName
+                            if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
+                                self.CurrentTank = tankName
+                                addon.Helper.Print(spellName, "on", tankName)
+                            end
+                            break;
                         end
-                        break;
                     end
                 end
             end
@@ -484,11 +493,12 @@ function rotation:Refresh()
     self.MyHealAbsorb = player:HealAbsorb()
     self.GcdReadyIn = player:GCDReadyIn()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
-    self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
+    self.ActionAdvanceWindow = 50 / 1000
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget = player.Target:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
+    self.TinyTarget = player.Target:IsTiny()
     self.ShortBursting = self:ShortBurstEffects()
 
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
@@ -541,6 +551,7 @@ function rotation:SetLayout()
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
     spells.BladeRush.Key = "9"
+    spells.Sepsis.Key = spells.BladeRush.Key
 
     spells.ThistleTea.Key = "s-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
@@ -552,17 +563,18 @@ function rotation:SetLayout()
     spells.Feint.Key = "s-7"
     spells.KidneyShot.Key = "s-8"
     spells.Vanish.Key = "s-9"
-    spells.AutoAttack.Key = "s-="
+
 
     spells.Kick.Key = "F7"
     spells.CrimsonVial.Key = "F11"
+    spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
     equip.Trinket14.Key = "s-0"
     equip.Trinket13.Key = "s--"
 
     local items = self.Items
-    items.Healthstone.Key = "F12"
+    items.Healthstone.Key = "s-="
 end
 
 addon:AddRotation("ROGUE", 2, rotation)
