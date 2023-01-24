@@ -227,16 +227,17 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (self.Energy < 40 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
-            function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and not player.Buffs:Applied(spells.ShadowDance.Buff) and not player.Debuffs:Applied(spells.Dreadblades.Debuff)) then return spells.BladeRush end end,
+            function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and not player.Buffs:Applied(spells.ShadowDance.Buff) and not player.Debuffs:Applied(spells.Dreadblades.Debuff) and not self.ShortBursting) then return spells.BladeRush end end,
+            function() if (not settings.AOE and self.EnergyDeficit > 50 and not self.ShortBursting) then return spells.BladeRush end end,
             function() if (self.ComboFinisherAllowed) then return spells.BetweenTheEyes end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
-            function() if (not settings.AOE and self.EnergyDeficit > 50 and not self.ShortBursting) then return spells.BladeRush end end,
             function() if (self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self.ShortBursting and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
-            function() if (settings.Burst) then return spells.Sepsis end end,
-            function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() return spells.Ambush end,
+            function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
+            function() if (settings.Burst) then return spells.Sepsis end end,
+            function() if (not settings.AOE or player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
             function() return self:PistolShot() end,
             function() if (settings.Burst and spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance() end end,
             function() return spells.SinisterStrike end,
@@ -262,7 +263,7 @@ function rotation:AutoAttack()
     local
     autoAttackList = autoAttackList or
         {
-            function() if (not spells.AutoAttack:IsQueued() or self.TinyTarget) then return spells.AutoAttack end end,
+            function() if (not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
 end
