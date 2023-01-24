@@ -260,7 +260,6 @@ end
 
 local autoAttackList
 function rotation:AutoAttack()
-    local
     autoAttackList = autoAttackList or
         {
             function() if (not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
