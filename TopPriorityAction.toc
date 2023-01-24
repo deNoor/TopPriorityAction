@@ -30,5 +30,6 @@ Rotations\HunterBeastMastery.lua
 Rotations\RogueAssassination.lua
 Rotations\RogueOutlaw.lua
 Rotations\WarriorFury.lua
+Rotations\WarriorProtection.lua
 
 TopPriorityAction.lua

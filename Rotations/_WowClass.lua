@@ -20,6 +20,7 @@ local WowClass = {
     },
     WARRIOR = {
         [2] = nil, -- Fury
+        [3] = nil, -- Protection
     },
 }
 
