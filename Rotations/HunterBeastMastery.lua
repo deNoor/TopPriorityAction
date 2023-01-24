@@ -6,7 +6,12 @@ local addon = TopPriorityAction
 ---@type table<string,Spell>
 local spells = {
     AutoShot = addon.Common.Spells.AutoShot,
-
+    MendPet = {
+        Id = 136,
+    },
+    Exhilaration = {
+        Id = 109304,
+    },
     KillCommand = {
         Id = 34026,
     },
@@ -16,6 +21,9 @@ local spells = {
     BarbedShot = {
         Id = 217200,
         Buff = 246851,
+    },
+    MultiShot = {
+        Id = 2643,
     },
     KillShot = {
         Id = 53351,
@@ -47,21 +55,24 @@ local rotation = {
     RangeChecker = spells.AutoShot,
 
     -- locals
-    InRange                = false,
-    Focus                  = 0,
-    FocusDeficit           = 0,
-    GcdReadyIn             = 0,
-    NowCasting             = 0,
-    CastingEndsIn          = 0,
-    CCUnlockIn             = 0,
-    ActionAdvanceWindow    = 0,
-    MyHealthPercent        = 0,
-    MyHealthPercentDeficit = 0,
-    MyHealAbsorb           = 0,
-    InInstance             = false,
-    InCombatWithTarget     = false,
-    CanAttackTarget        = false,
-    CanDotTarget           = false,
+    InRange                 = false,
+    Focus                   = 0,
+    FocusDeficit            = 0,
+    GcdReadyIn              = 0,
+    NowCasting              = 0,
+    CastingEndsIn           = 0,
+    CCUnlockIn              = 0,
+    ActionAdvanceWindow     = 0,
+    MyHealthPercent         = 0,
+    MyHealthPercentDeficit  = 0,
+    MyHealAbsorb            = 0,
+    HavePet                 = false,
+    PetHealthPercent        = 0,
+    PetHealthPercentDeficit = 0,
+    InInstance              = false,
+    InCombatWithTarget      = false,
+    CanAttackTarget         = false,
+    CanDotTarget            = false,
 }
 
 function rotation:SelectAction()
@@ -89,8 +100,8 @@ function rotation:SingleTarget()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.CounterShot end end,
             function() return spells.KillShot end,
             function() if (self.FocusDeficit > 40) then return spells.BarbedShot end end,
-            function() return spells.KillCommand end,
-            function() return spells.CobraShot end,
+            function() if (self.PetHealthPercent > 0) then return spells.KillCommand end end,
+            function() if (not settings.AOE) then return spells.CobraShot else return spells.MultiShot end end,
             function() return spells.AutoShot end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -103,6 +114,8 @@ function rotation:Utility()
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
+            function() if (self.HavePet and self.PetHealthPercentDeficit > 50) then return spells.MendPet end end,
+            function() if (self.MyHealthPercentDeficit > 65) then return spells.Exhilaration end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -192,6 +205,7 @@ function rotation:Refresh()
     self.Focus, self.FocusDeficit = player:Resource(Enum.PowerType.Focus)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
+    self.PetHealthPercent, self.PetHealthPercentDeficit = player.Pet:HealthPercent()
     self.GcdReadyIn = player:GCDReadyIn()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
@@ -211,11 +225,22 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
+    tricksMacro:Update()
     self:SetLayout()
 end
 
 function rotation:CreateLocalEventTracker()
     local frameHandlers = {}
+
+    function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
+        tricksMacro:Update()
+    end
+
+    function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
+        if (tricksMacro.PendingUpdate) then
+            tricksMacro:Update()
+        end
+    end
 
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
@@ -226,8 +251,11 @@ function rotation:SetLayout()
     spells.KillShot.Key = "2"
     spells.CobraShot.Key = "3"
     spells.BarbedShot.Key = "4"
+    spells.MultiShot.Key = "8"
 
     spells.CounterShot.Key = "F7"
+    spells.MendPet.Key = "F10"
+    spells.Exhilaration.Key = "F11"
     spells.AutoShot.Key = "F12"
 
     local equip = addon.Player.Equipment

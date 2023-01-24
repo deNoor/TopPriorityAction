@@ -8,6 +8,7 @@ local addon = TopPriorityAction
 ---@field Equipment Equipment
 ---@field Target Unit
 ---@field Mouseover Unit
+---@field Pet Unit
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
 ---@field InInstance fun(self:Player):boolean
@@ -23,6 +24,7 @@ local function NewPlayer()
     player.Talents = {}
     player.Target = addon.Initializer.NewUnit({ Id = "target", }):WithBuffs("HELPFUL"):WithDebuffs("PLAYER|HARMFUL")
     player.Mouseover = addon.Initializer.NewUnit({ Id = "mouseover", }):WithBuffs("HELPFUL"):WithDebuffs("RAID|HARMFUL")
+    player.Pet = addon.Initializer.NewUnit({ Id = "pet", })
     addon.Player = player
     return player
 end

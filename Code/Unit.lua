@@ -12,6 +12,8 @@ local addon = TopPriorityAction
 ---@field IsTotem fun(self:Unit):boolean
 ---@field CanDot fun(self:Unit):boolean @from Player perspective
 ---@field CanAttack fun(self:Unit):boolean @from Player perspective
+---@field Exists fun(self:Unit):boolean
+---@field Dead fun(self:Unit):boolean
 ---@field InCombatWithMe fun(self:Unit):boolean
 ---@field CastingEndsIn fun(self:Unit):number
 ---@field NowCasting fun(self:Unit):integer,number,number,boolean,boolean @spellId, leftSec, elapsedSec, channeling, kickable
@@ -29,7 +31,7 @@ local addon = TopPriorityAction
 local Unit = {}
 
 ---@type UnitId[]
-local unitIds = { "player", "target", "mouseover", }
+local unitIds = { "player", "target", "mouseover", "pet", }
 local knownUnits = addon.Helper.ToHashSet(unitIds)
 ---@param unit Unit
 ---@return Unit
@@ -125,9 +127,17 @@ end
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax
 function Unit:HealthPercent()
     local total = UnitHealthMax(self.Id)
+    if (total <= 0) then
+        return 0, 0
+    end
     local current = UnitHealth(self.Id)
     local currentPercent = current * 100 / total
     return currentPercent, 100 - currentPercent
+end
+
+local UnitExists = UnitExists
+function Unit:Exists()
+    return UnitExists(self.Id)
 end
 
 function Unit:Health()
@@ -149,6 +159,10 @@ end
 local UnitCanAttack, UnitIsDead = UnitCanAttack, UnitIsDead
 function Unit:CanAttack()
     return UnitCanAttack("player", self.Id) and not UnitIsDead(self.Id)
+end
+
+function Unit:Dead()
+    return UnitIsDead(self.Id)
 end
 
 local UnitClassification, UnitCreatureType = UnitClassification, UnitCreatureType
