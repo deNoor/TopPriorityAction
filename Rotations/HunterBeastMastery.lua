@@ -47,7 +47,7 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Rogue-Assassination",
+    Name = "Hunter-BeastMastery",
     Spells = spells,
     Items = items,
     Cmds = cmds,
