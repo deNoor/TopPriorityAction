@@ -65,9 +65,13 @@ function addon:UpdateKnownSpells()
             spell.Name = name
             spell.Icon = icon
             spell.HardCast = castTime > 0
-            spell.Known = IsPlayerSpell(spell.Id) -- name ~= nil, IsPlayerSpell(spell.Id), IsSpellKnownOrOverridesKnown(spell.Id)
-            spell.SpellBookType = BOOKTYPE_SPELL -- also BOOKTYPE_PET if added some time
-            spell.SpellBookSlot = FindSpellBookSlotBySpellID(spell.Id)
+            if (IsPassiveSpell(spell.Id)) then -- name ~= nil, IsPlayerSpell(spell.Id), IsSpellKnownOrOverridesKnown(spell.Id)
+                spell.Known = IsPlayerSpell(spell.Id)
+            else
+                spell.SpellBookType = BOOKTYPE_SPELL -- also BOOKTYPE_PET if added some time
+                spell.SpellBookSlot = FindSpellBookSlotBySpellID(spell.Id)
+                spell.Known = spell.SpellBookSlot ~= nil
+            end
             local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
             spell.NoGCD = gcdMS == 0
             spell.HasCD = cooldownMS > 0
@@ -96,6 +100,9 @@ function Spell:IsUsableNow()
         return false, false
     end
     local usable, noMana = IsUsableSpell(self.SpellBookSlot, self.SpellBookType)
+    if (usable == nil) then
+        return false, false
+    end
     if (usable) then
         local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > actionAdvanceWindow
         usable = not onCD
