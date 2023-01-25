@@ -2,7 +2,10 @@
     "Lua.diagnostics.globals": [
         "ACTIVE_CHAT_EDIT_BOX",
         "MAX_TALENT_TIERS",
-        "NUM_TALENT_COLUMNS"
+        "NUM_TALENT_COLUMNS",
+        "BOOKTYPE_SPELL",
+        "SlashCmdList",
+        "UNKNOWNOBJECT"
     ],
     "Lua.diagnostics.disable": [
         "invisible"
