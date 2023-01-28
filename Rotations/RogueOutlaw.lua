@@ -187,6 +187,9 @@ function rotation:SelectAction()
         if (self.InRange and self.Stealhed) then
             self:StealthOpener()
         end
+        if (self.Player.Mouseover:Exists() and self.RangeChecker:IsInRange("mouseover")) then
+            self:MouseoverCmd()
+        end
         if (self.InRange) then
             self:AutoAttack()
             self:SingleTarget()
@@ -223,9 +226,9 @@ function rotation:SingleTarget()
                 then return spells.KillingSpree
                 end
             end,
-            function() return self:RollTheBones() end,
-            function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
-            function() if (self.Energy < 40 and not self.ComboHolding) then return spells.ThistleTea end end,
+            function() if (not self.ComboHolding and not self.ShortBursting) then return self:RollTheBones() end end,
+            function() if (not self.ComboHolding and not self.ShortBursting) then return self:SliceAndDice() end end,
+            function() if (self.Energy < 50 and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
             function() if (settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and not player.Buffs:Applied(spells.ShadowDance.Buff) and not player.Debuffs:Applied(spells.Dreadblades.Debuff) and not self.ShortBursting) then return spells.BladeRush end end,
             function() if (not settings.AOE and self.EnergyDeficit > 50 and not self.ShortBursting) then return spells.BladeRush end end,
@@ -236,7 +239,7 @@ function rotation:SingleTarget()
             function() if (settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
             function() return spells.Ambush end,
             function() if (settings.Burst and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
-            function() if (settings.Burst) then return spells.Sepsis end end,
+            function() if (settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
             function() if (not settings.AOE or player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeRush end end,
             function() return self:PistolShot() end,
             function() if (settings.Burst and spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance() end end,
@@ -256,6 +259,17 @@ function rotation:Utility()
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
         }
     return rotation:RunPriorityList(utilityList)
+end
+
+local mouseoverList
+function rotation:MouseoverCmd()
+    local mouseover = self.Player.Mouseover
+    mouseoverList = mouseoverList or
+        {
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and mouseover:CanKick()) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+        }
+    return rotation:RunPriorityList(mouseoverList)
 end
 
 local autoAttackList
@@ -298,7 +312,7 @@ function rotation:SliceAndDice()
         end
         return nil
     end
-    if (self.ComboFinisherAllowed and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
+    if (self.ComboFinisherAllowed and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < 12) then
         return spells.SliceAndDice
     end
     return nil
@@ -307,7 +321,7 @@ end
 function rotation:PistolShot()
     if (spells.FanTheHammer.Known) then
         local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity)
-        if (self.Combo < 3 and stacks > 0 or stacks > 3) then
+        if (self.ComboDeficit > 3 and stacks > 0 or stacks > 3) then
             return spells.PistolShot
         end
         return nil
@@ -353,7 +367,7 @@ local activeRtb = {
     Broadside = false, -- 1 combo gen
     RuthlessPrecision = false, -- crit
     BuriedTreasure = false, -- energy regen
-    GrandMelee = false, -- SnD increase and leech
+    GrandMelee = false, -- SnD application and leech
 }
 ---@return Spell?
 function rotation:RollTheBones()
@@ -550,8 +564,6 @@ function rotation:SetLayout()
     spells.RollTheBones.Key = "6"
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
-    spells.BladeRush.Key = "9"
-    spells.Sepsis.Key = spells.BladeRush.Key
 
     spells.ThistleTea.Key = "s-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
@@ -559,6 +571,8 @@ function rotation:SetLayout()
     spells.Ambush.Key = "s-3"
     spells.KillingSpree.Key = "s-4"
     spells.Dreadblades.Key = spells.KillingSpree.Key
+    spells.BladeRush.Key = "s-5"
+    spells.Sepsis.Key = spells.BladeRush.Key
     spells.Shiv.Key = "s-6"
     spells.Feint.Key = "s-7"
     spells.KidneyShot.Key = "s-8"
