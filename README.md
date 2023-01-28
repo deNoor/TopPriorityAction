@@ -3,9 +3,9 @@ WoW addon to propose combat actions (spells, items). Implements combat action pr
 Uses retail WoW UI Lua.
 
 ## Current state
-- Game version: 10.0.2 (Dragonflight)
+- Game version: 10.0.5 (Dragonflight)
 - Specs:
-  - Active: outlaw (10.0.2)
+  - Active: outlaw (10.0.5)
   - Inactive: assa (10.0.2), feral (9.2.7), guardian (9.2.7), fury (9.2.7)
 
 ## Description
