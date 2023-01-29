@@ -6,11 +6,11 @@ local addon = TopPriorityAction
 -- need to be loaded first. Use to initialize addon-wide data.
 
 -- keybinds --------------------------
-BINDING_HEADER_TPRIOACTION = "Top priority action"
-BINDING_NAME_SWITCH = "Switch"
-BINDING_NAME_BURST = "Burst"
-BINDING_NAME_AOE = "AoE"
-BINDING_NAME_DISPEL = "Dispel"
+_G["BINDING_HEADER_TOPPRIOACTION_HEADER"] = "Top priority action"
+_G["BINDING_NAME_TOPPRIOACTION_SWITCH"] = "Switch"
+_G["BINDING_NAME_TOPPRIOACTION_BURST"] = "Burst"
+_G["BINDING_NAME_TOPPRIOACTION_AOE"] = "AoE"
+_G["BINDING_NAME_TOPPRIOACTION_DISPEL"] = "Dispel"
 TpaKeys = {}
 function TpaKeys.Toggle(toggle)
     addon.SavedSettings.Instance[toggle] = not addon.SavedSettings.Instance[toggle]

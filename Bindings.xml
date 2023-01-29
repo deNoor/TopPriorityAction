@@ -1,6 +1,6 @@
 <Bindings>
-  <Binding name="SWITCH" category="Top Priority Action">TpaKeys.Toggle("Enabled")</Binding>
-  <Binding name="BURST" category="Top Priority Action">TpaKeys.Toggle("Burst")</Binding>
-  <Binding name="AOE" category="Top Priority Action">TpaKeys.Toggle("AOE")</Binding>
-  <Binding name="DISPEL" category="Top Priority Action">TpaKeys.Toggle("Dispel")</Binding>
+  <Binding name="TOPPRIOACTION_SWITCH" category="Top Priority Action" header="TOPPRIOACTION_HEADER">TpaKeys.Toggle("Enabled")</Binding>
+  <Binding name="TOPPRIOACTION_BURST" category="Top Priority Action">TpaKeys.Toggle("Burst")</Binding>
+  <Binding name="TOPPRIOACTION_AOE" category="Top Priority Action">TpaKeys.Toggle("AOE")</Binding>
+  <Binding name="TOPPRIOACTION_DISPEL" category="Top Priority Action">TpaKeys.Toggle("Dispel")</Binding>
 </Bindings>
