@@ -15,16 +15,18 @@ local addon = TopPriorityAction
 ---@field Dispel boolean
 ---@field ActionAdvanceWindow integer
 
-local SavedSettings = { Instance = nil }
+local SavedSettings = {
+    Instance = {
+        Enabled = false,
+        Burst = false,
+        AOE = false,
+        Dispel = false,
+        ActionAdvanceWindow = 1,
+    }
+}
 function SavedSettings:Load()
     TopPriorityActionSettings = TopPriorityActionSettings -- saved variable from .toc file
-        or
-        {
-            Enabled = false,
-            Burst = false,
-            AOE = false,
-            Dispel = false,
-        }
+        or self.Instance
     TopPriorityActionSettings.ActionAdvanceWindow = TopPriorityActionSettings.ActionAdvanceWindow or (GetSpellQueueWindow() / 1000)
     self.Instance = TopPriorityActionSettings
     self:RaiseSettingUpdate()
