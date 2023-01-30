@@ -161,9 +161,10 @@ function tricksMacro:Update()
     else
         if (not tricksMacro.Exists) then
             if (not GetMacroInfo(self.Name)) then
-                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. spell.Name, true)) then
-                    addon.Helper.Print("Failed to create" .. self.Name .. "macro")
+                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. (spell.Name or ""), true)) then
+                    addon.Helper.Print("Failed to create", self.Name, "macro")
                 else
+                    addon.Helper.Print("Created macro", self.Name)
                     self.Exists = true
                 end
             else
