@@ -191,6 +191,7 @@ local rotation = {
     CanDotTarget           = false,
     TinyTarget             = false,
     ShortBursting          = false,
+    SetBonus2              = false,
 }
 
 function rotation:SelectAction()
@@ -568,6 +569,7 @@ function rotation:Refresh()
     self.CanDotTarget = player.Target:CanDot()
     self.TinyTarget = player.Target:IsTiny()
     self.ShortBursting = self:ShortBurstEffects()
+    self.SetBonus2 = player.Equipment:ActiveSetBonus(1535, 2)
 
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
 end
