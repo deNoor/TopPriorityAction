@@ -119,6 +119,20 @@ function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
     end
 end
 
+local GetUnitName, C_ChallengeMode, GetInstanceInfo = GetUnitName, C_ChallengeMode, GetInstanceInfo
+function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
+    local encounterID, itemID, itemLink, quantity, playerName, className = ...
+    if (playerName == GetUnitName("player", true)) then
+        local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
+        if (difficultyID and difficultyID == 8) then -- Mythic Keystone
+            local mapID, level, time, onTime, keystoneUpgradeLevels, practiceRun, oldDungeonScore, newDungeonScore, isAffixRecord, isMapRecord, primaryAffix, isEligibleForScore, upgradeMembers = C_ChallengeMode.GetCompletionInfo()
+            if (level and level > 0 and not practiceRun) then
+                addon.Convenience:ThanksBye(2)
+            end
+        end
+    end
+end
+
 local customHandlers = {}
 
 -- attach to addon
