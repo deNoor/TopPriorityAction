@@ -27,7 +27,8 @@ local CmdBus = {
 
 local default = {
     Command = {
-        DirationMax = 10,
+        SecMin = 0.1,
+        SecMax = 10,
     }
 }
 
@@ -62,8 +63,8 @@ function CmdBus:Add(...)
     if (type(duration) ~= "number") then
         warn("expected a duration but [2] was", duration)
         return
-    elseif (duration < 1 or duration > default.Command.DirationMax) then
-        warn("duration must be between 1 and", default.Command.DirationMax)
+    elseif (duration < default.Command.SecMin or duration > default.Command.SecMax) then
+        warn("duration must be between", default.Command.SecMin, "and", default.Command.SecMax)
     end
     local cmd = GetCached(name)
     cmd.Expiration = getTime() + duration
