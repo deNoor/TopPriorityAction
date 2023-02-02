@@ -154,6 +154,13 @@ local cmds = {
     }
 }
 
+local setBonuses = {
+    DFVault = {
+        ItemsIt = 1535,
+        Buff2Id = 394879,
+    }
+}
+
 ---@type table<string,Item>
 local items = addon.Common.Items
 
@@ -378,6 +385,10 @@ function rotation:ColdBlood()
         return nil
     end
     if (not self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and spells.Ambush:IsUsableNow()) then
+        local setBonus2 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsIt, 2)
+        if (setBonus2 and not player.Buffs:Applied(setBonuses.DFVault.Buff2Id)) then
+            return nil
+        end
         local usable, noMana = spells.Ambush:IsUsableNow()
         if (usable or noMana) then
             return spells.ColdBlood
@@ -484,16 +495,16 @@ function rotation:ComboPandemic(initialDuration)
     return initialDuration * (1 + self.Combo) * 0.3
 end
 
-local max = max
+local max, min = max, min
 ---@return boolean
 function rotation:FinisherAllowed()
     local comboFinisher = self.ComboFinisher
     if (spells.SummarilyDispatched.Known) then
-        comboFinisher = 5
+        comboFinisher = max(5, self.ComboFinisher)
     elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
-        comboFinisher = 5
+        comboFinisher = max(5, self.ComboFinisher)
     elseif (self.Player.Buffs:Applied(spells.RollTheBones.Broadside)) then
-        comboFinisher = max(4, comboFinisher - 1)
+        comboFinisher = min(self.Combo + self.ComboDeficit - 1, self.ComboFinisher)
     end
     return self.Combo >= comboFinisher
 end
@@ -569,7 +580,6 @@ function rotation:Refresh()
     self.CanDotTarget = player.Target:CanDot()
     self.TinyTarget = player.Target:IsTiny()
     self.ShortBursting = self:ShortBurstEffects()
-    self.SetBonus2 = player.Equipment:ActiveSetBonus(1535, 2)
 
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
 end
