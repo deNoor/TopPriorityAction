@@ -59,6 +59,7 @@ function Rotation:SetDefaults()
     self.PauseTimestamp = 0
     self.IsPauseKeyDown = false
     self.AddedPauseOnKey = 1
+    self.GcdReadyIn = 0
     return self
 end
 
@@ -113,7 +114,7 @@ end
 function Rotation:ActionQueueAwailable()
     local spellId, endsInSec = addon.Player:NowCasting()
     if (spellId > 0) then
-        return endsInSec < self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
+        return endsInSec <= self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
     end
     return true
 end
@@ -142,19 +143,19 @@ function Rotation:WaitForOpportunity()
             Empty = function() end,
             Spell = function()
                 local spell = self.SelectedAction ---@type Spell
-                if (not spell.NoGCD and self.GcdReadyIn > self.Settings.ActionAdvanceWindow) then
+                if (spell:ReadyIn() > self.Settings.ActionAdvanceWindow) then
                     self.SelectedAction = emptyAction
                 end
             end,
             EquipItem = function()
                 local item = self.SelectedAction ---@type EquipItem
-                if (addon.Player:CastingEndsIn() > 0) then
+                if (addon.Player:CastingEndsIn() > 0 or item:ReadyIn() > self.Settings.ActionAdvanceWindow) then
                     self.SelectedAction = emptyAction
                 end
             end,
             Item = function()
                 local item = self.SelectedAction ---@type Item
-                if (addon.Player:CastingEndsIn() > 0) then
+                if (addon.Player:CastingEndsIn() > 0 or item:ReadyIn() > self.Settings.ActionAdvanceWindow) then
                     self.SelectedAction = emptyAction
                 end
             end,

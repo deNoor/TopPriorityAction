@@ -104,7 +104,7 @@ function Spell:IsUsableNow()
         return false, false
     end
     if (usable) then
-        local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > actionAdvanceWindow
+        local onCD = (self.HasCD or self.ChargesBased) and self:ReadyIn() > addon.Rotation.GcdReadyIn
         usable = not onCD
     end
     return usable, noMana

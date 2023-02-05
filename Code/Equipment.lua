@@ -75,7 +75,7 @@ local IsUsableItem = IsUsableItem
 function EquipItem:IsUsableNow()
     local usable, noMana = IsUsableItem(self.Id)
     if (usable) then
-        local onCD = self:ReadyIn() > addon.Rotation.Settings.ActionAdvanceWindow
+        local onCD = self:ReadyIn() > addon.Rotation.GcdReadyIn
         usable = not onCD
     end
     return usable, noMana
