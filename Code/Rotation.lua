@@ -14,6 +14,7 @@ local addon = TopPriorityAction
 ---@field IsPauseKeyDown boolean @updated by eventTracker outside rotation, MODIFIER_STATE_CHANGED, IsRightControlKeyDown
 ---@field AddedPauseOnKey integer @constant from defaults
 ---@field RangeChecker Spell @must be configured by custom rotation
+---@field GcdReadyIn number
 ---@field VerifyAbstractsOverriden fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
 ---@field SetDefaults fun(self:Rotation):Rotation @keep unchanged
 ---@field AddSpells fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
@@ -141,7 +142,7 @@ function Rotation:WaitForOpportunity()
             Empty = function() end,
             Spell = function()
                 local spell = self.SelectedAction ---@type Spell
-                if (not spell.NoGCD and addon.Player:GCDReadyIn() > self.Settings.ActionAdvanceWindow) then
+                if (not spell.NoGCD and self.GcdReadyIn > self.Settings.ActionAdvanceWindow) then
                     self.SelectedAction = emptyAction
                 end
             end,
@@ -179,6 +180,7 @@ function Rotation:Pulse()
         return emptyAction
     end
     self.SelectedAction = nil
+    self.GcdReadyIn = addon.Player:GCDReadyIn()
     if (self:ActionQueueAwailable()) then
         self:SelectAction()
     end

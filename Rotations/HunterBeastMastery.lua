@@ -58,7 +58,6 @@ local rotation = {
     InRange                 = false,
     Focus                   = 0,
     FocusDeficit            = 0,
-    GcdReadyIn              = 0,
     NowCasting              = 0,
     CastingEndsIn           = 0,
     CCUnlockIn              = 0,
@@ -207,7 +206,6 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.PetHealthPercent, self.PetHealthPercentDeficit = player.Pet:HealthPercent()
-    self.GcdReadyIn = player:GCDReadyIn()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()

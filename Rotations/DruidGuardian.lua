@@ -114,7 +114,6 @@ local rotation = {
     Rage                   = 0,
     RageDeficit            = 0,
     ManaPercent            = 0,
-    GcdReadyIn             = 0,
     NowCasting             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
@@ -243,7 +242,6 @@ function rotation:Refresh()
     self.ManaPercent = player:ResourcePercent(Enum.PowerType.Mana)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
-    self.GcdReadyIn = player:GCDReadyIn()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
