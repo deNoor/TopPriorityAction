@@ -11,7 +11,7 @@ local Convenience = {}
 
 local C_Timer, DoEmote, tinsert = C_Timer, DoEmote, tinsert
 local emoteList = { "CONGRATULATE", "THANK", "BYE", }
-local betweenEmotesSec = 2
+local betweenEmotesSec = 3
 
 local pending = false
 local currentTicker = nil
