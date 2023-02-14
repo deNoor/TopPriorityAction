@@ -156,8 +156,9 @@ local cmds = {
 
 local setBonuses = {
     DFVault = {
-        ItemsIt = 1535,
+        ItemsId = 1535,
         Buff2Id = 394879,
+        Buff4Id = 394888,
     }
 }
 
@@ -166,15 +167,13 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Rogue-Assassination",
-    Spells = spells,
-    Items = items,
-    Cmds = cmds,
-
-    RangeChecker  = spells.SinisterStrike,
-    ComboFinisher = 5,
-    ComboKidney   = 5,
-
+    Name                   = "Rogue-Assassination",
+    Spells                 = spells,
+    Items                  = items,
+    Cmds                   = cmds,
+    RangeChecker           = spells.SinisterStrike,
+    ComboFinisher          = 5,
+    ComboKidney            = 5,
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
@@ -184,7 +183,6 @@ local rotation = {
     ComboDeficit           = 0,
     ComboFinisherAllowed   = false,
     ComboHolding           = false,
-    GcdReadyIn             = 0,
     NowCasting             = 0,
     CastingEndsIn          = 0,
     CCUnlockIn             = 0,
@@ -206,14 +204,14 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
-    if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
-        if (self.InRange and self.Stealhed) then
+    if ((not self.InInstance or self.InCombatWithTarget)) then
+        if (self.CanAttackTarget and self.InRange and self.Stealhed) then
             self:StealthOpener()
         end
         if (self.Player.Mouseover:Exists() and self.RangeChecker:IsInRange("mouseover")) then
             self:MouseoverCmd()
         end
-        if (self.InRange) then
+        if (self.CanAttackTarget and self.InRange) then
             self:AutoAttack()
             self:SingleTarget()
         end
@@ -237,10 +235,11 @@ function rotation:SingleTarget()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
+    local mouseover = player.Mouseover
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
@@ -379,13 +378,14 @@ function rotation:ColdBlood()
     end
     if (spells.SummarilyDispatched.Known) then
         local stacks, remains = player.Buffs:Stacks(spells.SummarilyDispatched.Buff), player.Buffs:Remains(spells.SummarilyDispatched.Buff)
-        if (self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and (stacks > 4 or (stacks > 2 and remains < 3))) then
+        local setBonus4 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsId, 4)
+        if (self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and ((setBonus4 and player.Buffs:Applied(setBonuses.DFVault.Buff4Id)) or (stacks > 4 or (stacks > 2 and remains < 3)))) then
             return spells.ColdBlood
         end
         return nil
     end
     if (not self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and spells.Ambush:IsUsableNow()) then
-        local setBonus2 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsIt, 2)
+        local setBonus2 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsId, 2)
         if (setBonus2 and not player.Buffs:Applied(setBonuses.DFVault.Buff2Id)) then
             return nil
         end
@@ -571,7 +571,6 @@ function rotation:Refresh()
     self.ComboHolding = false
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
-    self.GcdReadyIn = player:GCDReadyIn()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = 50 / 1000
     self.InInstance = player:InInstance()
@@ -630,6 +629,7 @@ function rotation:SetLayout()
     spells.RollTheBones.Key = "6"
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
+    spells.Feint.Key = "0"
 
     spells.ThistleTea.Key = "s-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
@@ -641,13 +641,13 @@ function rotation:SetLayout()
     spells.Sepsis.Key = spells.BladeRush.Key
     spells.GhostlyStrike.Key = spells.BladeRush.Key
     spells.Shiv.Key = "s-6"
-    spells.Feint.Key = "s-7"
+    spells.ColdBlood.Key = "s-7"
+
     spells.KidneyShot.Key = "s-8"
     spells.Vanish.Key = "s-9"
 
-
     spells.Kick.Key = "F7"
-    spells.ColdBlood.Key = "F10"
+
     spells.CrimsonVial.Key = "F11"
     spells.AutoAttack.Key = "F12"
 
