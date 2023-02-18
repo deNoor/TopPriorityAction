@@ -36,22 +36,35 @@ function EventTracker:RegisterEvents()
         end
     end
     for event, handler in pairs(self.CustomHandlers) do
-        EventRegistry:RegisterCallback(event, function(ownerId, ...)
-            self.EventTimestamp = getTime()
-            handler(event, ...)
-        end, self)
+        if (not C_EventUtils.IsEventValid(event)) then
+            EventRegistry:RegisterCallback(event, function(ownerId, ...)
+                self.EventTimestamp = getTime()
+                handler(event, ...)
+            end, self)
+        else
+            addon.Helper.Print("This event must be registered as frame event", event)
+        end
     end
     return self
 end
 
 function EventTracker:UnRegisterEvent(event)
-    EventRegistry:UnregisterCallback(event, self)
+    if (self.FrameHandlers[event]) then
+        EventRegistry:UnregisterFrameEventAndCallback(event, self)
+    elseif (self.CustomHandlers[event]) then
+        EventRegistry:UnregisterCallback(event, self)
+    else
+        addon.Helper.Print("Attempt to unregister unknown event", event)
+    end
     return self
 end
 
 function EventTracker:Dispose()
     for event, _ in pairs(self.FrameHandlers) do
         EventRegistry:UnregisterFrameEventAndCallback(event, self)
+    end
+    for event, _ in pairs(self.CustomHandlers) do
+        EventRegistry:UnregisterCallback(event, self)
     end
 end
 
