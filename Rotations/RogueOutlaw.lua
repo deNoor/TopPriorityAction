@@ -514,47 +514,7 @@ function rotation:ShortBurstEffects()
     return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff) or player.Buffs:Applied(spells.ColdBlood.Buff)
 end
 
-local InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT = InCombatLockdown, GetMacroInfo, CreateMacro, EditMacro, GetNumGroupMembers, UnitExists, UnitGroupRolesAssigned, UnitNameUnmodified, pcall, UNKNOWNOBJECT
-local tricksMacro = { Exists = false, Name = "TricksNamed", CurrentTank = "", PendingUpdate = false, }
-function tricksMacro:Update()
-    local spell = spells.TricksOfTheTrade
-    if (InCombatLockdown()) then
-        self.PendingUpdate = true
-    else
-        if (not tricksMacro.Exists) then
-            if (not GetMacroInfo(self.Name)) then
-                if (not pcall(CreateMacro, self.Name, "INV_Misc_QuestionMark", "#showtooltip " .. (spell.Name or ""), true)) then
-                    addon.Helper.Print("Failed to create", self.Name, "macro")
-                else
-                    addon.Helper.Print("Created macro", self.Name)
-                    self.Exists = true
-                end
-            else
-                self.Exists = true
-            end
-        end
-        if (self.Exists and spell.Known) then
-            if (GetNumGroupMembers() > 0) then
-                for i = 1, 4 do
-                    local unit = "party" .. i
-                    if (UnitExists(unit) and UnitGroupRolesAssigned(unit) == "TANK") then
-                        local tankName = UnitNameUnmodified(unit)
-                        if (tankName and tankName ~= UNKNOWNOBJECT and tankName ~= self.CurrentTank) then
-                            local spellName = spell.Name
-                            local macroText = "#showtooltip " .. spellName .. "\n/cast [@" .. tankName .. "] " .. spellName
-                            if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
-                                self.CurrentTank = tankName
-                                addon.Helper.Print(spellName, "on", tankName)
-                            end
-                            break;
-                        end
-                    end
-                end
-            end
-        end
-        self.PendingUpdate = false
-    end
-end
+local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
 function rotation:Refresh()
     local player = self.Player
