@@ -213,7 +213,7 @@ function rotation:Utility()
             function() if (self.CmdBus:Find(cmds.TitanicThrow.Name) and ((target:Exists() and spells.TitanicThrow:IsInRange()) or (mouseover:Exists() and spells.TitanicThrow:IsInRange("mouseover")))) then return spells.TitanicThrow end end,
             function() if (self.CmdBus:Find(cmds.DemoralizingShout.Name)) then return spells.DemoralizingShout end end,
             function() if (spells.Shockwave.Known and self.CmdBus:Find(cmds.Shockwave.Name)) then return spells.Shockwave end end,
-            function() if (spells.ShieldCharge.Known and self.CmdBus:Find(cmds.ShieldCharge.Name)) then return spells.ShieldCharge end end,
+            function() if (spells.ShieldCharge.Known and self.CmdBus:Find(cmds.ShieldCharge.Name) and spells.ShieldCharge:IsInRange("target")) then return spells.ShieldCharge end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
