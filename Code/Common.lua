@@ -23,6 +23,10 @@ local Common = {
             Id = 240559,
             Debuff = 240559,
         },
+        NecroticPitch = {
+            Id = 153692,
+            Debuff = 153692,
+        },
     },
     Items = {
         Healthstone = {

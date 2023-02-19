@@ -173,7 +173,7 @@ local rotation = {
     Cmds                   = cmds,
     RangeChecker           = spells.SinisterStrike,
     ComboFinisher          = 5,
-    ComboKidney            = 5,
+    ComboKidney            = 4,
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
@@ -305,6 +305,10 @@ function rotation:AutoAttack()
 end
 
 function rotation:AwaitedVanishAmbush()
+    local necroticPitch = addon.Common.Spells.NecroticPitch
+    if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
+        return nil
+    end
     if (self.GcdReadyIn < 0.01 and self.Energy > 50) then
         return spells.Vanish
     else
@@ -532,7 +536,6 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
-    self.ActionAdvanceWindow = 50 / 1000
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget = player.Target:CanAttack()
