@@ -10,7 +10,6 @@ local addon = TopPriorityAction
 ---@field Find fun(self:CmdBus, name:string):Cmd?
 
 ---@class Cmd
----@field private Frame Frame
 ---@field Name string
 ---@field Expiration number @GetTime() seconds
 ---@field Arg1 any
@@ -22,7 +21,8 @@ local getTime = GetTime
 ---@type CmdBus
 local CmdBus = {
     Commands = {},
-    Add = function(...) end,
+    Add = function(...)
+    end,
 }
 
 local default = {
