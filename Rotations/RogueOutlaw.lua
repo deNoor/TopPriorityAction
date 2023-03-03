@@ -172,7 +172,7 @@ local rotation = {
     Items                  = items,
     Cmds                   = cmds,
     RangeChecker           = spells.SinisterStrike,
-    ComboFinisher          = 5,
+    ComboFinisher          = 6,
     ComboKidney            = 4,
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -221,9 +221,11 @@ end
 local stealthOpenerList
 function rotation:StealthOpener()
     local player = self.Player
+    local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
             function() return self:RollTheBones() end,
+            function() if (spells.MarkedForDeath.Known and self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() return spells.Ambush end,
         }
@@ -428,6 +430,7 @@ function rotation:UseTrinket()
     if (burstTrinket and self.Settings.Burst) then
         return burstTrinket
     end
+    return nil
 end
 
 local activeRtb = {
@@ -502,13 +505,14 @@ end
 local max, min = max, min
 ---@return boolean
 function rotation:FinisherAllowed()
-    local comboFinisher = self.ComboFinisher
+    local comboMax = self.Combo + self.ComboDeficit
+    local comboFinisher = min(comboMax, self.ComboFinisher)
     if (spells.SummarilyDispatched.Known) then
         comboFinisher = max(5, self.ComboFinisher)
     elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
         comboFinisher = max(5, self.ComboFinisher)
     elseif (self.Player.Buffs:Applied(spells.RollTheBones.Broadside)) then
-        comboFinisher = min(self.Combo + self.ComboDeficit - 1, self.ComboFinisher)
+        comboFinisher = min(comboMax - 1, self.ComboFinisher)
     end
     return self.Combo >= comboFinisher
 end
