@@ -76,7 +76,7 @@ local function NewAuraCollection(unitId, filter)
         end,
         Applied = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
-            return aura.Remains > addon.SavedSettings.Instance.ActionAdvanceWindow
+            return aura.Remains > (addon.SavedSettings.Instance.ActionAdvanceWindow + 0.1)
         end,
         Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
