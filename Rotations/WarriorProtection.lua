@@ -310,10 +310,10 @@ function rotation:SetLayout()
     spells.ShieldBlock.Key = "6"
     spells.Shockwave.Key = "7"
 
-    spells.ImpedingVictory.Key = "s-1"
-    spells.Execute.Key = "s-3"
-    spells.Revenge.Key = "s-4"
-    spells.BattleStance.Key = "s-6"
+    spells.ImpedingVictory.Key = "n-1"
+    spells.Execute.Key = "n-3"
+    spells.Revenge.Key = "n-4"
+    spells.BattleStance.Key = "n-6"
     spells.DefensiveStance.Key = spells.BattleStance.Key
 
     spells.StormBolt.Key = "F1"
@@ -323,11 +323,11 @@ function rotation:SetLayout()
     spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "s-0"
-    equip.Trinket13.Key = "s--"
+    equip.Trinket14.Key = "n-0"
+    equip.Trinket13.Key = "n--"
 
     local items = self.Items
-    items.Healthstone.Key = "s-="
+    items.Healthstone.Key = "n-+"
 end
 
 addon:AddRotation("WARRIOR", 3, rotation)

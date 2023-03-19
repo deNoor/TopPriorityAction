@@ -332,7 +332,7 @@ function rotation:SliceAndDice()
     end
     if (spells.SwiftSlasher.Known) then
         if (self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < spells.SliceAndDice.Pandemic) then
-            if (self.ComboDeficit > 0) then
+            if (spells.RollTheBones.Known and self.ComboDeficit > 0) then
                 self.ComboFinisherAllowed = false
                 return nil
             else
@@ -434,12 +434,12 @@ function rotation:UseTrinket()
 end
 
 local activeRtb = {
-    TrueBearing = false, -- CDR
+    TrueBearing = false,        -- CDR
     SkullAndCrossbones = false, -- 25% Double SS
-    Broadside = false, -- 1 combo gen
-    RuthlessPrecision = false, -- crit
-    BuriedTreasure = false, -- energy regen
-    GrandMelee = false, -- SnD application and leech
+    Broadside = false,          -- 1 combo gen
+    RuthlessPrecision = false,  -- crit
+    BuriedTreasure = false,     -- energy regen
+    GrandMelee = false,         -- SnD application and leech
 }
 ---@return Spell?
 function rotation:RollTheBones()
@@ -598,20 +598,20 @@ function rotation:SetLayout()
     spells.BladeFlurry.Key = "8"
     spells.Feint.Key = "0"
 
-    spells.ThistleTea.Key = "s-1"
+    spells.ThistleTea.Key = "n-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
-    spells.MarkedForDeath.Key = "s-2"
-    spells.Ambush.Key = "s-3"
-    spells.KillingSpree.Key = "s-4"
+    spells.MarkedForDeath.Key = "n-2"
+    spells.Ambush.Key = "n-3"
+    spells.KillingSpree.Key = "n-4"
     spells.Dreadblades.Key = spells.KillingSpree.Key
-    spells.BladeRush.Key = "s-5"
+    spells.BladeRush.Key = "n-5"
     spells.Sepsis.Key = spells.BladeRush.Key
     spells.GhostlyStrike.Key = spells.BladeRush.Key
-    spells.Shiv.Key = "s-6"
-    spells.ColdBlood.Key = "s-7"
+    spells.Shiv.Key = "n-6"
+    spells.ColdBlood.Key = "n-7"
 
-    spells.KidneyShot.Key = "s-8"
-    spells.Vanish.Key = "s-9"
+    spells.KidneyShot.Key = "n-8"
+    spells.Vanish.Key = "n-9"
 
     spells.Kick.Key = "F7"
 
@@ -619,11 +619,11 @@ function rotation:SetLayout()
     spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "s-0"
-    equip.Trinket13.Key = "s--"
+    equip.Trinket14.Key = "n-0"
+    equip.Trinket13.Key = "n--"
 
     local items = self.Items
-    items.Healthstone.Key = "s-="
+    items.Healthstone.Key = "n-+"
 end
 
 addon:AddRotation("ROGUE", 2, rotation)

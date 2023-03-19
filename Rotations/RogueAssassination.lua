@@ -98,15 +98,13 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Rogue-Assassination",
-    Spells = spells,
-    Items = items,
-    Cmds = cmds,
-
-    RangeChecker       = spells.SinisterStrike,
-    ComboFinisherToMax = 2,
-    ComboKidney        = 4,
-
+    Name                   = "Rogue-Assassination",
+    Spells                 = spells,
+    Items                  = items,
+    Cmds                   = cmds,
+    RangeChecker           = spells.SinisterStrike,
+    ComboFinisherToMax     = 2,
+    ComboKidney            = 4,
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
@@ -305,19 +303,19 @@ function rotation:SetLayout()
     spells.FanOfKnives.Key = "8"
     spells.CrimsonTempest.Key = "9"
 
-    spells.ThistleTea.Key = "s-1"
-    spells.MarkedForDeath.Key = "s-2"
-    spells.Ambush.Key = "s-3"
-    spells.Feint.Key = "s-7"
-    spells.KidneyShot.Key = "s-8"
-    spells.Vanish.Key = "s-9"
-    spells.AutoAttack.Key = "s-="
+    spells.ThistleTea.Key = "n-1"
+    spells.MarkedForDeath.Key = "n-2"
+    spells.Ambush.Key = "n-3"
+    spells.Feint.Key = "n-7"
+    spells.KidneyShot.Key = "n-8"
+    spells.Vanish.Key = "n-9"
+    spells.AutoAttack.Key = "n-+"
 
     spells.CrimsonVial.Key = "F6"
     spells.Kick.Key = "F9"
 
     local equip = addon.Player.Equipment
-    equip.Trinket13.Key = "s--"
+    equip.Trinket13.Key = "n--"
 
     local items = self.Items
     items.Healthstone.Key = "F12"
