@@ -132,14 +132,20 @@ function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
     end
 end
 
-local GetUnitName, C_ChallengeMode, GetInstanceInfo = GetUnitName, C_ChallengeMode, GetInstanceInfo
+local GetUnitName, C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup = GetUnitName, C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup
+local encounterEndProcessing = false
 function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
     local encounterID, itemID, itemLink, quantity, playerName, className = ...
-    if (playerName == GetUnitName("player", true)) then
+    if (not encounterEndProcessing and playerName == GetUnitName("player", true)) then
+        encounterEndProcessing = true
+        C_Timer.After(10, function() encounterEndProcessing = false end)
         local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
         if (difficultyID and difficultyID == 8) then -- Mythic Keystone
             local mapID, level, time, onTime, keystoneUpgradeLevels, practiceRun, oldDungeonScore, newDungeonScore, isAffixRecord, isMapRecord, primaryAffix, isEligibleForScore, upgradeMembers = C_ChallengeMode.GetCompletionInfo()
             if (level and level > 0 and not practiceRun) then
+                if (level > 16 and onTime and IsInGroup()) then
+                    C_Timer.After(1, function() SendChatMessage("<(^-^)>", "PARTY") end)
+                end
                 addon.Convenience:ThanksBye(5)
             end
         end
