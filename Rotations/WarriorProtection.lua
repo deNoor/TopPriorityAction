@@ -65,6 +65,12 @@ local spells = {
     BoomingVoice = {
         Id = 202743,
     },
+    LastStand = {
+        Id = 12975,
+    },
+    Bolster = {
+        Id = 280001,
+    },
 }
 
 local cmds = {
@@ -116,6 +122,7 @@ local rotation = {
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
     CanDotTarget           = false,
+    ShieldBlockLow         = false,
 }
 
 function rotation:SelectAction()
@@ -187,14 +194,15 @@ function rotation:DefenceMode()
     defenseList = defenseList or
         {
             function() if (not player.Buffs:Applied(spells.DefensiveStance.Buff)) then return spells.DefensiveStance end end,
-            function() if (player.Buffs:Remains(spells.ShieldBlock.Buff) < spells.ShieldBlock.Pandemic) then return spells.ShieldBlock end end,
-            function() if (not player.Buffs:Applied(spells.IgnorePain.Buff) or (self.RageDeficit < 15)) then return spells.IgnorePain end end,
+            function() if (spells.Bolster.Known and not player.Buffs:Applied(spells.ShieldBlock.Buff) and spells.ShieldBlock:ReadyIn() > 0.5) then return spells.LastStand end end,
+            function() if (self.ShieldBlockLow) then return spells.ShieldBlock end end,
+            function() if ((player.Buffs:Remains(spells.IgnorePain.Buff) < 1 and not self.ShieldBlockLow) or self.RageDeficit < 15) then return spells.IgnorePain end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId)) then return spells.ImpedingVictory end end,
             function() return spells.ShieldSlam end,
             function() return spells.ThunderClap end,
             function() if (player.Buffs:Applied(spells.Revenge.Buff)) then return spells.Revenge end end,
             function() if (player.Buffs:Applied(spells.Execute.Buff)) then return spells.Execute end end,
-            function() if (self.Rage > 50) then return spells.Revenge end end,
+            function() if (not self.ShieldBlockLow and self.Rage > 40) then return spells.Revenge end end,
             function() if (spells.BoomingVoice.Known) then return spells.DemoralizingShout end end,
         }
     return rotation:RunPriorityList(defenseList)
@@ -261,6 +269,11 @@ function rotation:UseTrinket()
     end
 end
 
+function rotation:ShieldBlockFading()
+    local player = self.Player
+    return player.Buffs:Remains(spells.ShieldBlock.Buff) < 1.5
+end
+
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -279,6 +292,7 @@ function rotation:Refresh()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget = player.Target:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
+    self.ShieldBlockLow = self:ShieldBlockFading()
 end
 
 function rotation:Dispose()
@@ -320,6 +334,7 @@ function rotation:SetLayout()
     spells.Charge.Key = "F4"
     spells.Pummel.Key = "F7"
     spells.DemoralizingShout.Key = "F8"
+    spells.LastStand.Key = "F9"
     spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
