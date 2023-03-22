@@ -11,8 +11,15 @@ local spells = {
     Slam = {
         Id = 1464,
     },
+    BerserkerStance = {
+        Id = 386196,
+        Buff = 386196,
+    },
     VictoryRush = {
         Id = 34428,
+    },
+    ImpendingVictory = {
+        Id = 202168,
     },
     Whirlwind = {
         Id = 190411,
@@ -21,17 +28,14 @@ local spells = {
     Bloodthist = {
         Id = 23881,
     },
-    Bloodbath = {
-        Id = 335096,
-    },
     RagingBlow = {
         Id = 85288,
     },
-    CrushingBlow = {
-        Id = 335097,
-    },
     Rampage = {
         Id = 184367,
+    },
+    Onslaught = {
+        Id = 315720,
     },
     Enrage = {
         Id = 184361,
@@ -41,44 +45,58 @@ local spells = {
         Id = 1719,
         Buff = 1719,
     },
-    -- defensives
+    Avatar = {
+        Id = 107574,
+    },
+    OdynsFury = {
+        Id = 385059,
+    },
+    TitanicThrow = {
+        Id = 384090,
+    },
+    Pummel = {
+        Id = 6552,
+    },
+    StormBolt = {
+        Id = 107570,
+    },
+    Shockwave = {
+        Id = 46968,
+    },
     EnragedRegeneration = {
         Id = 184364,
         Buff = 184364,
     },
-    -- talents
-    ImpendingVictory = {
-        Id = 202168,
-        TalendId = 22625,
+    StormOfSwords = {
+        Id = 388903,
     },
-    DragonRoar = {
-        Id = 118000,
-        TalendId = 22398,
+    Annihilator = {
+        Id = 383916,
     },
-    Bladestorm = {
-        Id = 46924,
-        TalendId = 22400,
+    Tenderize = {
+        Id = 388933,
     },
-    RecklessAbandon = {
-        Id = 202751,
-        TalendId = 22402,
-    },
-    Siegebreaker = {
-        Id = 280772,
-        TalendId = 16037,
-    },
-    -- procs
     Victorious = {
         Id = 32216,
         Buff = 32216,
     },
-    -- Shadowlands specials
-    Condemn = {
-        Id = 330325,
-    },
-    -- racials
     LightsJudgment = {
         Id = 255647,
+    },
+}
+
+local cmds = {
+    Kick = {
+        Name = "kick",
+    },
+    StormBolt = {
+        Name = "stormbolt",
+    },
+    Shockwave = {
+        Name = "shockwave",
+    },
+    TitanicThrow = {
+        Name = "titanicthrow",
     },
 }
 
@@ -87,12 +105,11 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Warrior-Fury",
-    Spells = spells,
-    Items = items,
-
-    RangeChecker = spells.Execute,
-
+    Name                   = "Warrior-Fury",
+    Spells                 = spells,
+    Items                  = items,
+    Cmds                   = cmds,
+    RangeChecker           = spells.Execute,
     -- locals
     InRange                = false,
     Rage                   = 0,
@@ -107,10 +124,9 @@ local rotation = {
     InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
+    CanAttackMouseover     = false,
     CanDotTarget           = false,
-    LastCastSent           = 0,
-
-    EnrageSec = 0,
+    Enraged                = false,
 }
 
 function rotation:SelectAction()
@@ -120,69 +136,98 @@ function rotation:SelectAction()
     self:Utility()
     if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
-            self:Base()
+            self:AutoAttack()
+            self:SingleTarget()
         end
     end
 end
 
-local baseList
-function rotation:Base()
+local singleTargetList
+function rotation:SingleTarget()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
+    local mouseover = player.Mouseover
     local equip = player.Equipment
-    baseList = baseList or
+    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
+    singleTargetList = singleTargetList or
         {
+            function() if (not player.Buffs:Applied(spells.BerserkerStance.Buff)) then return spells.BerserkerStance end end,
+            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId)) then return spells.ImpendingVictory end end,
+            function() if ((self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return spells.Bloodthist end end,
+            function() return self:UseTrinket() end,
             function() if (settings.Burst) then return spells.LightsJudgment end end,
             function() if (settings.Burst) then return spells.Recklessness end end,
-            function() if (equip.Trinket13:IsInRange("target")) then return equip.Trinket13 end end,
-            function()
-                if (player.Talents[spells.ImpendingVictory.TalendId]) then
-                    if (self.MyHealthPercentDeficit > 40 or self.MyHealAbsorb > 0) then return spells.ImpendingVictory end
-                else
-                    if (self.MyHealthPercentDeficit > 20 or self.MyHealAbsorb > 0) then return spells.VictoryRush end
-                end
-            end,
-            function() if ((self.MyHealthPercentDeficit > 23 or self.MyHealAbsorb > 0) and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return self:BloodThristOrBath() end end,
+            function() if (settings.Burst) then return spells.Avatar end end,
+            function() if (settings.Burst) then return spells.OdynsFury end end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
-            function() if (self.EnrageSec > 1 + self.ActionAdvanceWindow) then return spells.Bladestorm end end,
-            function() return spells.Siegebreaker end,
+            function() if (spells.Tenderize.Known) then return spells.Onslaught end end,
+            function() if (not self.Enraged) then return spells.Rampage end end,
+            function() if (not self.Enraged) then return spells.Bloodthist end end,
+            function() return spells.Onslaught end,
+            function() return spells.Execute end,
             function() return spells.Rampage end,
-            function() if (spells.Condemn.Known) then return spells.Condemn else return spells.Execute end end,
-            function() if (self.EnrageSec > self.ActionAdvanceWindow) then return spells.DragonRoar end end,
-            function() if (self.EnrageSec > self.ActionAdvanceWindow) then return self:RagingAndCrushingBlow() end end,
-            function() return self:BloodThristOrBath() end,
-            function() return self:RagingAndCrushingBlow() end,
-            function() if (player.Buffs:Remains(spells.Victorious.Buff) > 0.5) then return player.Talents[spells.ImpendingVictory.TalendId] and spells.ImpendingVictory or spells.VictoryRush end end,
+            function() if (spells.StormOfSwords.Known) then return spells.Slam end end,
+            function() if (not spells.Annihilator.Known) then return spells.RagingBlow end end,
+            function() return spells.RagingBlow end,
+            function() return spells.Bloodthist end,
             function() return spells.Whirlwind end,
         }
-    return rotation:RunPriorityList(baseList)
+    return rotation:RunPriorityList(singleTargetList)
 end
 
 local utilityList
 function rotation:Utility()
     local player = self.Player
+    local target = self.Player.Target
+    local mouseover = player.Mouseover
+    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.Pummel:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Pummel:IsInRange("target") and target:CanKick()))) then return spells.Pummel end end,
+            function() if (spells.StormBolt.Known and self.CmdBus:Find(cmds.StormBolt.Name) and ((self.CanAttackMouseover and spells.StormBolt:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.StormBolt:IsInRange("target")))) then return spells.StormBolt end end,
+            function() if (self.CmdBus:Find(cmds.TitanicThrow.Name) and ((self.CanAttackMouseover and spells.TitanicThrow:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TitanicThrow:IsInRange("target")))) then return spells.TitanicThrow end end,
+            function() if (spells.Shockwave.Known and self.CmdBus:Find(cmds.Shockwave.Name)) then return spells.Shockwave end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
 
-function rotation:ImproovedRecklessness()
-    local player = self.Player
-    return player.Talents[spells.RecklessAbandon.TalendId] and player.Buffs:Remains(spells.Recklessness.Buff) > self.ActionAdvanceWindow
+local autoAttackList
+function rotation:AutoAttack()
+    autoAttackList = autoAttackList or
+        {
+            function() if (self.GcdReadyIn > self.ActionAdvanceWindow and not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
+        }
+    return rotation:RunPriorityList(autoAttackList)
 end
 
-function rotation:RagingAndCrushingBlow()
-    return self:ImproovedRecklessness() and spells.CrushingBlow or spells.RagingBlow
+local aoeTrinkets = addon.Helper.ToHashSet({
+    198451, -- 10y healing/damage aoe
+})
+local burstTrinkets = addon.Helper.ToHashSet({
+    133642, -- +stats
+})
+
+---@return EquipItem?
+function rotation:UseTrinket()
+    local equip = self.Player.Equipment
+    ---@param ids integer[]
+    ---@return EquipItem
+    local trinketFrom = function(ids)
+        return (ids[equip.Trinket13.Id] and equip.Trinket13) or (ids[equip.Trinket14.Id] and equip.Trinket14)
+    end
+    local aoeTrinket = trinketFrom(aoeTrinkets)
+    if (aoeTrinket and self.Settings.AOE) then
+        return aoeTrinket
+    end
+    local burstTrinket = trinketFrom(burstTrinkets)
+    if (burstTrinket and self.Settings.Burst) then
+        return burstTrinket
+    end
+    return nil
 end
 
-function rotation:BloodThristOrBath()
-    return self:ImproovedRecklessness() and spells.Bloodbath or spells.Bloodthist
-end
-
-local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -199,9 +244,9 @@ function rotation:Refresh()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
-    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
-    self.EnrageSec = player.Buffs:Remains(spells.Enrage.Buff)
+    self.Enraged = player.Buffs:Applied(spells.Enrage.Buff)
 end
 
 function rotation:Dispose()
@@ -211,6 +256,7 @@ end
 
 function rotation:Activate()
     self.Player = addon.Player
+    self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
@@ -225,26 +271,32 @@ end
 function rotation:SetLayout()
     local spells = self.Spells
     spells.Execute.Key = "2"
-    spells.Condemn.Key = spells.Execute.Key
     spells.RagingBlow.Key = "3"
-    spells.CrushingBlow.Key = spells.RagingBlow.Key
     spells.Bloodthist.Key = "4"
-    spells.Bloodbath.Key = spells.Bloodthist.Key
     spells.Rampage.Key = "5"
-    spells.Siegebreaker.Key = "6"
-    spells.Recklessness.Key = "7"
+    spells.Onslaught.Key = "6"
+
     spells.Whirlwind.Key = "8"
-    spells.Bladestorm.Key = "9"
-    spells.DragonRoar.Key = spells.Bladestorm.Key
-    spells.VictoryRush.Key = "-"
+
+    spells.StormBolt.Key = "F1"
+    spells.Pummel.Key = "F7"
+    spells.AutoAttack.Key = "F12"
+
+    spells.VictoryRush.Key = "n-1"
     spells.ImpendingVictory.Key = spells.VictoryRush.Key
+    spells.Slam.Key = "n-3"
+    spells.BerserkerStance.Key = "n-5"
+    spells.OdynsFury.Key = "n-6"
+    spells.Avatar.Key = "n-7"
+    spells.Recklessness.Key = "n-8"
+    spells.LightsJudgment.Key = "n-9"
 
     local equip = addon.Player.Equipment
-    equip.Trinket13.Key = "F11"
-    spells.LightsJudgment.Key = nil
+    equip.Trinket14.Key = "n-0"
+    equip.Trinket13.Key = "n--"
 
     local items = self.Items
-    items.Healthstone.Key = "F12"
+    items.Healthstone.Key = "n-+"
 end
 
 addon:AddRotation("WARRIOR", 2, rotation)
