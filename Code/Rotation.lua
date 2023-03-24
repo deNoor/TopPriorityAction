@@ -20,7 +20,7 @@ local addon = TopPriorityAction
 ---@field AddSpells fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
 ---@field AddItems fun(self:Rotation, class:string, spec:integer):Rotation @keep unchanged
 ---@field RunPriorityList fun(self:Rotation, priorityList:(fun():Action)[]):Rotation @framework implements
----@field Pulse fun(self:Rotation):Action @framework implements and exposes to addon, do not call in custom rotation
+---@field Pulse fun(self:Rotation):PlayerAction @framework implements and exposes to addon, do not call in custom rotation
 ---@field SelectAction fun(self:Rotation) @abstract, custom rotation must override
 ---@field Activate fun(self:Rotation) @virtual, custom rotation may override
 ---@field Dispose fun(self:Rotation) @virtual, custom rotation may override
@@ -35,8 +35,10 @@ local emptyRotation = addon.Initializer.Empty.Rotation
 ---@type Rotation
 local Rotation = {
     SelectedAction = nil, ---@type Spell|Item|Action|EquipItem
-    Activate = function(_) end,
-    Dispose = function(_) end,
+    Activate = function(_)
+    end,
+    Dispose = function(_)
+    end,
 }
 
 ---@param class string
@@ -66,7 +68,7 @@ end
 ---@return boolean
 local
 SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar =
-SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar
+    SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, UnitOnTaxi, HasVehicleActionBar, HasOverrideActionBar
 function Rotation:ShouldNotRun()
     return not self.Settings.Enabled
         or self.IsPauseKeyDown
@@ -135,12 +137,13 @@ function Rotation:ReduceActionSpam()
     return self
 end
 
-local actionTypeSwitches = {} -- class level
+local actionTypeSwitches = {}               -- class level
 function Rotation:WaitForOpportunity()
     local switch = actionTypeSwitches[self] -- instance level
     if (not switch) then
         actionTypeSwitches[self] = {
-            Empty = function() end,
+            Empty = function()
+            end,
             Spell = function()
                 local spell = self.SelectedAction ---@type Spell
                 if (spell:ReadyIn() > self.Settings.ActionAdvanceWindow) then

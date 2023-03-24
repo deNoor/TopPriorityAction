@@ -168,7 +168,7 @@ end
 ---@param instance table
 ---@param classDefinition table
 function Helper.AddVirtualMethods(instance, classDefinition)
-    for name, func in pairs(classDefinition) do -- add functions directly, direct lookup might be faster than metatable lookup
+    for name, func in pairs(classDefinition) do                   -- add functions directly, direct lookup might be faster than metatable lookup
         if (type(func) == "function" and not instance[name]) then -- insert only non-overriden functions
             instance[name] = func
         end
@@ -181,7 +181,7 @@ addon.Helper = Helper
 
 ---@class Empty
 ---@field Rotation Rotation
----@field Action Action
+---@field Action PlayerAction
 
 ---@type Action
 local emptyAction = {
@@ -203,10 +203,13 @@ local emptyRotation = {
     Items = {},
     RangeChecker = emptyAction,
     Pulse = function(_) return emptyAction end,
-    SelectAction = function(_) end,
+    SelectAction = function(_)
+    end,
     ShouldNotRun = function(_) return true end,
-    Activate = function(_) end,
-    Dispose = function(_) end,
+    Activate = function(_)
+    end,
+    Dispose = function(_)
+    end,
 }
 
 ---@class Initializer
