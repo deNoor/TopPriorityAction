@@ -5,7 +5,7 @@ local addon = TopPriorityAction
 
 ---@class CmdBus
 ---@field private Commands table<string, Cmd>
----@field Add fun(self:CmdBus, ...)
+---@field Add fun(self:CmdBus, name:string, duration:string|number, ...)
 ---@field Remove fun(self:CmdBus, name:string)
 ---@field Find fun(self:CmdBus, name:string):Cmd?
 
@@ -21,8 +21,6 @@ local getTime = GetTime
 ---@type CmdBus
 local CmdBus = {
     Commands = {},
-    Add = function(...)
-    end,
 }
 
 local default = {
@@ -51,9 +49,8 @@ local function GetCached(name)
     return cmd
 end
 
-function CmdBus:Add(...)
+function CmdBus:Add(nameRaw, durationRaw, ...)
     local warn = addon.Helper.Print
-    local nameRaw, durationRaw, arg1, arg2, arg3 = ...
     local name = tostring(nameRaw)
     local duration = tonumber(durationRaw)
     if (type(name) ~= "string") then
@@ -68,6 +65,7 @@ function CmdBus:Add(...)
     end
     local cmd = GetCached(name)
     cmd.Expiration = getTime() + duration
+    local arg1, arg2, arg3 = ...
     cmd.Arg1 = arg1
     cmd.Arg2 = arg2
     cmd.Arg3 = arg3
@@ -78,6 +76,8 @@ function CmdBus:Find(name)
     local cmd = self.Commands[name]
     if (cmd and cmd.Expiration > addon.Rotation.Timestamp) then
         return cmd
+    else
+        return nil
     end
 end
 
