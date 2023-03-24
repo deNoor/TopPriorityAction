@@ -6,11 +6,13 @@ local addon = TopPriorityAction
 ---@class Convenience
 ---@field ThanksBye fun(self:Convenience, delay:number?)
 ---@field CreateTricksMacro fun(self:Convenience, name:string, spell:Spell):TricksMacro
+---@field UserAction fun(self:Convenience):PlayerAction?
+---@field EnableAutoConfirmDelete fun(self:Convenience)
 
 ---@type Convenience
 local Convenience = {}
 
-local C_Timer, DoEmote, tinsert = C_Timer, DoEmote, tinsert
+local C_Timer, DoEmote, tinsert, hooksecurefunc = C_Timer, DoEmote, tinsert, hooksecurefunc
 local emoteList = { "CONGRATULATE", "THANK", "BYE", }
 local betweenEmotesSec = 3
 
@@ -99,6 +101,46 @@ function Convenience:CreateTricksMacro(name, spell)
     end
 
     return tricksMacro
+end
+
+function Convenience:UserAction()
+    local cmdBus = addon.CmdBus
+    local customKeyCommand = addon.Common.Commands.CustomKey
+    local userKeyCommand = cmdBus:Find(customKeyCommand.Name)
+    if (userKeyCommand and userKeyCommand.Arg1) then
+        return userKeyCommand.Arg1
+    end
+    return nil
+end
+
+function Convenience:EnableAutoConfirmDelete()
+    local InCombatLockdown = InCombatLockdown
+    local cmdBus = addon.CmdBus
+    ---@type PlayerAction
+    local customKeyCommand = addon.Common.Commands.CustomKey
+    local enterKey = addon.Common.PlayerActions.EnterKey
+    local attachToPopupWindow = function(window)
+        hooksecurefunc(window, "OnUpdate", function(dialog)
+            if (not InCombatLockdown()) then
+                if (dialog.button1:IsEnabled()) then
+                    cmdBus:Add(customKeyCommand.Name, 0.1, enterKey)
+                end
+            end
+        end)
+        hooksecurefunc(window, "OnHide", function(dialog)
+            cmdBus:Remove(customKeyCommand.Name)
+        end)
+        window.enterClicksFirstButton = true
+    end
+    local popupIds = {
+        "DELETE_ITEM",
+        "DELETE_QUEST_ITEM",
+        "DELETE_GOOD_ITEM",
+        "DELETE_GOOD_QUEST_ITEM"
+    }
+    for _, id in ipairs(popupIds) do
+        attachToPopupWindow(StaticPopupDialogs[id])
+    end
 end
 
 -- attach to addon

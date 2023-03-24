@@ -86,8 +86,9 @@ local frameHandlers = {}
 function frameHandlers.ADDON_LOADED(event, ...)
     local name = ...
     if name == addonName then
-        addon.SavedSettings:Load()
         addon.EventTracker:UnRegisterEvent(event)
+        addon.SavedSettings:Load()
+        addon.Convenience:EnableAutoConfirmDelete()
     end
 end
 

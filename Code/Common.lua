@@ -6,6 +6,8 @@ local addon = TopPriorityAction
 ---@class Common
 ---@field Spells table<string, Spell>
 ---@field Items table<string, Item>
+---@field PlayerActions table<string, PlayerAction>
+---@field Commands table<string, Cmd>
 
 ---@type Common
 local Common = {
@@ -32,7 +34,20 @@ local Common = {
         Healthstone = {
             Id = 5512,
         },
-    }
+    },
+    PlayerActions = {
+        EnterKey = {
+            Key = "Enter",
+            Icon = 0,
+            Id = 0,
+            Name = "Enter"
+        },
+    },
+    Commands = {
+        CustomKey = {
+            Name = "CustomKey",
+        },
+    },
 }
 
 -- attach to addon

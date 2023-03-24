@@ -32,6 +32,7 @@ function Program:RegisterActionUpdater()
     local getTime = GetTime
     local eventRegistry = EventRegistry
     local addon = addon
+    local convenience = addon.Convenience
     local event = addon.Shared.CustomEvents.ADDON_TPA_ACTION_UPDATE
     local emptyAction = addon.Initializer.Empty.Action
     local currentAction = emptyAction
@@ -41,7 +42,7 @@ function Program:RegisterActionUpdater()
             local now = getTime()
             local rotation = addon.Rotation
             rotation.Timestamp = now
-            local action = rotation:Pulse() or emptyAction
+            local action = convenience:UserAction() or rotation:Pulse() or emptyAction
             if (action ~= currentAction) then
                 currentAction = action
                 eventRegistry:TriggerEvent(event, action)
