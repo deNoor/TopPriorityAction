@@ -5,7 +5,9 @@
         "NUM_TALENT_COLUMNS",
         "BOOKTYPE_SPELL",
         "SlashCmdList",
-        "UNKNOWNOBJECT"
+        "UNKNOWNOBJECT",
+        "StaticPopupDialogs",
+        "DELETE_ITEM_CONFIRM_STRING"
     ],
     "Lua.diagnostics.disable": [
         "invisible"
