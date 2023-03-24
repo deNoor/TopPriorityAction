@@ -193,10 +193,10 @@ local rotation = {
     InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
+    CanAttackMouseover     = false,
     CanDotTarget           = false,
     TinyTarget             = false,
     ShortBursting          = false,
-    SetBonus2              = false,
 }
 
 function rotation:SelectAction()
@@ -207,9 +207,6 @@ function rotation:SelectAction()
     if ((not self.InInstance or self.InCombatWithTarget)) then
         if (self.CanAttackTarget and self.InRange and self.Stealhed) then
             self:StealthOpener()
-        end
-        if (self.Player.Mouseover:Exists() and self.RangeChecker:IsInRange("mouseover")) then
-            self:MouseoverCmd()
         end
         if (self.CanAttackTarget and self.InRange) then
             self:AutoAttack()
@@ -276,25 +273,18 @@ end
 local utilityList
 function rotation:Utility()
     local player = self.Player
+    local target = self.Player.Target
+    local mouseover = player.Mouseover
     local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     utilityList = utilityList or
         {
+            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
-            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealhed and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealhed and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
         }
     return rotation:RunPriorityList(utilityList)
-end
-
-local mouseoverList
-function rotation:MouseoverCmd()
-    local mouseover = self.Player.Mouseover
-    mouseoverList = mouseoverList or
-        {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and mouseover:CanKick()) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-        }
-    return rotation:RunPriorityList(mouseoverList)
 end
 
 local autoAttackList
@@ -542,7 +532,7 @@ function rotation:Refresh()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
-    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.TinyTarget = player.Target:IsTiny()
     self.ShortBursting = self:ShortBurstEffects()
