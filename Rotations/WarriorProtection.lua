@@ -71,6 +71,9 @@ local spells = {
     Bolster = {
         Id = 280001,
     },
+    LightsJudgment = {
+        Id = 255647,
+    },
 }
 
 local cmds = {
@@ -121,6 +124,7 @@ local rotation = {
     InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
+    CanAttackMouseover     = false,
     CanDotTarget           = false,
     ShieldBlockLow         = false,
 }
@@ -130,13 +134,10 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
-    if (self.Player.Mouseover:Exists()) then
-        self:MouseoverCmd()
-    end
     if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
             self:AutoAttack()
-            self:SingleTarget()
+            self:Base()
             if (self.Settings.Burst) then
                 self:BattleMode()
             else
@@ -146,19 +147,18 @@ function rotation:SelectAction()
     end
 end
 
-local singleTargetList
-function rotation:SingleTarget()
+local baseList
+function rotation:Base()
     local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
     local mouseover = player.Mouseover
     local equip = player.Equipment
     local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
-    singleTargetList = singleTargetList or
+    baseList = baseList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Pummel end end,
         }
-    return rotation:RunPriorityList(singleTargetList)
+    return rotation:RunPriorityList(baseList)
 end
 
 local battleList
@@ -218,23 +218,14 @@ function rotation:Utility()
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Charge.Name) and spells.Charge:IsInRange()) then return spells.Charge end end,
-            function() if (self.CmdBus:Find(cmds.TitanicThrow.Name) and ((target:Exists() and spells.TitanicThrow:IsInRange()) or (mouseover:Exists() and spells.TitanicThrow:IsInRange("mouseover")))) then return spells.TitanicThrow end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.Pummel:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Pummel:IsInRange("target") and target:CanKick()))) then return spells.Pummel end end,
+            function() if (spells.StormBolt.Known and self.CmdBus:Find(cmds.StormBolt.Name) and ((self.CanAttackMouseover and spells.StormBolt:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.StormBolt:IsInRange("target")))) then return spells.StormBolt end end,
+            function() if (self.CmdBus:Find(cmds.TitanicThrow.Name) and ((self.CanAttackMouseover and spells.TitanicThrow:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TitanicThrow:IsInRange("target")))) then return spells.TitanicThrow end end,
             function() if (self.CmdBus:Find(cmds.DemoralizingShout.Name)) then return spells.DemoralizingShout end end,
             function() if (spells.Shockwave.Known and self.CmdBus:Find(cmds.Shockwave.Name)) then return spells.Shockwave end end,
             function() if (spells.ShieldCharge.Known and self.CmdBus:Find(cmds.ShieldCharge.Name) and spells.ShieldCharge:IsInRange("target")) then return spells.ShieldCharge end end,
         }
     return rotation:RunPriorityList(utilityList)
-end
-
-local mouseoverList
-function rotation:MouseoverCmd()
-    local mouseover = self.Player.Mouseover
-    mouseoverList = mouseoverList or
-        {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and spells.Pummel:IsInRange("mouseover") and mouseover:CanKick()) then return spells.Pummel end end,
-            function() if (self.CmdBus:Find(cmds.StormBolt.Name) and spells.StormBolt:IsInRange("mouseover")) then return spells.StormBolt end end,
-        }
-    return rotation:RunPriorityList(mouseoverList)
 end
 
 local autoAttackList
@@ -290,7 +281,7 @@ function rotation:Refresh()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
-    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.ShieldBlockLow = self:ShieldBlockFading()
 end
@@ -324,18 +315,17 @@ function rotation:SetLayout()
     spells.ShieldBlock.Key = "6"
     spells.Shockwave.Key = "7"
 
+    spells.StormBolt.Key = "F1"
+    spells.Pummel.Key = "F7"
+    spells.DemoralizingShout.Key = "F8"
+    spells.LastStand.Key = "F9"
+    spells.AutoAttack.Key = "F12"
+
     spells.ImpedingVictory.Key = "n-1"
     spells.Execute.Key = "n-3"
     spells.Revenge.Key = "n-4"
     spells.BattleStance.Key = "n-6"
     spells.DefensiveStance.Key = spells.BattleStance.Key
-
-    spells.StormBolt.Key = "F1"
-    spells.Charge.Key = "F4"
-    spells.Pummel.Key = "F7"
-    spells.DemoralizingShout.Key = "F8"
-    spells.LastStand.Key = "F9"
-    spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
     equip.Trinket14.Key = "n-0"
