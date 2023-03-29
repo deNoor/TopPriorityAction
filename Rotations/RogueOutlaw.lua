@@ -224,6 +224,7 @@ function rotation:StealthOpener()
             function() return self:RollTheBones() end,
             function() if (spells.MarkedForDeath.Known and self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
+            function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() return spells.Ambush end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
@@ -240,6 +241,7 @@ function rotation:SingleTarget()
         {
             function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+            function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
             function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and not player.Buffs:Applied(spells.AdrenalineRush.Buff)) then return spells.KillingSpree end end,
@@ -249,19 +251,15 @@ function rotation:SingleTarget()
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
             function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
             function() if (spells.BladeRush.Known and not settings.AOE and (self.EnergyDeficit > 50 and not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
-            function() if (spells.ColdBlood.Known and spells.ImprovedBetweenTheEyes.Known and self.ComboFinisherAllowed) then return self:ColdBlood() end end,
             function() if (self.ComboFinisherAllowed and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3)) then return spells.BetweenTheEyes end end,
-            function() if (spells.ColdBlood.Known and spells.SummarilyDispatched.Known and self.ComboFinisherAllowed) then return self:ColdBlood() end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
             function() if (spells.MarkedForDeath.Known and self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.Dreadblades.Known and settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
-            function() if (spells.ColdBlood.Known and not spells.GreenskinsWickers.Known) then return self:ColdBlood() end end,
             function() return spells.Ambush end,
             function() if (spells.GhostlyStrike.Known and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
             function() if (settings.Burst and not self.ShortBursting and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() if (spells.Sepsis.Known and settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
-            function() if (spells.ColdBlood.Known) then return self:ColdBlood() end end,
             function() return self:PistolShot() end,
             function() if (spells.BladeRush.Known and (not settings.AOE or player.Buffs:Applied(spells.BladeFlurry.Buff))) then return spells.BladeRush end end,
             function() if (spells.ShadowDance.Known and settings.Burst and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon() and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
@@ -347,48 +345,6 @@ function rotation:PistolShot()
     end
     if (self.Player.Buffs:Applied(spells.PistolShot.Opportunity)) then
         return spells.PistolShot
-    end
-    return nil
-end
-
-function rotation:ColdBlood()
-    local settings = self.Settings
-    local player = self.Player
-    if (self.ComboHolding) then
-        return nil
-    end
-    if (settings.AOE and player.Buffs:Remains(spells.BladeFlurry.Buff) < 1 and spells.BladeFlurry:ReadyIn() < 1) then
-        return nil
-    end
-    if (spells.GreenskinsWickers.Known) then
-        if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.GreenskinsWickers.Buff) and self:PistolShot()) then
-            return spells.ColdBlood
-        end
-        return nil
-    end
-    if (spells.ImprovedBetweenTheEyes.Known) then
-        if (self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
-            return spells.ColdBlood
-        end
-        return nil
-    end
-    if (spells.SummarilyDispatched.Known) then
-        local stacks, remains = player.Buffs:Stacks(spells.SummarilyDispatched.Buff), player.Buffs:Remains(spells.SummarilyDispatched.Buff)
-        local setBonus4 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsId, 4)
-        if (self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and ((setBonus4 and player.Buffs:Applied(setBonuses.DFVault.Buff4Id)) or (stacks > 4 or (stacks > 2 and remains < 3)))) then
-            return spells.ColdBlood
-        end
-        return nil
-    end
-    if (not self.ComboFinisherAllowed and (not spells.FanTheHammer.Known or self.GcdReadyIn <= self.ActionAdvanceWindow) and spells.Ambush:IsUsableNow()) then
-        local setBonus2 = player.Equipment:ActiveSetBonus(setBonuses.DFVault.ItemsId, 2)
-        if (setBonus2 and not player.Buffs:Applied(setBonuses.DFVault.Buff2Id)) then
-            return nil
-        end
-        local usable, noMana = spells.Ambush:IsUsableNow()
-        if (usable or noMana) then
-            return spells.ColdBlood
-        end
     end
     return nil
 end
@@ -496,20 +452,18 @@ local max, min = max, min
 ---@return boolean
 function rotation:FinisherAllowed()
     local comboMax = self.Combo + self.ComboDeficit
-    local comboFinisher = min(comboMax, self.ComboFinisher)
+    local comboFinisher = max(5, min(self.ComboFinisher, comboMax - 1))
     if (spells.SummarilyDispatched.Known) then
-        comboFinisher = max(5, self.ComboFinisher)
+        comboFinisher = max(5, comboFinisher)
     elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
-        comboFinisher = max(5, self.ComboFinisher)
-    elseif (self.Player.Buffs:Applied(spells.RollTheBones.Broadside)) then
-        comboFinisher = min(comboMax - 1, self.ComboFinisher)
+        comboFinisher = max(5, comboFinisher)
     end
     return self.Combo >= comboFinisher
 end
 
 function rotation:ShortBurstEffects()
     local player = self.Player
-    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff) or player.Buffs:Applied(spells.ColdBlood.Buff)
+    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff)
 end
 
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
