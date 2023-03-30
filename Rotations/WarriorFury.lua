@@ -15,6 +15,10 @@ local spells = {
         Id = 386196,
         Buff = 386196,
     },
+    DefensiveStance = {
+        Id = 386208,
+        Buff = 386208,
+    },
     VictoryRush = {
         Id = 34428,
     },
@@ -152,7 +156,7 @@ function rotation:SingleTarget()
     local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     singleTargetList = singleTargetList or
         {
-            function() if (not player.Buffs:Applied(spells.BerserkerStance.Buff)) then return spells.BerserkerStance end end,
+            function() if (not player.Buffs:Applied(spells.BerserkerStance.Buff) and not player.Buffs:Applied(spells.DefensiveStance.Buff)) then return spells.BerserkerStance end end,
             function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId)) then return spells.ImpendingVictory end end,
             function() if ((self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) and player.Buffs:Applied(spells.EnragedRegeneration.Buff)) then return spells.Bloodthist end end,
             function() return self:UseTrinket() end,
@@ -161,15 +165,14 @@ function rotation:SingleTarget()
             function() if (settings.Burst) then return spells.Avatar end end,
             function() if (settings.Burst) then return spells.OdynsFury end end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.Whirlwind.Buff)) then return spells.Whirlwind end end,
+            function() return spells.Rampage end,
             function() if (spells.Tenderize.Known) then return spells.Onslaught end end,
             function() if (not self.Enraged) then return spells.Rampage end end,
             function() if (not self.Enraged) then return spells.Bloodthist end end,
             function() return spells.Onslaught end,
             function() return spells.Execute end,
-            function() return spells.Rampage end,
             function() if (spells.StormOfSwords.Known) then return spells.Slam end end,
             function() if (not spells.Annihilator.Known) then return spells.RagingBlow end end,
-            function() return spells.RagingBlow end,
             function() return spells.Bloodthist end,
             function() return spells.Whirlwind end,
         }
