@@ -167,11 +167,10 @@ function rotation:BattleMode()
     local player = self.Player
     local target = self.Player.Target
     local equip = player.Equipment
-    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     battleList = battleList or
         {
             function() if (not player.Buffs:Applied(spells.BattleStance.Buff)) then return spells.BattleStance end end,
-            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId)) then return spells.ImpedingVictory end end,
+            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.ImpedingVictory end end,
             function() return spells.ShieldCharge end,
             function() return spells.Execute end,
             function() return spells.Revenge end,
@@ -190,14 +189,13 @@ function rotation:DefenceMode()
     local player = self.Player
     local target = self.Player.Target
     local equip = player.Equipment
-    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     defenseList = defenseList or
         {
             function() if (not player.Buffs:Applied(spells.DefensiveStance.Buff)) then return spells.DefensiveStance end end,
             function() if (spells.Bolster.Known and not player.Buffs:Applied(spells.ShieldBlock.Buff) and spells.ShieldBlock:ReadyIn() > 0.5) then return spells.LastStand end end,
             function() if (self.ShieldBlockLow) then return spells.ShieldBlock end end,
-            function() if ((player.Buffs:Remains(spells.IgnorePain.Buff) < 1 and not self.ShieldBlockLow) or self.RageDeficit < 15) then return spells.IgnorePain end end,
-            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId)) then return spells.ImpedingVictory end end,
+            function() if (((not self.ShieldBlockLow or self.Rage >= (30 + 35)) and self:CanAddIgnorePain()) or self.RageDeficit < 15) then return spells.IgnorePain end end,
+            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.ImpedingVictory end end,
             function() return spells.ShieldSlam end,
             function() return spells.ThunderClap end,
             function() if (player.Buffs:Applied(spells.Revenge.Buff)) then return spells.Revenge end end,
@@ -213,7 +211,6 @@ function rotation:Utility()
     local player = self.Player
     local target = self.Player.Target
     local mouseover = player.Mouseover
-    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
@@ -260,9 +257,25 @@ function rotation:UseTrinket()
     end
 end
 
+local min, PlayerEffectiveAttackPower, GetCombatRatingBonus, GetVersatilityBonus, CR_VERSATILITY_DAMAGE_DONE, ATTACK_POWER_MAGIC_NUMBER =
+    min, PlayerEffectiveAttackPower, GetCombatRatingBonus, GetVersatilityBonus, CR_VERSATILITY_DAMAGE_DONE, ATTACK_POWER_MAGIC_NUMBER
+function rotation:CanAddIgnorePain()
+    local player = self.Player
+    local ignorePain = player.Buffs:Find(spells.IgnorePain.Buff)
+    if (not ignorePain or ignorePain.Remains < 0.5) then
+        return true
+    end
+    local amount = ignorePain.Amount or 0
+    local canAdd = PlayerEffectiveAttackPower() * ATTACK_POWER_MAGIC_NUMBER * (1 + (GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)) / 100)
+    local myHealth, myHealthDeficit = player:Health()
+    local maxAmount = (myHealth + myHealthDeficit) * 0.3
+    maxAmount = min(canAdd * 2, maxAmount)
+    return maxAmount - amount > canAdd
+end
+
 function rotation:ShieldBlockFading()
     local player = self.Player
-    return player.Buffs:Remains(spells.ShieldBlock.Buff) < 1.5
+    return player.Buffs:Remains(spells.ShieldBlock.Buff) < 2.4
 end
 
 function rotation:Refresh()
