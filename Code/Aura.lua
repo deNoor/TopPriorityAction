@@ -9,6 +9,7 @@ local addon = TopPriorityAction
 ---@field FullDuration number
 ---@field DispelType string?
 ---@field CanPurge boolean
+---@field Amount number
 
 ---@class AuraCollection
 ---@field Refresh fun(self:AuraCollection, timestamp?:number)
@@ -30,7 +31,7 @@ local emptyAura = {
 
 local auraCache = {}
 local function UpdateAuras(auras, unit, filter, timestamp)
-    AuraUtil.ForEachAura(unit, filter, nil, function(name, _, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossDebuff, castByPlayer, ...)
+    AuraUtil.ForEachAura(unit, filter, nil, function(name, icon, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, nameplateShowPersonal, spellId, canApplyAura, isBossDebuff, castByPlayer, nameplateShowAll, timeMod, ...)
         local now = timestamp or getTime()
         local aura = auras[spellId]
         if (not aura) then
@@ -52,6 +53,7 @@ local function UpdateAuras(auras, unit, filter, timestamp)
         aura.FullDuration = duration
         aura.DispelType = dispelType -- ["Magic", "Disease", "Poison", "Curse", ""] and nil
         aura.CanPurge = canStealOrPurge
+        aura.Amount = ...
     end)
 end
 
