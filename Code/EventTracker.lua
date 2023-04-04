@@ -147,7 +147,7 @@ function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
                 if (level > 16 and onTime and IsInGroup()) then
                     C_Timer.After(1, function() SendChatMessage("<(^-^)>", "PARTY") end)
                 end
-                addon.Convenience:ThanksBye(5)
+                addon.Convenience:ThanksBye(2)
             end
         end
     end
