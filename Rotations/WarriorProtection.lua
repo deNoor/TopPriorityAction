@@ -265,11 +265,12 @@ function rotation:CanAddIgnorePain()
     if (not ignorePain or ignorePain.Remains < 0.5) then
         return true
     end
+    local preferredCoef = 1.0
     local amount = ignorePain.Amount or 0
     local canAdd = PlayerEffectiveAttackPower() * ATTACK_POWER_MAGIC_NUMBER * (1 + (GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)) / 100)
     local myHealth, myHealthDeficit = player:Health()
     local maxAmount = (myHealth + myHealthDeficit) * 0.3
-    maxAmount = min(canAdd * 2, maxAmount)
+    maxAmount = min(canAdd * preferredCoef, maxAmount)
     return maxAmount - amount > canAdd
 end
 
