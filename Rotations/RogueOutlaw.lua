@@ -258,7 +258,7 @@ function rotation:SingleTarget()
             function() if (spells.Dreadblades.Known and settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
             function() return spells.Ambush end,
             function() if (spells.GhostlyStrike.Known and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
-            function() if (settings.Burst and not self.ShortBursting and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
+            function() if (settings.Burst and settings.Dispel and not self.ShortBursting and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() if (spells.Sepsis.Known and settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
             function() return self:PistolShot() end,
             function() if (spells.BladeRush.Known and (not settings.AOE or player.Buffs:Applied(spells.BladeFlurry.Buff))) then return spells.BladeRush end end,
