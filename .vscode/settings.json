@@ -9,7 +9,9 @@
         "StaticPopupDialogs",
         "DELETE_ITEM_CONFIRM_STRING",
         "CR_VERSATILITY_DAMAGE_DONE",
-        "ATTACK_POWER_MAGIC_NUMBER"
+        "ATTACK_POWER_MAGIC_NUMBER",
+        "HelpOpenWebTicketButton",
+        "TicketStatusFrame"
     ],
     "Lua.diagnostics.disable": [
         "invisible"
