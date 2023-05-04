@@ -8,6 +8,7 @@ local addon = TopPriorityAction
 ---@field CreateTricksMacro fun(self:Convenience, name:string, spell:Spell):TricksMacro
 ---@field UserAction fun(self:Convenience):PlayerAction?
 ---@field EnableAutoConfirmDelete fun(self:Convenience)
+---@field EnableHiddenPendingTicket fun(self:Convenience)
 
 ---@type Convenience
 local Convenience = {}
@@ -141,6 +142,11 @@ function Convenience:EnableAutoConfirmDelete()
     for _, id in ipairs(popupIds) do
         attachToPopupWindow(StaticPopupDialogs[id])
     end
+end
+
+function Convenience:EnableHiddenPendingTicket()
+    HelpOpenWebTicketButton:HookScript("OnShow", function (frame) frame:Hide() end)
+    TicketStatusFrame:HookScript("OnShow", function (frame) frame:Hide() end)
 end
 
 -- attach to addon

@@ -89,6 +89,7 @@ function frameHandlers.ADDON_LOADED(event, ...)
         addon.EventTracker:UnRegisterEvent(event)
         addon.SavedSettings:Load()
         addon.Convenience:EnableAutoConfirmDelete()
+        addon.Convenience:EnableHiddenPendingTicket()
     end
 end
 
