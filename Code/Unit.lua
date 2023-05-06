@@ -94,7 +94,7 @@ end
 
 function Unit:CanKick(advanced)
     local _, leftSec, elapsedSec, channeling, kickable = self:NowCasting()
-    if (not kickable or leftSec < 0.06) then
+    if (not kickable or leftSec < 0.06 * 2) then -- was 0.06, temp higher for TR ping
         return false
     end
     if (advanced) then
