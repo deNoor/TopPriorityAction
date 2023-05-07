@@ -90,6 +90,7 @@ function frameHandlers.ADDON_LOADED(event, ...)
         addon.SavedSettings:Load()
         addon.Convenience:EnableAutoConfirmDelete()
         addon.Convenience:EnableHiddenPendingTicket()
+        addon.Convenience:DisableActionBarGlow()
     end
 end
 

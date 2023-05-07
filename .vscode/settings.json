@@ -11,7 +11,9 @@
         "CR_VERSATILITY_DAMAGE_DONE",
         "ATTACK_POWER_MAGIC_NUMBER",
         "HelpOpenWebTicketButton",
-        "TicketStatusFrame"
+        "TicketStatusFrame",
+        "ActionButton_ShowOverlayGlow",
+        "ActionButton_HideOverlayGlow"
     ],
     "Lua.diagnostics.disable": [
         "invisible"
