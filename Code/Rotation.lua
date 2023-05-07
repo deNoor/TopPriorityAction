@@ -34,7 +34,7 @@ local emptyRotation = addon.Initializer.Empty.Rotation
 
 ---@type Rotation
 local Rotation = {
-    SelectedAction = nil, ---@type Spell|Item|Action|EquipItem
+    SelectedAction = nil, ---@type Spell|Item|Action|PlayerAction|EquipItem
     Activate = function(_)
     end,
     Dispose = function(_)
@@ -125,7 +125,7 @@ local buggedCurrentSpellCastDetection = { [330325] = "Condemn", }
 ---@param action Action
 ---@return boolean
 local function ForcedSpam(action)
-    return action.Type == "Spell" and buggedCurrentSpellCastDetection[action.Id]
+    return action.Type == "Spell" and buggedCurrentSpellCastDetection[action.Id] ~= nil
 end
 
 function Rotation:ReduceActionSpam()

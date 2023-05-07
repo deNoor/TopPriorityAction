@@ -193,7 +193,7 @@ local emptyAction = {
     IsAvailable = function() return true end,
     IsUsableNow = function() return true, false end,
     IsQueued = function() return false end,
-    IsInRange = function() return false end,
+    IsInRange = function() return true end,
     ReadyIn = function() return 0 end,
 }
 ---@type Rotation
