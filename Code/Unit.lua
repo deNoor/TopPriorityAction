@@ -22,10 +22,11 @@ local addon = TopPriorityAction
 ---@field ResourcePercent fun(self:Unit, index:integer):number,number @current, deficit
 ---@field Health fun(self:Unit):number,number @current, deficit
 ---@field HealthPercent fun(self:Unit):number,number @current, deficit
+---@field Absorb fun(self:Unit):number @amount
 ---@field HealAbsorb fun(self:Unit):number @amount
 ---@field IsFriend fun(self:Unit):boolean @with player
 ---@field IsEnemy fun(self:Unit):boolean @with player
----@field IsTiny fun(self:Unit):boolean
+---@field IsWorthy fun(self:Unit):boolean
 
 ---@type Unit
 local Unit = {}
@@ -146,6 +147,11 @@ function Unit:Health()
     return current, total - current
 end
 
+local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
+function Unit:Absorb()
+    return UnitGetTotalAbsorbs(self.Id)
+end
+
 local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
 function Unit:HealAbsorb()
     return UnitGetTotalHealAbsorbs(self.Id)
@@ -172,8 +178,13 @@ function Unit:IsTotem()
     return badCreatureTypes[UnitCreatureType(self.Id)] ~= nil
 end
 
+local UnitIsBossMob = UnitIsBossMob
+function Unit:IsBoss()
+    return UnitIsBossMob(self.Id)
+end
+
 function Unit:CanDot()
-    return goodUnitClassifications[UnitClassification(self.Id)] ~= nil and not self:IsTotem()
+    return (self:IsBoss() or goodUnitClassifications[UnitClassification(self.Id)] ~= nil) and not self:IsTotem()
 end
 
 local UnitIsFriend, UnitIsEnemy = UnitIsFriend, UnitIsEnemy
@@ -185,9 +196,21 @@ function Unit:IsEnemy()
     return UnitIsEnemy("player", self.Id)
 end
 
-local PlayerEffectiveAttackPower, UnitHealthMax = PlayerEffectiveAttackPower, UnitHealthMax
-function Unit:IsTiny()
-    return (UnitHealthMax(self.Id) < PlayerEffectiveAttackPower())
+local max, GetNumGroupMembers = max, GetNumGroupMembers
+function Unit:IsWorthy()
+    local classification = UnitClassification(self.Id)
+    if (goodUnitClassifications[classification]) then
+        local player = addon.Player
+        if (not player:InInstance()) then
+            return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 4)
+        end
+        if (classification == "normal" or classification == "rare") then
+            return false
+        end
+        local groupSize = max(GetNumGroupMembers() or 1, 1)
+        return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 4) * groupSize
+    end
+    return false
 end
 
 -- attach to addon
