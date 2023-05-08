@@ -55,6 +55,7 @@ local spells = {
     },
     Vanish = {
         Id = 1856,
+        Buff = 11327,
     },
     BladeFlurry = {
         Id = 13877,
@@ -151,7 +152,16 @@ local cmds = {
     },
     Kick = {
         Name = "kick",
-    }
+    },
+    Vanish = {
+        Name = "vanish"
+    },
+    ShadowDance = {
+        Name = "shadowdance"
+    },
+    PistolShot = {
+        Name = "pistolshot"
+    },
 }
 
 local setBonuses = {
@@ -181,6 +191,7 @@ local rotation = {
     EnergyDeficit          = 0,
     Combo                  = 0,
     ComboDeficit           = 0,
+    FanTheHammerTicks      = 0,
     ComboFinisherAllowed   = false,
     ComboHolding           = false,
     NowCasting             = 0,
@@ -195,8 +206,10 @@ local rotation = {
     CanAttackTarget        = false,
     CanAttackMouseover     = false,
     CanDotTarget           = false,
-    TinyTarget             = false,
+    UnwortyTarget          = false,
+    NanoBursting           = false,
     ShortBursting          = false,
+    CombatStealthSent      = false,
 }
 
 function rotation:SelectAction()
@@ -205,7 +218,7 @@ function rotation:SelectAction()
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
     if ((not self.InInstance or self.InCombatWithTarget)) then
-        if (self.CanAttackTarget and self.InRange and self.Stealhed) then
+        if (self.CanAttackTarget and self.InRange and (self.Stealhed or self.CombatStealthSent)) then
             self:StealthOpener()
         end
         if (self.CanAttackTarget and self.InRange) then
@@ -217,15 +230,18 @@ end
 
 local stealthOpenerList
 function rotation:StealthOpener()
+    local settings = self.Settings
     local player = self.Player
     local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
-            function() return self:RollTheBones() end,
-            function() if (spells.MarkedForDeath.Known and self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
+            function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() return spells.Ambush end,
+            function() return self.EmptyAction end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
 end
@@ -239,30 +255,29 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
+            -- function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
+            -- function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
-            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
-            function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and not player.Buffs:Applied(spells.AdrenalineRush.Buff)) then return spells.KillingSpree end end,
-            function() if (spells.RollTheBones.Known and not self.ComboHolding and not self.ShortBursting) then return self:RollTheBones() end end,
-            function() if (not self.ComboHolding and not self.ShortBursting) then return self:SliceAndDice() end end,
-            function() if (spells.ThistleTea.Known and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
-            function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
             function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
-            function() if (spells.BladeRush.Known and not settings.AOE and (self.EnergyDeficit > 50 and not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
-            function() if (self.ComboFinisherAllowed and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3)) then return spells.BetweenTheEyes end end,
+            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
+            function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.Energy < 50)) then return spells.KillingSpree end end,
+            function() if (spells.RollTheBones.Known and not self.ComboHolding) then return self:RollTheBones() end end,
+            function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
+            function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
+            function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
+            function() if (self.ComboFinisherAllowed and self.WortyTarget and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3)) then return spells.BetweenTheEyes end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
-            function() if (spells.MarkedForDeath.Known and self.ComboDeficit > 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
-            function() if (spells.Dreadblades.Known and settings.Burst and not self.ComboHolding and self.ComboDeficit > 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
+            function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
+            function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (spells.Dreadblades.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and self.Combo < 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
             function() return spells.Ambush end,
             function() if (spells.GhostlyStrike.Known and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
-            function() if (settings.Burst and settings.Dispel and not self.ShortBursting and not self.ComboHolding and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn and (not spells.TakeThemBySurprise.Known or not player.Buffs:Applied(spells.TakeThemBySurprise.Buff))) then return self:AwaitedVanishAmbush() end end,
             function() if (spells.Sepsis.Known and settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
+            function() if (spells.BladeRush.Known and not settings.AOE and self.Energy < 80 and not player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.BladeRush end end,
+            function() if (settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
+            function() if (spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon() and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
             function() return self:PistolShot() end,
-            function() if (spells.BladeRush.Known and (not settings.AOE or player.Buffs:Applied(spells.BladeFlurry.Buff))) then return spells.BladeRush end end,
-            function() if (spells.ShadowDance.Known and settings.Burst and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon() and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
             function() return spells.SinisterStrike end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -279,8 +294,8 @@ function rotation:Utility()
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealhed and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealhed and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -294,12 +309,21 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
+function rotation:ExpectVanish()
+    self.CmdBus:Add(self.Cmds.Vanish.Name, 0.4)
+end
+
+function rotation:ExpectDance()
+    self.CmdBus:Add(self.Cmds.ShadowDance.Name, 0.4)
+end
+
 function rotation:AwaitedVanishAmbush()
     local necroticPitch = addon.Common.Spells.NecroticPitch
     if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
         return nil
     end
-    if (self.GcdReadyIn < 0.01 and self.Energy > 50) then
+    if (self.Energy > 80 and self.GcdReadyIn < 0.2) then
+        self:ExpectVanish()
         return spells.Vanish
     else
         return self.EmptyAction
@@ -307,7 +331,8 @@ function rotation:AwaitedVanishAmbush()
 end
 
 function rotation:AwaitedShadowDance()
-    if (self.Energy > 80 and self.GcdReadyIn < 0.05) then
+    if (self.Energy > 80 and self.GcdReadyIn < 0.2) then
+        self:ExpectDance()
         return spells.ShadowDance
     else
         return self.EmptyAction
@@ -337,8 +362,8 @@ end
 
 function rotation:PistolShot()
     if (spells.FanTheHammer.Known) then
-        local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity)
-        if (self.ComboDeficit > 3 and stacks > 0 or stacks > 3) then
+        local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks
+        if (stacks > 0) then
             return spells.PistolShot
         end
         return nil
@@ -389,7 +414,7 @@ local activeRtb = {
 }
 ---@return Spell?
 function rotation:RollTheBones()
-    if (self.ShortBursting) then
+    if (self.NanoBursting) then
         return nil
     end
 
@@ -461,9 +486,28 @@ function rotation:FinisherAllowed()
     return self.Combo >= comboFinisher
 end
 
+function rotation:Predictions()
+    if (spells.ShadowDance:IsQueued()) then
+        self:ExpectDance()
+    end
+    if (spells.ShadowDance:IsQueued()) then
+        self:ExpectVanish()
+    end
+    if (spells.FanTheHammer.Known and self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
+        local maxCombo = self.Combo + self.ComboDeficit
+        self.Combo = self.Combo + (self.FanTheHammerTicks * (self.Player.Buffs:Applied(spells.RollTheBones.Broadside) and 1 or 2))
+        self.ComboDeficit = maxCombo - self.Combo
+    end
+end
+
 function rotation:ShortBurstEffects()
     local player = self.Player
-    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff) or player.Buffs:Applied(spells.Subterfuge.Buff)
+    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Debuffs:Applied(spells.Dreadblades.Debuff)
+end
+
+function rotation:NanoBurstEffects()
+    local player = self.Player
+    return player.Buffs:Applied(spells.Subterfuge.Buff) or player.Buffs:Applied(spells.Vanish.Buff)
 end
 
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
@@ -479,7 +523,6 @@ function rotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
-    self.ComboFinisherAllowed = self:FinisherAllowed()
     self.ComboHolding = false
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
@@ -488,10 +531,15 @@ function rotation:Refresh()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
-    self.TinyTarget = player.Target:IsTiny()
-    self.ShortBursting = self:ShortBurstEffects()
+    self.WortyTarget = player.Target:IsWorthy()
+    self:Predictions()
+    self.NanoBursting = rotation:NanoBurstEffects()
+    self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
+    self.ComboFinisherAllowed = self:FinisherAllowed()
 
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
+
+    self.CombatStealthSent = (self.CmdBus:Find(cmds.Vanish.Name) or self.CmdBus:Find(cmds.ShadowDance.Name)) ~= nil
 end
 
 function rotation:Dispose()
@@ -514,6 +562,46 @@ function rotation:CreateLocalEventTracker()
     local IsStealthed = IsStealthed
     function frameHandlers.UPDATE_STEALTH(event, ...)
         self.Stealhed = IsStealthed()
+    end
+
+    function frameHandlers.UNIT_SPELLCAST_SENT(event, unit, target, castGUID, spellID)
+        if (unit == "player") then
+            if (spellID == spells.Vanish.Id) then
+                self:ExpectVanish()
+            elseif (spellID == spells.ShadowDance.Id) then
+                self:ExpectDance()
+            end
+        end
+    end
+
+    local min = min
+    local spellIdHandlers = {
+        [spells.Vanish.Id] = function()
+            self:ExpectVanish()
+        end,
+        [spells.ShadowDance.Id] = function()
+            self:ExpectDance()
+        end,
+        [spells.Ambush.Id] = function()
+            self.CmdBus:Remove(self.Cmds.Vanish.Name)
+            self.CmdBus:Remove(self.Cmds.ShadowDance.Name)
+        end,
+        [spells.PistolShot.Id] = function()
+            if (spells.FanTheHammer.Known) then
+                if (not self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
+                    self.CmdBus:Add(self.Cmds.PistolShot.Name, 0.4)
+                    self.FanTheHammerTicks = min(self.Player.Buffs:Stacks(spells.PistolShot.Opportunity), 2)
+                elseif (self.FanTheHammerTicks > 0) then
+                    self.FanTheHammerTicks = self.FanTheHammerTicks - 1
+                end
+            end
+        end,
+    }
+    function frameHandlers.UNIT_SPELLCAST_SUCCEEDED(event, target, castGUID, spellID)
+        local spellHandler = spellIdHandlers[spellID]
+        if (spellHandler) then
+            spellHandler()
+        end
     end
 
     function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
