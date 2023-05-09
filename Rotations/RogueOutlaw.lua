@@ -203,7 +203,7 @@ local rotation = {
     ComboFinisher          = 6,
     ComboKidney            = 4,
     -- locals
-    Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
+    Stealthed              = IsStealthed(),  -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
@@ -237,7 +237,7 @@ function rotation:SelectAction()
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
     if ((not self.InInstance or self.InCombatWithTarget)) then
-        if (self.CanAttackTarget and self.InRange and (self.Stealhed or self.CombatStealthSent)) then
+        if (self.CanAttackTarget and self.InRange and (self.Stealthed or self.CombatStealthSent)) then
             self:StealthOpener()
         end
         if (self.CanAttackTarget and self.InRange) then
@@ -316,9 +316,9 @@ function rotation:Utility()
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
-            function() if (self.InInstance) then return spells.Stealth end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
+            function() if (not self.Stealthed and self.InInstance) then return spells.Stealth end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -584,6 +584,7 @@ end
 
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
+local IsStealthed = IsStealthed
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -604,6 +605,7 @@ function rotation:Refresh()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.WorthyTarget = player.Target:IsWorthy()
+    self.Stealthed = IsStealthed()
     self:Predictions()
     self.NanoBursting = rotation:NanoBurstEffects()
     self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
@@ -634,7 +636,7 @@ function rotation:CreateLocalEventTracker()
 
     local IsStealthed = IsStealthed
     function frameHandlers.UPDATE_STEALTH(event, ...)
-        self.Stealhed = IsStealthed()
+        self.Stealthed = IsStealthed()
     end
 
     local spellIdHandlers = {
