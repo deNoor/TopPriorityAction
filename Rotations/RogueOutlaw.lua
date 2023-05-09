@@ -144,6 +144,12 @@ local spells = {
         Id = 382245,
         Buff = 382245,
     },
+    EchoingReprimand = {
+        Id = 385616,
+        Buff2 = 323558,
+        Buff3 = 323559,
+        Buff4 = 323560,
+    },
     ShadowDance = {
         Id = 185313,
     },
@@ -205,6 +211,7 @@ local rotation = {
     ComboDeficit           = 0,
     FanTheHammerTicks      = 0,
     ComboFinisherAllowed   = false,
+    ComboEchoing           = false,
     ComboHolding           = false,
     NowCasting             = 0,
     CastingEndsIn          = 0,
@@ -218,7 +225,7 @@ local rotation = {
     CanAttackTarget        = false,
     CanAttackMouseover     = false,
     CanDotTarget           = false,
-    UnwortyTarget          = false,
+    WorthyTarget           = false,
     NanoBursting           = false,
     ShortBursting          = false,
     CombatStealthSent      = false,
@@ -252,7 +259,7 @@ function rotation:StealthOpener()
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
-            function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
+            -- function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
         }
@@ -270,7 +277,7 @@ function rotation:SingleTarget()
         {
             -- function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
             -- function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-            function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
+            -- function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
@@ -280,15 +287,16 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
-            function() if (self.ComboFinisherAllowed and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or (self.WortyTarget and target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3))) then return spells.BetweenTheEyes end end,
-            function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
+            function() if ((self.ComboFinisherAllowed or self.ComboEchoing) and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or (self.WorthyTarget and target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3))) then return spells.BetweenTheEyes end end,
+            function() if (self.ComboFinisherAllowed or self.ComboEchoing) then return spells.Dispatch end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.Dreadblades.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and self.Combo < 3 and not self:KillingSpreeSoon()) then return spells.Dreadblades end end,
             function() return spells.Ambush end,
-            function() if (spells.GhostlyStrike.Known and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
+            function() if (spells.GhostlyStrike.Known and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
             function() if (spells.Sepsis.Known and settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
             function() if (spells.BladeRush.Known and not settings.AOE and self.Energy < 80 and not player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.BladeRush end end,
+            function() if (spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
             function() if (settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
             function() if (spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon() and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
             function() return self:PistolShot() end,
@@ -532,6 +540,24 @@ function rotation:FinisherAllowed()
     return self.Combo >= comboFinisher
 end
 
+local echoBuffs = {
+    [2] = spells.EchoingReprimand.Buff2,
+    [3] = spells.EchoingReprimand.Buff3,
+    [4] = spells.EchoingReprimand.Buff4,
+}
+---@return boolean
+function rotation:ComboEcho()
+    if (not spells.EchoingReprimand.Known) then
+        return false
+    end
+    local combo = self.Combo
+    if (2 <= combo and combo <= 4) then
+        local buffId = echoBuffs[combo] or addon.Helper.Print("EchoingReprimand buff id is missing for", combo)
+        return self.Player.Buffs:Applied(buffId)
+    end
+    return false
+end
+
 function rotation:Predictions()
     if (spells.ShadowDance:IsQueued()) then
         self:ExpectDance()
@@ -577,11 +603,12 @@ function rotation:Refresh()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
-    self.WortyTarget = player.Target:IsWorthy()
+    self.WorthyTarget = player.Target:IsWorthy()
     self:Predictions()
     self.NanoBursting = rotation:NanoBurstEffects()
     self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
     self.ComboFinisherAllowed = self:FinisherAllowed()
+    self.ComboEchoing = self:ComboEcho()
 
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
 
@@ -694,6 +721,7 @@ function rotation:SetLayout()
 
     spells.ThistleTea.Key = "n-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
+    spells.EchoingReprimand.Key = spells.ThistleTea.Key
     spells.MarkedForDeath.Key = "n-2"
     spells.Ambush.Key = "n-3"
     spells.KillingSpree.Key = "n-4"
