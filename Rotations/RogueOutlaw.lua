@@ -45,6 +45,9 @@ local spells = {
         BuriedTreasure = 199600,
         GrandMelee = 193358,
     },
+    KeepItRolling = {
+        Id = 381989,
+    },
     Shiv = {
         Id = 5938,
     },
@@ -52,6 +55,12 @@ local spells = {
         Id = 13750,
         Buff = 13750,
         LoadedDice = 256171,
+    },
+    Stealth = {
+        Id = 1784,
+    },
+    StealthSubterfuge = {
+        Id = 115191,
     },
     Vanish = {
         Id = 1856,
@@ -148,19 +157,22 @@ local cmds = {
         Name = "kidney",
     },
     Feint = {
-        Name = "feint"
+        Name = "feint",
     },
     Kick = {
         Name = "kick",
     },
     Vanish = {
-        Name = "vanish"
+        Name = "vanish",
     },
     ShadowDance = {
-        Name = "shadowdance"
+        Name = "shadowdance",
+    },
+    Stealth = {
+        Name = "stealth",
     },
     PistolShot = {
-        Name = "pistolshot"
+        Name = "pistolshot",
     },
 }
 
@@ -237,6 +249,7 @@ function rotation:StealthOpener()
         {
             function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
@@ -258,15 +271,16 @@ function rotation:SingleTarget()
             -- function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
             -- function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
+            function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (settings.AOE and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
-            function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
+            function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
             function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.Energy < 50)) then return spells.KillingSpree end end,
             function() if (spells.RollTheBones.Known and not self.ComboHolding) then return self:RollTheBones() end end,
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
-            function() if (self.ComboFinisherAllowed and self.WortyTarget and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3)) then return spells.BetweenTheEyes end end,
+            function() if (self.ComboFinisherAllowed and (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or (self.WortyTarget and target.Debuffs:Remains(spells.BetweenTheEyes.Debuff) < 3))) then return spells.BetweenTheEyes end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
@@ -296,6 +310,7 @@ function rotation:Utility()
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealhed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
+            function() if (self.InInstance) then return spells.Stealth end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -317,12 +332,16 @@ function rotation:ExpectDance()
     self.CmdBus:Add(self.Cmds.ShadowDance.Name, 0.4)
 end
 
+function rotation:ExpectStealth()
+    self.CmdBus:Add(self.Cmds.Stealth.Name, 0.4)
+end
+
 function rotation:AwaitedVanishAmbush()
     local necroticPitch = addon.Common.Spells.NecroticPitch
     if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
         return nil
     end
-    if (self.Energy > 80 and self.GcdReadyIn < 0.2) then
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow + 0.2) then
         self:ExpectVanish()
         return spells.Vanish
     else
@@ -331,7 +350,7 @@ function rotation:AwaitedVanishAmbush()
 end
 
 function rotation:AwaitedShadowDance()
-    if (self.Energy > 80 and self.GcdReadyIn < 0.2) then
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow + 0.2) then
         self:ExpectDance()
         return spells.ShadowDance
     else
@@ -404,10 +423,10 @@ function rotation:UseTrinket()
     return nil
 end
 
-local activeRtb = {
-    TrueBearing = false,        -- CDR
-    SkullAndCrossbones = false, -- 25% Double SS
+local dice = {
     Broadside = false,          -- 1 combo gen
+    SkullAndCrossbones = false, -- 25% Double SS
+    TrueBearing = false,        -- CDR
     RuthlessPrecision = false,  -- crit
     BuriedTreasure = false,     -- energy regen
     GrandMelee = false,         -- SnD application and leech
@@ -426,24 +445,24 @@ function rotation:RollTheBones()
     local buffs = self.Player.Buffs
     local inPandemic = false
     local count = 0
-    for name, _ in pairs(activeRtb) do
+    for name, _ in pairs(dice) do
         local id = rtb[name] or addon.Helper.Print("RollTheBones buff id is missing for", name)
         local aura = buffs:Find(id)
         if (aura and aura.FullDuration > 20 and aura.Remains > self.ActionAdvanceWindow) then
-            activeRtb[name] = true
+            dice[name] = true
             count = count + 1
             inPandemic = inPandemic or aura.Remains < rtb.Pandemic
         else
-            activeRtb[name] = false
+            dice[name] = false
         end
     end
 
     local reroll = function()
         if (count > 2) then
             return false
-        elseif (activeRtb.TrueBearing or activeRtb.SkullAndCrossbones) then
+        elseif (dice.Broadside or dice.SkullAndCrossbones) then
             return false
-        elseif (count > 1 and not (activeRtb.GrandMelee and activeRtb.BuriedTreasure)) then
+        elseif (count > 1 and not (dice.GrandMelee and dice.BuriedTreasure)) then
             return false
         else
             return true
@@ -453,6 +472,33 @@ function rotation:RollTheBones()
     if (reroll()) then
         return rtb
     end
+end
+
+local diceToKeep = {
+    Broadside = true,
+    SkullAndCrossbones = true,
+    TrueBearing = true,
+    RuthlessPrecision = true,
+    BuriedTreasure = true,
+    GrandMelee = false,
+}
+---@return Spell?
+function rotation:KeepItRolling()
+    local rtb = spells.RollTheBones
+    local buffs = self.Player.Buffs
+    local count = 0
+    for name, _ in pairs(diceToKeep) do
+        local id = rtb[name] or addon.Helper.Print("RollTheBones buff id is missing for", name)
+        local aura = buffs:Find(id)
+        if (aura and aura.Remains > 0.5) then
+            count = count + 1
+        end
+    end
+    if (count > 2) then
+        return spells.KeepItRolling
+    end
+
+    return nil
 end
 
 function rotation:KidneyOnCommand()
@@ -564,12 +610,22 @@ function rotation:CreateLocalEventTracker()
         self.Stealhed = IsStealthed()
     end
 
+    local spellIdHandlers = {
+        [spells.Vanish.Id] = function()
+            self:ExpectVanish()
+        end,
+        [spells.ShadowDance.Id] = function()
+            self:ExpectDance()
+        end,
+        [spells.Stealth.Id] = function()
+            self:ExpectStealth()
+        end,
+    }
     function frameHandlers.UNIT_SPELLCAST_SENT(event, unit, target, castGUID, spellID)
         if (unit == "player") then
-            if (spellID == spells.Vanish.Id) then
-                self:ExpectVanish()
-            elseif (spellID == spells.ShadowDance.Id) then
-                self:ExpectDance()
+            local spellHandler = spellIdHandlers[spellID]
+            if (spellHandler) then
+                spellHandler()
             end
         end
     end
@@ -585,6 +641,7 @@ function rotation:CreateLocalEventTracker()
         [spells.Ambush.Id] = function()
             self.CmdBus:Remove(self.Cmds.Vanish.Name)
             self.CmdBus:Remove(self.Cmds.ShadowDance.Name)
+            self.CmdBus:Remove(self.Cmds.Stealth.Name)
         end,
         [spells.PistolShot.Id] = function()
             if (spells.FanTheHammer.Known) then
@@ -630,6 +687,11 @@ function rotation:SetLayout()
     spells.BladeFlurry.Key = "8"
     spells.Feint.Key = "0"
 
+    spells.Stealth.Key = "F5"
+    spells.Kick.Key = "F7"
+    spells.CrimsonVial.Key = "F11"
+    spells.AutoAttack.Key = "F12"
+
     spells.ThistleTea.Key = "n-1"
     spells.ShadowDance.Key = spells.ThistleTea.Key
     spells.MarkedForDeath.Key = "n-2"
@@ -638,17 +700,12 @@ function rotation:SetLayout()
     spells.Dreadblades.Key = spells.KillingSpree.Key
     spells.BladeRush.Key = "n-5"
     spells.Sepsis.Key = spells.BladeRush.Key
+    spells.KeepItRolling.Key = spells.BladeRush.Key
     spells.GhostlyStrike.Key = spells.BladeRush.Key
     spells.Shiv.Key = "n-6"
     spells.ColdBlood.Key = "n-7"
-
     spells.KidneyShot.Key = "n-8"
     spells.Vanish.Key = "n-9"
-
-    spells.Kick.Key = "F7"
-
-    spells.CrimsonVial.Key = "F11"
-    spells.AutoAttack.Key = "F12"
 
     local equip = addon.Player.Equipment
     equip.Trinket14.Key = "n-0"
