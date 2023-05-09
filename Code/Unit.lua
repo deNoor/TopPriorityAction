@@ -26,7 +26,7 @@ local addon = TopPriorityAction
 ---@field HealAbsorb fun(self:Unit):number @amount
 ---@field IsFriend fun(self:Unit):boolean @with player
 ---@field IsEnemy fun(self:Unit):boolean @with player
----@field IsWorthy fun(self:Unit):boolean
+---@field IsWorthy fun(self:Unit, coefficient:number?):boolean
 
 ---@type Unit
 local Unit = {}
@@ -197,18 +197,19 @@ function Unit:IsEnemy()
 end
 
 local max, GetNumGroupMembers = max, GetNumGroupMembers
-function Unit:IsWorthy()
+function Unit:IsWorthy(coefficient)
+    coefficient = coefficient or 1
     local classification = UnitClassification(self.Id)
     if (goodUnitClassifications[classification]) then
         local player = addon.Player
         if (not player:InInstance()) then
-            return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 4)
+            return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 2) * coefficient
         end
         if (classification == "normal" or classification == "rare") then
             return false
         end
         local groupSize = max(GetNumGroupMembers() or 1, 1)
-        return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 4) * groupSize
+        return (self:Health() + self:Absorb()) > UnitHealthMax("player") * groupSize * coefficient
     end
     return false
 end
