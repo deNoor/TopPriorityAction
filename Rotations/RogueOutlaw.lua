@@ -203,7 +203,7 @@ local rotation = {
     ComboFinisher          = 6,
     ComboKidney            = 4,
     -- locals
-    Stealthed              = IsStealthed(),  -- UPDATE_STEALTH, IsStealthed()
+    Stealthed              = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
     InRange                = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
@@ -318,7 +318,7 @@ function rotation:Utility()
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(grievousWoundId))) then return spells.CrimsonVial end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
-            function() if (not self.Stealthed and self.InInstance) then return spells.Stealth end end,
+            function() if (not self.Stealthed) then return self:AutoStealth() end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -330,6 +330,14 @@ function rotation:AutoAttack()
             function() if (self.GcdReadyIn > self.ActionAdvanceWindow and not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
+end
+
+local C_ChallengeMode = C_ChallengeMode
+---@return Spell?
+function rotation:AutoStealth()
+    if (self.InInstance and C_ChallengeMode.IsChallengeModeActive()) then
+        return spells.Stealth
+    end
 end
 
 function rotation:ExpectVanish()
