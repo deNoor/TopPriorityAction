@@ -203,13 +203,13 @@ function Unit:IsWorthy(coefficient)
     if (goodUnitClassifications[classification]) then
         local player = addon.Player
         if (not player:InInstance()) then
-            return (self:Health() + self:Absorb()) > (UnitHealthMax("player") / 2) * coefficient
+            return (self:Health() + self:Absorb()) > UnitHealthMax("player") * 0.5 * coefficient
         end
         if (classification == "normal" or classification == "rare") then
             return false
         end
         local groupSize = max(GetNumGroupMembers() or 1, 1)
-        return (self:Health() + self:Absorb()) > UnitHealthMax("player") * groupSize * coefficient
+        return (self:Health() + self:Absorb()) > UnitHealthMax("player") * 0.5 * groupSize * coefficient
     end
     return false
 end
