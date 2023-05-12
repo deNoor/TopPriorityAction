@@ -139,9 +139,9 @@ local GetUnitName, C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, I
 local encounterEndProcessing = false
 function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
     local encounterID, itemID, itemLink, quantity, playerName, className = ...
-    if (not encounterEndProcessing and playerName == GetUnitName("player", true)) then
+    if (not encounterEndProcessing) then
         encounterEndProcessing = true
-        C_Timer.After(10, function() encounterEndProcessing = false end)
+        C_Timer.After(10 * 60, function() encounterEndProcessing = false end)
         local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
         if (difficultyID and difficultyID == 8) then -- Mythic Keystone
             local mapID, level, time, onTime, keystoneUpgradeLevels, practiceRun, oldDungeonScore, newDungeonScore, isAffixRecord, isMapRecord, primaryAffix, isEligibleForScore, upgradeMembers = C_ChallengeMode.GetCompletionInfo()
