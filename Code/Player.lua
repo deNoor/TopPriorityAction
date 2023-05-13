@@ -12,6 +12,7 @@ local addon = TopPriorityAction
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
 ---@field InInstance fun(self:Player):boolean
+---@field Jump fun(self:Player)
 
 ---@type Player
 local Player = {
@@ -43,6 +44,17 @@ local instanceTypes = addon.Helper.ToHashSet({ "raid", "party", "pvp", "arena", 
 function Player:InInstance()
     return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil and GetNumGroupMembers() > 0
 end
+
+function Player:Jump()
+    local customKeyCommand = addon.Common.Commands.CustomKey
+    local jumpKey = addon.Common.PlayerActions.JumpKey
+    addon.CmdBus:Add(customKeyCommand.Name, 0.05, jumpKey)
+end
+
+hooksecurefunc("JumpOrAscendStart", function(...)
+    local customKeyCommand = addon.Common.Commands.CustomKey
+    addon.CmdBus:Remove(customKeyCommand.Name)
+end)
 
 -- attach to addon
 addon.Initializer.NewPlayer = NewPlayer

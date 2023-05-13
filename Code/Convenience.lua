@@ -118,7 +118,6 @@ end
 function Convenience:EnableAutoConfirmDelete()
     local InCombatLockdown = InCombatLockdown
     local cmdBus = addon.CmdBus
-    ---@type PlayerAction
     local customKeyCommand = addon.Common.Commands.CustomKey
     local enterKey = addon.Common.PlayerActions.EnterKey
     local attachToPopupWindow = function(window)

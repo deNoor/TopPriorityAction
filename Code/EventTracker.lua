@@ -135,7 +135,7 @@ function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
     end
 end
 
-local GetUnitName, C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup = GetUnitName, C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup
+local C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup = C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup
 local encounterEndProcessing = false
 function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
     local encounterID, itemID, itemLink, quantity, playerName, className = ...
@@ -156,6 +156,10 @@ function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
 end
 
 local customHandlers = {}
+
+function customHandlers.WA_TPA_HELPER_VP_BOSS3_JUMP(event, ...)
+    addon.Player:Jump()
+end
 
 -- attach to addon
 addon.Initializer.NewEventTracker = NewEventTracker

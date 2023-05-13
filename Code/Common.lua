@@ -42,6 +42,12 @@ local Common = {
             Id = 0,
             Name = "Enter"
         },
+        JumpKey = {
+            Key = "Space",
+            Icon = 0,
+            Id = 0,
+            Name = "Space"
+        },
     },
     Commands = {
         CustomKey = {
