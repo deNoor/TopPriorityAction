@@ -397,6 +397,9 @@ end
 
 function rotation:PistolShot()
     if (spells.FanTheHammer.Known) then
+        if (self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
+            return nil
+        end
         local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks
         if (stacks > 0) then
             return spells.PistolShot
@@ -566,6 +569,7 @@ function rotation:ComboEcho()
     return false
 end
 
+local max, min = max, min
 function rotation:Predictions()
     if (spells.ShadowDance:IsQueued()) then
         self:ExpectDance()
@@ -575,7 +579,8 @@ function rotation:Predictions()
     end
     if (spells.FanTheHammer.Known and self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
         local maxCombo = self.Combo + self.ComboDeficit
-        self.Combo = self.Combo + (self.FanTheHammerTicks * (self.Player.Buffs:Applied(spells.RollTheBones.Broadside) and 1 or 2))
+        local incCombo = (self.FanTheHammerTicks * (self.Player.Buffs:Applied(spells.RollTheBones.Broadside) and 2 or 1))
+        self.Combo = min(self.Combo + incCombo, maxCombo)
         self.ComboDeficit = maxCombo - self.Combo
     end
 end
@@ -691,10 +696,12 @@ function rotation:CreateLocalEventTracker()
             end
         end,
     }
-    function frameHandlers.UNIT_SPELLCAST_SUCCEEDED(event, target, castGUID, spellID)
-        local spellHandler = spellIdHandlers[spellID]
-        if (spellHandler) then
-            spellHandler()
+    function frameHandlers.UNIT_SPELLCAST_SUCCEEDED(event, unit, castGUID, spellID)
+        if (unit == "player") then
+            local spellHandler = spellIdHandlers[spellID]
+            if (spellHandler) then
+                spellHandler()
+            end
         end
     end
 
