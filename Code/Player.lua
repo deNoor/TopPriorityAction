@@ -48,7 +48,7 @@ end
 function Player:Jump()
     local customKeyCommand = addon.Common.Commands.CustomKey
     local jumpKey = addon.Common.PlayerActions.JumpKey
-    addon.CmdBus:Add(customKeyCommand.Name, 0.05, jumpKey)
+    addon.CmdBus:Add(customKeyCommand.Name, 0.5, jumpKey)
 end
 
 hooksecurefunc("JumpOrAscendStart", function(...)
