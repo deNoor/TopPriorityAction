@@ -25,6 +25,10 @@ local Common = {
             Id = 240559,
             Debuff = 240559,
         },
+        GashFrenzy = {
+            Id = 378020,
+            Debuff = 378020,
+        },
         NecroticPitch = {
             Id = 153692,
             Debuff = 153692,
