@@ -9,7 +9,6 @@ local addon = TopPriorityAction
 ---@field UserAction fun(self:Convenience):PlayerAction?
 ---@field EnableAutoConfirmDelete fun(self:Convenience)
 ---@field EnableHiddenPendingTicket fun(self:Convenience)
----@field DisableActionBarGlow fun(self:Convenience)
 
 ---@type Convenience
 local Convenience = {}
@@ -147,19 +146,6 @@ end
 function Convenience:EnableHiddenPendingTicket()
     HelpOpenWebTicketButton:HookScript("OnShow", function(frame) frame:Hide() end)
     TicketStatusFrame:HookScript("OnShow", function(frame) frame:Hide() end)
-end
-
-local GetActionInfo = GetActionInfo
-local noGlowActionTypes = addon.Helper.ToHashSet({ "spell", "macro", })
-function Convenience:DisableActionBarGlow()
-    hooksecurefunc("ActionButton_ShowOverlayGlow", function(button)
-        local spellType, id, subType = GetActionInfo(button.action)
-        if (noGlowActionTypes[spellType]) then
-            if button.SpellActivationAlert and button.SpellActivationAlert.animOut then
-                button.SpellActivationAlert.animOut:OnFinished()
-            end
-        end
-    end)
 end
 
 -- attach to addon
