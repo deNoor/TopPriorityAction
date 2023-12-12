@@ -16,6 +16,8 @@
         "ActionButton_HideOverlayGlow"
     ],
     "Lua.diagnostics.disable": [
-        "invisible"
+        "invisible",
+        "missing-fields",
+        "inject-field"
     ]
 }
