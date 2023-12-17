@@ -217,7 +217,7 @@ local rotation = {
     ComboFinisher          = 5,
     ComboKidney            = 4,
     -- locals
-    Stealthed              = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
+    Stealthed              = false,
     InRange                = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
@@ -272,9 +272,8 @@ function rotation:StealthOpener()
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() return self:SliceAndDice() end,
-            -- function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return spells.BetweenTheEyes end end,
+            function() return self:SliceAndDice() end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
         }
@@ -302,7 +301,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
-            function() if (spells.GhostlyStrike.Known and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
+            function() if (spells.GhostlyStrike.Known and settings.Burst and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
 
             function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish() end end,
             function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
@@ -377,8 +376,7 @@ function rotation:AwaitedVanish()
     if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
         return nil
     end
-    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow + 0.2) then
-        self:ExpectVanish()
+    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow) then
         return spells.Vanish
     else
         return self.EmptyAction
@@ -386,8 +384,7 @@ function rotation:AwaitedVanish()
 end
 
 function rotation:AwaitedShadowDance()
-    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow + 0.2) then
-        self:ExpectDance()
+    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow) then
         return spells.ShadowDance
     else
         return self.EmptyAction
@@ -615,9 +612,14 @@ function rotation:NanoBurstEffects()
     return player.Buffs:Applied(spells.Vanish.Buff)
 end
 
+local GetShapeshiftForm = GetShapeshiftForm
+function rotation:StealthStance()
+    local stance = GetShapeshiftForm(true)
+    return (stance and (stance == 1 or stance == 2))
+end
+
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
-local IsStealthed = IsStealthed
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -633,12 +635,13 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
+    self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.WorthyTarget = player.Target:IsWorthy()
-    self.Stealthed = IsStealthed()
+    self.Stealthed = self:StealthStance()
     self:Predictions()
     self.NanoBursting = rotation:NanoBurstEffects()
     self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
@@ -667,9 +670,8 @@ end
 function rotation:CreateLocalEventTracker()
     local frameHandlers = {}
 
-    local IsStealthed = IsStealthed
-    function frameHandlers.UPDATE_STEALTH(event, ...)
-        self.Stealthed = IsStealthed()
+    function frameHandlers.UPDATE_SHAPESHIFT_FORM(event, ...)
+        self.Stealthed = self:StealthStance()
     end
 
     local spellIdHandlers = {
