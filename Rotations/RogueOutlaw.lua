@@ -423,8 +423,8 @@ function rotation:BetweenTheEyes()
     local settings = self.Settings
     if (spells.Crackshot.Known) then
         if (self.Stealthed or self.ShortBursting or
-                ((not settings.Burst or (spells.ShadowDance:ReadyIn() > 15 and (not settings.Dispel or not self.InInstance or spells.Vanish:ReadyIn() > 45)))
-                    and (buffs:Remains(spells.BetweenTheEyes.Buff) < 3))) then
+                (((spells.ShadowDance:ReadyIn() > 15 and (not settings.Dispel or not self.InInstance or spells.Vanish:ReadyIn() > 45)))
+                    and (buffs:Remains(spells.BetweenTheEyes.Buff) < 2))) then
             return spells.BetweenTheEyes
         end
         return nil
@@ -503,7 +503,7 @@ function rotation:RollTheBones()
         end
         if (count > 2) then
             return false
-        elseif (count == 2 and not buffs:Applied(spells.LoadedDice.Buff)) then
+        elseif ((count == 2 and not buffs:Applied(spells.LoadedDice.Buff)) or self.ShortBursting) then
             return false
         else
             return true
