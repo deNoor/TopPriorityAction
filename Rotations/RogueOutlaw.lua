@@ -302,6 +302,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.ShortBursting) then return spells.Shiv end end,
+            function() if (spells.GhostlyStrike.Known and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
 
             function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish() end end,
             function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance() end end,
@@ -312,7 +313,6 @@ function rotation:SingleTarget()
             function() if (settings.Burst and not self.ComboHolding and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.Crackshot.Known and self.ShortBursting) then return self:PistolShot() end end,
             function() return spells.Ambush end,
-            function() if (spells.GhostlyStrike.Known and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
             function() if (spells.Sepsis.Known and settings.Burst and not self.ShortBursting) then return spells.Sepsis end end,
             function() if (spells.BladeRush.Known and not settings.AOE and self.Energy < 80 and not player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.BladeRush end end,
             function() if (spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
@@ -422,9 +422,7 @@ function rotation:BetweenTheEyes()
     local buffs = self.Player.Buffs
     local settings = self.Settings
     if (spells.Crackshot.Known) then
-        if (self.Stealthed or self.ShortBursting or
-                (((spells.ShadowDance:ReadyIn() > 15 and (not settings.Dispel or not self.InInstance or spells.Vanish:ReadyIn() > 45)))
-                    and (buffs:Remains(spells.BetweenTheEyes.Buff) < 2))) then
+        if (self.Stealthed or self.ShortBursting) then
             return spells.BetweenTheEyes
         end
         return nil
