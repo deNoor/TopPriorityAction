@@ -61,6 +61,8 @@ local spells = {
     },
     Stealth = {
         Id = 1784,
+        Buff1 = 1784,
+        Buff2 = 115191,
     },
     StealthSubterfuge = {
         Id = 115191,
@@ -182,14 +184,8 @@ local cmds = {
     Kick = {
         Name = "kick",
     },
-    Vanish = {
-        Name = "vanish",
-    },
-    ShadowDance = {
-        Name = "shadowdance",
-    },
-    Stealth = {
-        Name = "stealth",
+    CombatStealth = {
+        Name = "combatstealth",
     },
     PistolShot = {
         Name = "pistolshot",
@@ -217,7 +213,8 @@ local rotation = {
     ComboFinisher          = 5,
     ComboKidney            = 4,
     -- locals
-    Stealthed              = false,
+    InStealth              = false,
+    InStealthStance        = false,
     InRange                = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
@@ -251,7 +248,7 @@ function rotation:SelectAction()
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
     if ((not self.InInstance or self.InCombatWithTarget)) then
-        if (self.CanAttackTarget and self.InRange and (self.Stealthed or self.CombatStealthSent)) then
+        if (self.CanAttackTarget and self.InRange and self.InStealth) then
             self:StealthOpener()
         end
         if (self.CanAttackTarget and self.InRange) then
@@ -268,11 +265,12 @@ function rotation:StealthOpener()
     local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
+
             function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return spells.BetweenTheEyes end end,
+            function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() return self:SliceAndDice() end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
@@ -292,6 +290,7 @@ function rotation:SingleTarget()
             -- function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
             -- function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
             -- function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
+            function() return self:AwaitCombatStealth() end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if ((settings.AOE or spells.UnderhandedUpperHand.Known) and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
@@ -335,9 +334,9 @@ function rotation:Utility()
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.Stealthed and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
-            function() if (not self.Stealthed) then return self:AutoStealth() end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
+            function() if (not self.InStealth) then return self:AutoStealth() end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -359,16 +358,8 @@ function rotation:AutoStealth()
     end
 end
 
-function rotation:ExpectVanish()
-    self.CmdBus:Add(self.Cmds.Vanish.Name, 0.4)
-end
-
-function rotation:ExpectDance()
-    self.CmdBus:Add(self.Cmds.ShadowDance.Name, 0.4)
-end
-
-function rotation:ExpectStealth()
-    self.CmdBus:Add(self.Cmds.Stealth.Name, 0.4)
+function rotation:ExpectCombatStealth()
+    self.CmdBus:Add(self.Cmds.CombatStealth.Name, 0.4)
 end
 
 function rotation:AwaitedVanish()
@@ -389,6 +380,10 @@ function rotation:AwaitedShadowDance()
     else
         return self.EmptyAction
     end
+end
+
+function rotation:AwaitCombatStealth()
+    if (self.CombatStealthSent and not self.InStealthStance) then return self.EmptyAction end
 end
 
 function rotation:SliceAndDice()
@@ -419,7 +414,7 @@ function rotation:BetweenTheEyes()
     local buffs = self.Player.Buffs
     local settings = self.Settings
     if (spells.Crackshot.Known) then
-        if (self.Stealthed or self.ShortBursting) then
+        if (self.InStealthStance) then
             return spells.BetweenTheEyes
         end
         return nil
@@ -589,10 +584,10 @@ end
 local max, min = max, min
 function rotation:Predictions()
     if (spells.ShadowDance:IsQueued()) then
-        self:ExpectDance()
+        self:ExpectCombatStealth()
     end
     if (spells.ShadowDance:IsQueued()) then
-        self:ExpectVanish()
+        self:ExpectCombatStealth()
     end
     if (spells.FanTheHammer.Known and self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
         local maxCombo = self.Combo + self.ComboDeficit
@@ -620,6 +615,7 @@ end
 
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
+local IsStealthed = IsStealthed
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -641,16 +637,15 @@ function rotation:Refresh()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.WorthyTarget = player.Target:IsWorthy()
-    self.Stealthed = self:StealthStance()
+    self.InStealth = IsStealthed()
+    self.InStealthStance = self:StealthStance()
     self:Predictions()
     self.NanoBursting = rotation:NanoBurstEffects()
     self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
     self.ComboFinisherAllowed = self:FinisherAllowed()
     self.ComboEchoing = self:ComboEcho()
-
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
-
-    self.CombatStealthSent = (self.CmdBus:Find(cmds.Vanish.Name) or self.CmdBus:Find(cmds.ShadowDance.Name)) ~= nil
+    self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
 end
 
 function rotation:Dispose()
@@ -670,19 +665,24 @@ end
 function rotation:CreateLocalEventTracker()
     local frameHandlers = {}
 
+    local IsStealthed = IsStealthed
+    function frameHandlers.UPDATE_STEALTH(event, ...)
+        self.Stealthed = IsStealthed()
+    end
+
     function frameHandlers.UPDATE_SHAPESHIFT_FORM(event, ...)
-        self.Stealthed = self:StealthStance()
+        self.InStealthStance = self:StealthStance()
     end
 
     local spellIdHandlers = {
         [spells.Vanish.Id] = function()
-            self:ExpectVanish()
+            self:ExpectCombatStealth()
         end,
         [spells.ShadowDance.Id] = function()
-            self:ExpectDance()
+            self:ExpectCombatStealth()
         end,
         [spells.Stealth.Id] = function()
-            self:ExpectStealth()
+            self:ExpectCombatStealth()
         end,
     }
     function frameHandlers.UNIT_SPELLCAST_SENT(event, unit, target, castGUID, spellID)
@@ -696,25 +696,6 @@ function rotation:CreateLocalEventTracker()
 
     local min = min
     local spellIdHandlers = {
-        [spells.Vanish.Id] = function()
-            self:ExpectVanish()
-        end,
-        [spells.ShadowDance.Id] = function()
-            self:ExpectDance()
-        end,
-        [spells.Ambush.Id] = function()
-            self.CmdBus:Remove(self.Cmds.Vanish.Name)
-            self.CmdBus:Remove(self.Cmds.ShadowDance.Name)
-            self.CmdBus:Remove(self.Cmds.Stealth.Name)
-        end,
-        [spells.BetweenTheEyes.Id] = function()
-            if (not spells.Crackshot.Known) then
-                return
-            end
-            self.CmdBus:Remove(self.Cmds.Vanish.Name)
-            self.CmdBus:Remove(self.Cmds.ShadowDance.Name)
-            self.CmdBus:Remove(self.Cmds.Stealth.Name)
-        end,
         [spells.PistolShot.Id] = function()
             if (spells.FanTheHammer.Known) then
                 if (not self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
