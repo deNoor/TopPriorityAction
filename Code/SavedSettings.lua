@@ -21,7 +21,7 @@ local SavedSettings = {
         Burst = false,
         AOE = false,
         Dispel = false,
-        ActionAdvanceWindow = 1,
+        ActionAdvanceWindow = 0.1,
     }
 }
 function SavedSettings:Load()
