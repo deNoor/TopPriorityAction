@@ -24,7 +24,7 @@ local addon = TopPriorityAction
 ---@field UpdateRotationResource fun(self:TopPriorityAction)
 
 local Program = {
-    UpdateEverySec = 1 / 61,
+    UpdateEverySec = 1 / 121,
     Ticker = nil,
 }
 
