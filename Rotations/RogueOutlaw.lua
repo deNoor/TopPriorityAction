@@ -287,9 +287,6 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            -- function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick() and not mouseover:Exists()) then return spells.Kick end end,
-            -- function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-            -- function() if (spells.ColdBlood.Known) then return spells.ColdBlood end end,
             function() return self:AwaitCombatStealth() end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if ((settings.AOE or spells.UnderhandedUpperHand.Known) and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
@@ -367,7 +364,7 @@ function rotation:AwaitedVanish()
     if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
         return nil
     end
-    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow) then
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow) then
         return spells.Vanish
     else
         return self.EmptyAction
@@ -375,7 +372,7 @@ function rotation:AwaitedVanish()
 end
 
 function rotation:AwaitedShadowDance()
-    if (self.Energy > (spells.Crackshot.Known and 25 or 80) and self.GcdReadyIn < self.ActionAdvanceWindow) then
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow) then
         return spells.ShadowDance
     else
         return self.EmptyAction
@@ -461,7 +458,7 @@ local dice = {
     TrueBearing = false,        -- CDR
     RuthlessPrecision = false,  -- crit
     BuriedTreasure = false,     -- energy regen
-    GrandMelee = false,         -- SnD application and leech
+    GrandMelee = false,         -- damage and flurry damage
 }
 ---@return Spell?
 function rotation:RollTheBones()
