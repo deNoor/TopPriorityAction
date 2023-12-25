@@ -192,12 +192,10 @@ local cmds = {
     },
 }
 
-local setBonuses = {
-    DFVault = {
-        ItemsId = 1535,
-        Buff2Id = 394879,
-        Buff4Id = 394888,
-    }
+local setBonus = {
+    DFAmir = {
+        SetId = 1566,
+    },
 }
 
 ---@type table<string,Item>
@@ -240,6 +238,7 @@ local rotation = {
     NanoBursting           = false,
     ShortBursting          = false,
     CombatStealthSent      = false,
+    AmirSet4p              = false,
 }
 
 function rotation:SelectAction()
@@ -270,8 +269,8 @@ function rotation:StealthOpener()
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
-            function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() return self:SliceAndDice() end,
+            function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
         }
@@ -485,7 +484,7 @@ function rotation:RollTheBones()
     end
 
     local reroll = function()
-        if (remains < 3) then
+        if (remains < (self.ShortBursting and 2 or 7)) then
             return true
         end
         if (count > 2) then
@@ -643,6 +642,7 @@ function rotation:Refresh()
     self.ComboEchoing = self:ComboEcho()
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
     self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
+    self.AmirSet4p = player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
 end
 
 function rotation:Dispose()
