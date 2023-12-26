@@ -483,13 +483,15 @@ function rotation:RollTheBones()
         end
     end
 
+    local desiredMin = 2 + (self.AmirSet4p and 1 or 0);
+
     local reroll = function()
         if (remains < (self.ShortBursting and 2 or 7)) then
             return true
         end
-        if (count > 2) then
+        if (count > desiredMin) then
             return false
-        elseif ((count == 2 and not buffs:Applied(spells.LoadedDice.Buff)) or self.ShortBursting) then
+        elseif ((count == desiredMin and not buffs:Applied(spells.LoadedDice.Buff)) or self.ShortBursting) then
             return false
         else
             return true
