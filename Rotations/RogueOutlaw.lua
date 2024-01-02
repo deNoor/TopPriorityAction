@@ -735,6 +735,7 @@ function rotation:SetLayout()
     spells.SliceAndDice.Key = "1"
     spells.PistolShot.Key = "2"
     spells.SinisterStrike.Key = "3"
+    spells.Ambush.Key = spells.SinisterStrike.Key
     spells.Eviscerate.Key = "4"
     spells.Dispatch.Key = spells.Eviscerate.Key
     spells.BetweenTheEyes.Key = "5"
@@ -742,33 +743,24 @@ function rotation:SetLayout()
     spells.AdrenalineRush.Key = "7"
     spells.BladeFlurry.Key = "8"
     spells.BladeRush.Key = "9"
-    spells.Ambush.Key = "0"
-    spells.Shiv.Key = "-"
+    spells.CrimsonVial.Key = "0"
+    spells.Feint.Key = "-"
     spells.GhostlyStrike.Key = "="
 
-    spells.ShadowDance.Key = "F1"
-    spells.Vanish.Key = "F2"
-    spells.MarkedForDeath.Key = "F4"
-    spells.KillingSpree.Key = "F5"
-    spells.KeepItRolling.Key = "F6"
-    spells.Sepsis.Key = "F7"
-    spells.EchoingReprimand.Key = "F8"
-    spells.ThistleTea.Key = "F9"
-    spells.Kick.Key = "F10"
-    spells.KidneyShot.Key = "F11"
-    spells.AutoAttack.Key = "F12"
+    spells.ShadowDance.Key = "n-1"
+    spells.Vanish.Key = "n-2"
+    spells.Stealth.Key = "n-3"
+    spells.Kick.Key = "n-4"
+    spells.KidneyShot.Key = "n-5"
 
-    spells.Stealth.Key = "n-1"
-    spells.Feint.Key = "n-2"
-    spells.ColdBlood.Key = "n-3"
-    spells.CrimsonVial.Key = "n-7"
+    spells.AutoAttack.Key = "n-+"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "n--"
-    equip.Trinket13.Key = "n-+"
+    equip.Trinket14.Key = "n-0"
+    equip.Trinket13.Key = "n--"
 
     local items = self.Items
-    items.Healthstone.Key = "n-0"
+    items.Healthstone.Key = "n-9"
 end
 
 addon:AddRotation("ROGUE", 2, rotation)
