@@ -264,7 +264,7 @@ function rotation:StealthOpener()
     local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
-
+            function() if (self.AmirSet4p and spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
@@ -325,6 +325,7 @@ function rotation:Utility()
     local target = self.Player.Target
     local mouseover = player.Mouseover
     local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
+    local C_ChallengeMode = C_ChallengeMode
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
@@ -333,6 +334,7 @@ function rotation:Utility()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealth) then return self:AutoStealth() end end,
+            function() if (self.AmirSet4p and self.InInstance and C_ChallengeMode.IsChallengeModeActive() and spells.RollTheBones.Known) then return self:RollTheBones() end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -346,10 +348,10 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
-local C_ChallengeMode = C_ChallengeMode
+local C_ChallengeMode, UnitInVehicle = C_ChallengeMode, UnitInVehicle
 ---@return Spell?
 function rotation:AutoStealth()
-    if (self.InInstance and C_ChallengeMode.IsChallengeModeActive()) then
+    if (self.InInstance and C_ChallengeMode.IsChallengeModeActive() and not UnitInVehicle("player")) then
         return spells.Stealth
     end
 end
