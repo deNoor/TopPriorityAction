@@ -747,20 +747,20 @@ function rotation:SetLayout()
     spells.Feint.Key = "-"
     spells.GhostlyStrike.Key = "="
 
-    spells.ShadowDance.Key = "n-1"
-    spells.Vanish.Key = "n-2"
-    spells.Stealth.Key = "n-3"
-    spells.Kick.Key = "n-4"
-    spells.KidneyShot.Key = "n-5"
+    spells.ShadowDance.Key = "num1"
+    spells.Vanish.Key = "num2"
+    spells.Stealth.Key = "num3"
+    spells.Kick.Key = "num4"
+    spells.KidneyShot.Key = "num5"
 
-    spells.AutoAttack.Key = "n-+"
+    spells.AutoAttack.Key = "num+"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "n-0"
-    equip.Trinket13.Key = "n--"
+    equip.Trinket14.Key = "num0"
+    equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "n-9"
+    items.Healthstone.Key = "num9"
 end
 
 addon:AddRotation("ROGUE", 2, rotation)

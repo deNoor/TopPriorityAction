@@ -170,7 +170,7 @@ function rotation:SingleTarget()
             function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
             function()
                 if (self.ComboFinisherAllowed and not self.ComboHolding and self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic or
-                    (self.EnergyDeficit > 50 and not target.Debuffs:Applied(spells.Rupture.Debuff)))) then
+                        (self.EnergyDeficit > 50 and not target.Debuffs:Applied(spells.Rupture.Debuff)))) then
                     return spells.Rupture
                 end
             end,
@@ -303,19 +303,19 @@ function rotation:SetLayout()
     spells.FanOfKnives.Key = "8"
     spells.CrimsonTempest.Key = "9"
 
-    spells.ThistleTea.Key = "n-1"
-    spells.MarkedForDeath.Key = "n-2"
-    spells.Ambush.Key = "n-3"
-    spells.Feint.Key = "n-7"
-    spells.KidneyShot.Key = "n-8"
-    spells.Vanish.Key = "n-9"
-    spells.AutoAttack.Key = "n-+"
+    spells.ThistleTea.Key = "num1"
+    spells.MarkedForDeath.Key = "num2"
+    spells.Ambush.Key = "num3"
+    spells.Feint.Key = "num7"
+    spells.KidneyShot.Key = "num8"
+    spells.Vanish.Key = "num9"
+    spells.AutoAttack.Key = "num+"
 
     spells.CrimsonVial.Key = "F6"
     spells.Kick.Key = "F9"
 
     local equip = addon.Player.Equipment
-    equip.Trinket13.Key = "n--"
+    equip.Trinket13.Key = "num-"
 
     local items = self.Items
     items.Healthstone.Key = "F12"

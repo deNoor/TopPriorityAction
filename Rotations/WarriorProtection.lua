@@ -335,18 +335,18 @@ function rotation:SetLayout()
     spells.LastStand.Key = "F9"
     spells.AutoAttack.Key = "F12"
 
-    spells.ImpedingVictory.Key = "n-1"
-    spells.Execute.Key = "n-3"
-    spells.Revenge.Key = "n-4"
-    spells.BattleStance.Key = "n-6"
+    spells.ImpedingVictory.Key = "num1"
+    spells.Execute.Key = "num3"
+    spells.Revenge.Key = "num4"
+    spells.BattleStance.Key = "num6"
     spells.DefensiveStance.Key = spells.BattleStance.Key
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "n-0"
-    equip.Trinket13.Key = "n--"
+    equip.Trinket14.Key = "num0"
+    equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "n-+"
+    items.Healthstone.Key = "num+"
 end
 
 addon:AddRotation("WARRIOR", 3, rotation)

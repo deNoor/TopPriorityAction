@@ -215,11 +215,11 @@ function rotation:SetLayout()
     spells.AutoShot.Key = "F12"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "n-0"
-    equip.Trinket13.Key = "n--"
+    equip.Trinket14.Key = "num0"
+    equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "n-+"
+    items.Healthstone.Key = "num+"
 end
 
 addon:AddRotation("HUNTER", 1, rotation)

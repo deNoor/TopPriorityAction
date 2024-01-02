@@ -285,21 +285,21 @@ function rotation:SetLayout()
     spells.Pummel.Key = "F7"
     spells.AutoAttack.Key = "F12"
 
-    spells.VictoryRush.Key = "n-1"
+    spells.VictoryRush.Key = "num1"
     spells.ImpendingVictory.Key = spells.VictoryRush.Key
-    spells.Slam.Key = "n-3"
-    spells.BerserkerStance.Key = "n-5"
-    spells.OdynsFury.Key = "n-6"
-    spells.Avatar.Key = "n-7"
-    spells.Recklessness.Key = "n-8"
-    spells.LightsJudgment.Key = "n-9"
+    spells.Slam.Key = "num3"
+    spells.BerserkerStance.Key = "num5"
+    spells.OdynsFury.Key = "num6"
+    spells.Avatar.Key = "num7"
+    spells.Recklessness.Key = "num8"
+    spells.LightsJudgment.Key = "num9"
 
     local equip = addon.Player.Equipment
-    equip.Trinket14.Key = "n-0"
-    equip.Trinket13.Key = "n--"
+    equip.Trinket14.Key = "num0"
+    equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "n-+"
+    items.Healthstone.Key = "num+"
 end
 
 addon:AddRotation("WARRIOR", 2, rotation)
