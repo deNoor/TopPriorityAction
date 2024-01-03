@@ -38,6 +38,10 @@ local Common = {
         Healthstone = {
             Id = 5512,
         },
+        RaidRune = {
+            Id = 211495,
+            Buff = 393438,
+        },
     },
     PlayerActions = {
         EnterKey = {

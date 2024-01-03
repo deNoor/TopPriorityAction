@@ -214,6 +214,7 @@ local rotation = {
     InStealth              = false,
     InStealthStance        = false,
     InRange                = false,
+    InEncounter            = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
     Combo                  = 0,
@@ -325,7 +326,6 @@ function rotation:Utility()
     local target = self.Player.Target
     local mouseover = player.Mouseover
     local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
-    local C_ChallengeMode = C_ChallengeMode
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
@@ -334,7 +334,8 @@ function rotation:Utility()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealth) then return self:AutoStealth() end end,
-            function() if (self.AmirSet4p and self.InInstance and C_ChallengeMode.IsChallengeModeActive() and spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (self.AmirSet4p and self.InEncounter and spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (self.InEncounter and player.Buffs:Remains(items.RaidRune.Buff) < 60 * 5) then return items.RaidRune end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -348,10 +349,10 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
-local C_ChallengeMode, UnitInVehicle = C_ChallengeMode, UnitInVehicle
+local UnitInVehicle = UnitInVehicle
 ---@return Spell?
 function rotation:AutoStealth()
-    if (self.InInstance and C_ChallengeMode.IsChallengeModeActive() and not UnitInVehicle("player")) then
+    if (self.InEncounter and not UnitInVehicle("player")) then
         return spells.Stealth
     end
 end
@@ -615,7 +616,7 @@ end
 
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
-local IsStealthed = IsStealthed
+local IsStealthed, C_ChallengeMode, IsEncounterInProgress = IsStealthed, C_ChallengeMode, IsEncounterInProgress
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -647,6 +648,7 @@ function rotation:Refresh()
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
     self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
     self.AmirSet4p = player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
+    self.InEncounter = C_ChallengeMode.IsChallengeModeActive() or IsEncounterInProgress() or false
 end
 
 function rotation:Dispose()
@@ -760,6 +762,7 @@ function rotation:SetLayout()
     equip.Trinket13.Key = "num-"
 
     local items = self.Items
+    items.RaidRune.Key = "num7"
     items.Healthstone.Key = "num9"
 end
 
