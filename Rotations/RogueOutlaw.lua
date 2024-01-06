@@ -215,6 +215,7 @@ local rotation = {
     InStealthStance        = false,
     InRange                = false,
     InEncounter            = false,
+    InInstance             = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
     Combo                  = 0,
@@ -230,7 +231,6 @@ local rotation = {
     MyHealthPercent        = 0,
     MyHealthPercentDeficit = 0,
     MyHealAbsorb           = 0,
-    InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
     CanAttackMouseover     = false,
@@ -386,7 +386,8 @@ function rotation:AwaitCombatStealth()
 end
 
 function rotation:SliceAndDice()
-    if (self.ComboFinisherAllowed and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < (self.ShortBursting and 2 or spells.SliceAndDice.Pandemic)) then
+    if (self.ComboFinisherAllowed and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) <
+            (self.ShortBursting and 2 or (spells.UnderhandedUpperHand.Known and 12 or spells.SliceAndDice.Pandemic))) then
         return spells.SliceAndDice
     end
     return nil
@@ -545,10 +546,12 @@ function rotation:KidneyOnCommand()
     end
 end
 
----@param initialDuration number
+---@param perComboDuration number
+---@param baseDuration number?
 ---@return number
-function rotation:ComboPandemic(initialDuration)
-    return initialDuration * (1 + self.Combo) * 0.3
+function rotation:ComboPandemic(perComboDuration, baseDuration)
+    baseDuration = baseDuration or perComboDuration
+    return (baseDuration + perComboDuration * self.Combo) * 0.3
 end
 
 local max, min = max, min
