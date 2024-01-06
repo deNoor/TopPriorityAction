@@ -15,8 +15,17 @@ local spells = {
     Mutilate = {
         Id = 1329,
     },
+    Stealth = {
+        Id = 1784,
+        Buff1 = 1784,
+        Buff2 = 115191,
+    },
     Ambush = {
         Id = 8676,
+    },
+    Subterfuge = {
+        Id = 108208,
+        Buff = 115192,
     },
     Blindside = {
         Id = 328085,
@@ -26,6 +35,17 @@ local spells = {
         Id = 703,
         Debuff = 703,
         Pandemic = 18 * 0.3,
+    },
+    ImprovedGarrote = {
+        Id = 381632,
+        Buff = 392403,
+    },
+    ShroudedSuffocation = {
+        Id = 385478,
+    },
+    CausticSpatter = {
+        Id = 421975,
+        Debuff = 421976,
     },
     Eviscerate = {
         Id = 196819,
@@ -55,6 +75,7 @@ local spells = {
     },
     Vanish = {
         Id = 1856,
+        Buff = 11327,
     },
     FanOfKnives = {
         Id = 51723,
@@ -69,12 +90,32 @@ local spells = {
     },
     Feint = {
         Id = 1966,
+        Buff = 1966,
     },
-    MarkedForDeath = {
-        Id = 137619,
+    TricksOfTheTrade = {
+        Id = 57934,
     },
     ThistleTea = {
         Id = 381623,
+        Buff = 381623,
+    },
+    ColdBlood = {
+        Id = 382245,
+        Buff = 382245,
+    },
+    EchoingReprimand = {
+        Id = 385616,
+        Buff2 = 323558,
+        Buff3 = 323559,
+        Buff4 = 323560,
+    },
+    Kingsbane = {
+        Id = 385627,
+        Debuff = 385627,
+    },
+    ShadowDance = {
+        Id = 185313,
+        Buff = 185422,
     },
     KidneyShot = {
         Id = 408,
@@ -86,11 +127,20 @@ local cmds = {
         Name = "kidney",
     },
     Feint = {
-        Name = "feint"
+        Name = "feint",
     },
     Kick = {
         Name = "kick",
-    }
+    },
+    CombatStealth = {
+        Name = "combatstealth",
+    },
+}
+
+local setBonus = {
+    DFAmir = {
+        SetId = 1566,
+    },
 }
 
 ---@type table<string,Item>
@@ -103,16 +153,20 @@ local rotation = {
     Items                  = items,
     Cmds                   = cmds,
     RangeChecker           = spells.SinisterStrike,
-    ComboFinisherToMax     = 2,
+    ComboFinisher          = 5,
     ComboKidney            = 4,
     -- locals
-    Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
+    InStealth              = false,
+    InStealthStance        = false,
     InRange                = false,
+    InEncounter            = false,
+    InInstance             = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
     Combo                  = 0,
     ComboDeficit           = 0,
     ComboFinisherAllowed   = false,
+    ComboEchoing           = false,
     ComboHolding           = false,
     NowCasting             = 0,
     CastingEndsIn          = 0,
@@ -121,36 +175,45 @@ local rotation = {
     MyHealthPercent        = 0,
     MyHealthPercentDeficit = 0,
     MyHealAbsorb           = 0,
-    InInstance             = false,
     InCombatWithTarget     = false,
     CanAttackTarget        = false,
+    CanAttackMouseover     = false,
     CanDotTarget           = false,
+    WorthyTarget           = false,
+    NanoBursting           = false,
+    ShortBursting          = false,
+    CombatStealthSent      = false,
+    AmirSet4p              = false,
 }
 
+local UnitInVehicle = UnitInVehicle
 function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    if (true)
-    then
+    if (not UnitInVehicle("player")) then
         self:Utility()
-        if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
-            if (self.InRange and self.Stealhed) then
-                self:StealthOpener()
-            end
-            if (self.InRange) then
-                self:AutoAttack()
-                self:SingleTarget()
-            end
+    end
+    if ((not self.InInstance or self.InCombatWithTarget)) then
+        if (self.CanAttackTarget and self.InRange and self.InStealth) then
+            self:StealthOpener()
+        end
+        if (self.CanAttackTarget and self.InRange) then
+            self:AutoAttack()
+            self:SingleTarget()
         end
     end
 end
 
 local stealthOpenerList
 function rotation:StealthOpener()
+    local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
-            function() return spells.Ambush end,
+            function() return self:SliceAndDice() end,
+            function() if (self.CanDotTarget) then return self:Rupture() end end,
+            function() return self.CanDotTarget and spells.Garrote or spells.Ambush end,
+            function() return self.EmptyAction end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
 end
@@ -163,24 +226,26 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick(true)) then return spells.Kick end end,
-            function() if (self.CmdBus:Find(cmds.Kidney.Name)) then return self:KidneyOnCommand() end end,
-            function() if (self.Combo > 0 and not self.ComboHolding and not player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.SliceAndDice end end,
-            function() if (settings.Burst and not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
-            function() if (self.Energy < 30 and not self.ComboHolding) then return spells.ThistleTea end end,
-            function()
-                if (self.ComboFinisherAllowed and not self.ComboHolding and self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Rupture.Debuff) < spells.Rupture.Pandemic or
-                        (self.EnergyDeficit > 50 and not target.Debuffs:Applied(spells.Rupture.Debuff)))) then
-                    return spells.Rupture
-                end
-            end,
-            function() if (self.ComboFinisherAllowed and not self.ComboHolding and self.Settings.AOE) then return spells.CrimsonTempest end end,
-            function() if (self.ComboFinisherAllowed and not self.ComboHolding) then return spells.Envenom end end,
-            function() if (self.Combo < 1 and player.Buffs:Remains(spells.SliceAndDice.Buff) > 2 and not target:IsTotem()) then return spells.MarkedForDeath end end,
-            function() if (settings.Burst and not self.Settings.AOE and self.InInstance and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanishAmbush() end end,
-            function() if (self.CanDotTarget and (not self.Settings.AOE and target.Debuffs:Remains(spells.Garrote.Debuff) < spells.Garrote.Pandemic or (not target.Debuffs:Applied(spells.Garrote.Debuff)))) then return spells.Garrote end end,
+            function() return self:AwaitCombatStealth() end,
+            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
+            function() if (not self.ComboHolding and (self.ComboFinisherAllowed or self.ComboEchoing) and player.Buffs:Remains(spells.SliceAndDice.Buff) < 6 and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return spells.Envenom end end,
+            function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
+            function() if (spells.ThistleTea.Known and spells.ThistleTea:ActiveCharges() > 2 and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff)) then return spells.ThistleTea end end,
+            function() if (spells.ThistleTea.Known and spells.Kingsbane.Known and target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Kingsbane.Debuff) < 6) then return spells.ThistleTea end end,
+            function() if (spells.Kingsbane.Known and settings.Dispel and self.InInstance and target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Kingsbane.Debuff) < 3) then return spells.Vanish end end,
+            function() if (not self.ComboHolding and self.CanDotTarget) then return self:Rupture() end end,
+            function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
+            function() if (spells.Kingsbane.Known and settings.Burst and not player.Buffs:Applied(spells.Subterfuge.Buff) and not player.Buffs:Applied(spells.Vanish.Buff)) then return spells.Kingsbane end end,
+            function() if (not self.ComboHolding and (self.ComboFinisherAllowed or self.ComboEchoing) and target.Debuffs:Applied(spells.Kingsbane.Debuff) and player.Buffs:Remains(spells.Envenom.Buff) < target.Debuffs:Remains(spells.Kingsbane.Debuff) and player.Buffs:Remains(spells.Envenom.Buff) < spells.Envenom.Pandemic) then return spells.Envenom end end,
+            function() if (not self.ComboHolding and (self.ComboFinisherAllowed or self.ComboEchoing) and self.Settings.AOE and self.CanDotTarget and target.Debuffs:Remains(spells.CrimsonTempest.Debuff) < spells.CrimsonTempest.Pandemic) then return spells.CrimsonTempest end end,
+            function() if (self.ComboFinisherAllowed or self.ComboEchoing) then return spells.Envenom end end,
+            function() return spells.EchoingReprimand end,
+            function() if (target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Shiv.Debuff) < target.Debuffs:Remains(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
+            function() if (self.CanDotTarget and self.WorthyTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < 3) then return spells.Garrote end end,
+            function() if (self.CanDotTarget and self.WorthyTarget and self.ShortBursting and player.Buffs:Applied(spells.ImprovedGarrote.Buff) and target.Debuffs:Remains(spells.Garrote.Debuff) < 15) then return spells.Garrote end end,
+            -- function() if (spells.CausticSpatter.Known and settings.AOE and not target.Debuffs:Applied(spells.CausticSpatter.Debuff)) then return spells.Mutilate end end,
+            function() if (player.Buffs:Applied(spells.Blindside.Buff)) then return spells.Ambush end end,
             function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
-            function() if (target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
             function() return spells.Ambush end,
             function() return spells.Mutilate end,
         }
@@ -190,11 +255,18 @@ end
 local utilityList
 function rotation:Utility()
     local player = self.Player
+    local target = self.Player.Target
+    local mouseover = player.Mouseover
+    local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
     utilityList = utilityList or
         {
-            function() if (self.CmdBus:Find(cmds.Feint.Name)) then return spells.Feint end end,
-            function() if (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0) then return spells.CrimsonVial end end,
-            function() if (self.MyHealthPercentDeficit > 65) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
+            function() if (self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
+            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
+            function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
+            function() if (not self.InStealth) then return self:AutoStealth() end end,
+            function() if (self.InEncounter and player.Buffs:Remains(items.RaidRune.Buff) < 60 * 5) then return items.RaidRune end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -203,24 +275,99 @@ local autoAttackList
 function rotation:AutoAttack()
     autoAttackList = autoAttackList or
         {
-            function() if (not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
+            function() if (self.GcdReadyIn > self.ActionAdvanceWindow and not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
 end
 
-function rotation:DelayedEnvenom()
-    local player = self.Player
-    if (player.Buffs:Remains(spells.Envenom.Buff) < spells.Envenom.Pandmic or self.ComboDeficit <= 1) then
-        return spells.Envenom
+---@return Spell?
+function rotation:AutoStealth()
+    if (self.InEncounter) then
+        return spells.Stealth
     end
 end
 
-function rotation:AwaitedVanishAmbush()
-    if (self.GcdReadyIn < 0.01 and (self.Energy > 50 or self.Player.Buffs:Applied(spells.Blindside.Buff))) then
+function rotation:ExpectCombatStealth()
+    self.CmdBus:Add(self.Cmds.CombatStealth.Name, 0.4)
+end
+
+function rotation:AwaitedVanish()
+    local necroticPitch = addon.Common.Spells.NecroticPitch
+    if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
+        return nil
+    end
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow) then
         return spells.Vanish
     else
         return self.EmptyAction
     end
+end
+
+function rotation:AwaitedShadowDance()
+    if (self.Energy > 80 and self.GcdReadyIn < self.ActionAdvanceWindow) then
+        return spells.ShadowDance
+    else
+        return self.EmptyAction
+    end
+end
+
+function rotation:AwaitCombatStealth()
+    if (self.CombatStealthSent and not self.InStealthStance) then return self.EmptyAction end
+end
+
+function rotation:SliceAndDice()
+    if (self.Combo > 0 and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) < 2) then
+        return spells.SliceAndDice
+    end
+    return nil
+end
+
+function rotation:Rupture()
+    local player = self.Player
+    local target = self.Player.Target
+    if ((self.ComboFinisherAllowed or self.ComboEchoing) and target.Debuffs:Remains(spells.Rupture.Debuff) < 4) then
+        return spells.Rupture
+    end
+    return nil
+end
+
+function rotation:DelayedEnvenom()
+    local player = self.Player
+    local target = self.Player.Target
+    if (target.Debuffs:Applied(spells.Shiv.Debuff)) then
+        return spells.Envenom
+    end
+    if (player.Buffs:Remains(spells.Envenom.Buff) < spells.Envenom.Pandmic or self.Energy > 100) then
+        return spells.Envenom
+    else
+        return self.EmptyAction
+    end
+end
+
+local aoeTrinkets = addon.Helper.ToHashSet({
+    198451, -- 10y healing/damage aoe
+})
+local burstTrinkets = addon.Helper.ToHashSet({
+    133642, -- +stats
+})
+
+---@return EquipItem?
+function rotation:UseTrinket()
+    local equip = self.Player.Equipment
+    ---@param ids integer[]
+    ---@return EquipItem
+    local trinketFrom = function(ids)
+        return (ids[equip.Trinket13.Id] and equip.Trinket13) or (ids[equip.Trinket14.Id] and equip.Trinket14)
+    end
+    local aoeTrinket = trinketFrom(aoeTrinkets)
+    if (aoeTrinket and self.Settings.AOE) then
+        return aoeTrinket
+    end
+    local burstTrinket = trinketFrom(burstTrinkets)
+    if (burstTrinket and self.Settings.Burst) then
+        return burstTrinket
+    end
+    return nil
 end
 
 function rotation:KidneyOnCommand()
@@ -228,16 +375,76 @@ function rotation:KidneyOnCommand()
     if (readyIn < 2) then
         if (self.Combo < self.ComboKidney) then
             self.ComboHolding = true
+            self.ComboFinisherAllowed = false
             return nil
         end
         return (readyIn > self.ActionAdvanceWindow) and self.EmptyAction or spells.KidneyShot
     end
 end
 
-function rotation:ComboPandemic(initialDuration)
-    return initialDuration * (1 + self.Combo) * 0.3
+---@param perComboDuration number
+---@param baseDuration number?
+---@return number
+function rotation:ComboPandemic(perComboDuration, baseDuration)
+    baseDuration = baseDuration or perComboDuration
+    return (baseDuration + perComboDuration * self.Combo) * 0.3
 end
 
+local max, min = max, min
+---@return boolean
+function rotation:FinisherAllowed()
+    local comboMax = self.Combo + self.ComboDeficit
+    local comboFinisher = max(4, min(self.ComboFinisher, comboMax - 1))
+    return self.Combo >= comboFinisher
+end
+
+local echoBuffs = {
+    [2] = spells.EchoingReprimand.Buff2,
+    [3] = spells.EchoingReprimand.Buff3,
+    [4] = spells.EchoingReprimand.Buff4,
+}
+---@return boolean
+function rotation:ComboEcho()
+    if (not spells.EchoingReprimand.Known) then
+        return false
+    end
+    local combo = self.Combo
+    if (2 <= combo and combo <= 4) then
+        local buffId = echoBuffs[combo] or addon.Helper.Print("EchoingReprimand buff id is missing for", combo)
+        return self.Player.Buffs:Applied(buffId)
+    end
+    return false
+end
+
+local max, min = max, min
+function rotation:Predictions()
+    if (spells.ShadowDance:IsQueued()) then
+        self:ExpectCombatStealth()
+    end
+    if (spells.ShadowDance:IsQueued()) then
+        self:ExpectCombatStealth()
+    end
+end
+
+function rotation:ShortBurstEffects()
+    local player = self.Player
+    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Buffs:Applied(spells.Subterfuge.Buff)
+end
+
+function rotation:NanoBurstEffects()
+    local player = self.Player
+    return player.Buffs:Applied(spells.Vanish.Buff)
+end
+
+local GetShapeshiftForm = GetShapeshiftForm
+function rotation:StealthStance()
+    local stance = GetShapeshiftForm(true)
+    return (stance and (stance == 1 or stance == 2))
+end
+
+local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
+
+local IsStealthed, C_ChallengeMode, IsEncounterInProgress = IsStealthed, C_ChallengeMode, IsEncounterInProgress
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -249,7 +456,6 @@ function rotation:Refresh()
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
-    self.ComboFinisherAllowed = self.ComboDeficit <= self.ComboFinisherToMax
     self.ComboHolding = false
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
@@ -257,12 +463,23 @@ function rotation:Refresh()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
-    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
-
+    self.WorthyTarget = player.Target:IsWorthy()
+    self.InStealth = IsStealthed()
+    self.InStealthStance = self:StealthStance()
+    self:Predictions()
+    self.NanoBursting = rotation:NanoBurstEffects()
+    self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
+    self.ComboFinisherAllowed = self:FinisherAllowed()
+    self.ComboEchoing = self:ComboEcho()
+    spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
     spells.Rupture.Pandemic = self:ComboPandemic(4)
-    spells.Envenom.Pandmic = self:ComboPandemic(1)
-    spells.CrimsonTempest.Pandemic = self:ComboPandemic(2)
+    spells.CrimsonTempest.Pandemic = self:ComboPandemic(2, 4)
+    spells.Envenom.Pandemic = self:ComboPandemic(1, 0)
+    self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
+    self.AmirSet4p = player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
+    self.InEncounter = C_ChallengeMode.IsChallengeModeActive() or IsEncounterInProgress() or false
 end
 
 function rotation:Dispose()
@@ -275,6 +492,7 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
+    tricksMacro:Update()
     self:SetLayout()
 end
 
@@ -283,7 +501,41 @@ function rotation:CreateLocalEventTracker()
 
     local IsStealthed = IsStealthed
     function frameHandlers.UPDATE_STEALTH(event, ...)
-        self.Stealhed = IsStealthed()
+        self.Stealthed = IsStealthed()
+    end
+
+    function frameHandlers.UPDATE_SHAPESHIFT_FORM(event, ...)
+        self.InStealthStance = self:StealthStance()
+    end
+
+    local spellIdHandlers = {
+        [spells.Vanish.Id] = function()
+            self:ExpectCombatStealth()
+        end,
+        [spells.ShadowDance.Id] = function()
+            self:ExpectCombatStealth()
+        end,
+        [spells.Stealth.Id] = function()
+            self:ExpectCombatStealth()
+        end,
+    }
+    function frameHandlers.UNIT_SPELLCAST_SENT(event, unit, target, castGUID, spellID)
+        if (unit == "player") then
+            local spellHandler = spellIdHandlers[spellID]
+            if (spellHandler) then
+                spellHandler()
+            end
+        end
+    end
+
+    function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
+        tricksMacro:Update()
+    end
+
+    function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
+        if (tricksMacro.PendingUpdate) then
+            tricksMacro:Update()
+        end
     end
 
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
@@ -295,6 +547,7 @@ function rotation:SetLayout()
     spells.Garrote.Key = "2"
     spells.SinisterStrike.Key = "3"
     spells.Mutilate.Key = spells.SinisterStrike.Key
+    spells.Ambush.Key = spells.Mutilate.Key
     spells.Eviscerate.Key = "4"
     spells.Envenom.Key = spells.Eviscerate.Key
     spells.Rupture.Key = "5"
@@ -302,23 +555,31 @@ function rotation:SetLayout()
     spells.Deathmark.Key = "7"
     spells.FanOfKnives.Key = "8"
     spells.CrimsonTempest.Key = "9"
+    spells.CrimsonVial.Key = "0"
+    spells.Feint.Key = "-"
 
-    spells.ThistleTea.Key = "num1"
-    spells.MarkedForDeath.Key = "num2"
-    spells.Ambush.Key = "num3"
-    spells.Feint.Key = "num7"
-    spells.KidneyShot.Key = "num8"
-    spells.Vanish.Key = "num9"
+    spells.ShadowDance.Key = "num1"
+    spells.Kingsbane.Key = spells.ShadowDance.Key
+    spells.EchoingReprimand.Key = spells.ShadowDance.Key
+    spells.Vanish.Key = "num2"
+    spells.Stealth.Key = "num3"
+    spells.Kick.Key = "num4"
+    spells.KidneyShot.Key = "num5"
+    spells.ThistleTea.Key = "num6"
+
     spells.AutoAttack.Key = "num+"
 
-    spells.CrimsonVial.Key = "F6"
-    spells.Kick.Key = "F9"
-
     local equip = addon.Player.Equipment
+    equip.Trinket14.Key = "num0"
     equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "F12"
+    items.RaidRune.Key = "num7"
+    items.Healthstone.Key = "num9"
+end
+
+function test()
+    return rotation.Player.Target
 end
 
 addon:AddRotation("ROGUE", 1, rotation)
