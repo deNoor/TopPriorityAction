@@ -242,11 +242,14 @@ local rotation = {
     AmirSet4p              = false,
 }
 
+local UnitInVehicle = UnitInVehicle
 function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
-    self:Utility()
+    if (not UnitInVehicle("player")) then
+        self:Utility()
+    end
     if ((not self.InInstance or self.InCombatWithTarget)) then
         if (self.CanAttackTarget and self.InRange and self.InStealth) then
             self:StealthOpener()
@@ -349,10 +352,9 @@ function rotation:AutoAttack()
     return rotation:RunPriorityList(autoAttackList)
 end
 
-local UnitInVehicle = UnitInVehicle
 ---@return Spell?
 function rotation:AutoStealth()
-    if (self.InEncounter and not UnitInVehicle("player")) then
+    if (self.InEncounter) then
         return spells.Stealth
     end
 end
