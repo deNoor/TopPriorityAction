@@ -294,7 +294,7 @@ function rotation:SingleTarget()
             function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
             function() if ((settings.AOE or spells.UnderhandedUpperHand.Known) and not self.ComboHolding and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function() if (not self.ComboHolding) then return self:UseTrinket() end end,
-            function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.ShortBursting or self.Energy < 50)) then return spells.BladeRush end end,
+            function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and (not self.NanoBursting or self.Energy < 50)) then return spells.BladeRush end end,
             function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.Energy < 50)) then return spells.KillingSpree end end,
             function() if (spells.RollTheBones.Known and not self.ComboHolding) then return self:RollTheBones() end end,
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
@@ -725,6 +725,14 @@ function rotation:CreateLocalEventTracker()
     end
 
     function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
+        tricksMacro:Update()
+    end
+
+    function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
+        tricksMacro:Update()
+    end
+
+    function frameHandlers.CHALLENGE_MODE_START(event, ...)
         tricksMacro:Update()
     end
 

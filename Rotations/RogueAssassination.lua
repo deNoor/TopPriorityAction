@@ -532,6 +532,14 @@ function rotation:CreateLocalEventTracker()
         tricksMacro:Update()
     end
 
+    function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
+        tricksMacro:Update()
+    end
+
+    function frameHandlers.CHALLENGE_MODE_START(event, ...)
+        tricksMacro:Update()
+    end
+
     function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
         if (tricksMacro.PendingUpdate) then
             tricksMacro:Update()
