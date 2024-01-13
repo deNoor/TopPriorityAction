@@ -278,6 +278,7 @@ function rotation:StealthOpener()
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
+            function() if (player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
         }
@@ -310,7 +311,8 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not settings.AOE and self.Energy < 40 and not player.Buffs:Applied(spells.PistolShot.Opportunity)) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.Crackshot.Known and self.ShortBursting) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 2) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
-            function() if (not self.ComboFinisherAllowed and self.ComboDeficit < 3 and spells.FanTheHammer.Known and (self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks < 4)) then return spells.SinisterStrike end end,
+            -- function() if (not self.ComboFinisherAllowed and self.ComboDeficit < 3 and spells.FanTheHammer.Known and (self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks < 4)) then return spells.SinisterStrike end end,
+            function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(80) end end,
             function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance(80) end end,
@@ -757,7 +759,7 @@ function rotation:SetLayout()
     spells.SliceAndDice.Key = "1"
     spells.PistolShot.Key = "2"
     spells.SinisterStrike.Key = "3"
-    spells.Ambush.Key = spells.SinisterStrike.Key
+    -- spells.Ambush.Key = spells.SinisterStrike.Key
     spells.Eviscerate.Key = "4"
     spells.Dispatch.Key = spells.Eviscerate.Key
     spells.BetweenTheEyes.Key = "5"
@@ -774,6 +776,7 @@ function rotation:SetLayout()
     spells.Stealth.Key = "num3"
     spells.Kick.Key = "num4"
     spells.KidneyShot.Key = "num5"
+    spells.Ambush.Key = "num6"
     spells.EchoingReprimand.Key = "num6"
 
     spells.AutoAttack.Key = "num+"
