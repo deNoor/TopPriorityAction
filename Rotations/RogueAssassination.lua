@@ -582,7 +582,7 @@ function rotation:SetLayout()
     equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.RaidRune.Key = "num7"
+    items.RaidRune.Key = "num8"
     items.Healthstone.Key = "num9"
 end
 

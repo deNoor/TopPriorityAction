@@ -493,13 +493,13 @@ function rotation:RollTheBones()
         end
     end
 
-    local desiredMin = 1 + (self.AmirSet4p and 1 or 0);
+    local desiredMin = 2 + (self.AmirSet4p and 1 or 0);
 
     local reroll = function()
         if (remains < (self.ShortBursting and 2 or 7)) then
             return true
         end
-        if (count > desiredMin) then
+        if (count >= desiredMin) then
             return false
         elseif ((count == desiredMin and not buffs:Applied(spells.LoadedDice.Buff)) or self.ShortBursting) then
             return false
@@ -511,6 +511,7 @@ function rotation:RollTheBones()
     if (reroll()) then
         return rtb
     end
+    return nil
 end
 
 local diceToKeep = {
@@ -519,7 +520,7 @@ local diceToKeep = {
     TrueBearing = true,
     RuthlessPrecision = true,
     BuriedTreasure = true,
-    GrandMelee = false,
+    GrandMelee = true,
 }
 ---@return Spell?
 function rotation:KeepItRolling()
@@ -533,7 +534,8 @@ function rotation:KeepItRolling()
             count = count + 1
         end
     end
-    if (count > 2) then
+    local desiredMin = 3 + (self.AmirSet4p and 1 or 0);
+    if (count >= desiredMin) then
         return spells.KeepItRolling
     end
 
@@ -777,7 +779,8 @@ function rotation:SetLayout()
     spells.Kick.Key = "num4"
     spells.KidneyShot.Key = "num5"
     spells.Ambush.Key = "num6"
-    spells.EchoingReprimand.Key = "num6"
+    spells.EchoingReprimand.Key = spells.Ambush.Key
+    spells.KeepItRolling.Key = "num7"
 
     spells.AutoAttack.Key = "num+"
 
@@ -786,7 +789,7 @@ function rotation:SetLayout()
     equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.RaidRune.Key = "num7"
+    items.RaidRune.Key = "num8"
     items.Healthstone.Key = "num9"
 end
 
