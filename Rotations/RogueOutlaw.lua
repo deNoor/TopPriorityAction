@@ -217,7 +217,8 @@ local rotation = {
     InStealth              = false,
     InStealthStance        = false,
     InRange                = false,
-    InEncounter            = false,
+    InChallenge            = false,
+    InRaidFight            = false,
     InInstance             = false,
     Energy                 = 0,
     EnergyDeficit          = 0,
@@ -314,12 +315,12 @@ function rotation:SingleTarget()
             -- function() if (not self.ComboFinisherAllowed and self.ComboDeficit < 3 and spells.FanTheHammer.Known and (self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks < 4)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed) then return self:PistolShot() end end,
-            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(80) end end,
+            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(80) end end,
             function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance(80) end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known) then return spells.Ambush end end,
             function() if (not self.ComboFinisherAllowed) then return spells.SinisterStrike end end,
 
-            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting and self.InInstance and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(25) end end,
+            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(25) end end,
             function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance(25) end end,
             function() if (self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
@@ -341,8 +342,8 @@ function rotation:Utility()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealth) then return self:AutoStealth() end end,
-            function() if (self.AmirSet4p and self.InEncounter and spells.RollTheBones.Known) then return self:RollTheBones() end end,
-            function() if (self.InEncounter and player.Buffs:Remains(items.RaidRune.Buff) < 60 * 5) then return items.RaidRune end end,
+            function() if (self.AmirSet4p and (self.InChallenge or self.InRaidFight) and spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if ((self.InChallenge or self.InRaidFight) and player.Buffs:Remains(items.RaidRune.Buff) < 60 * 5) then return items.RaidRune end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -358,7 +359,7 @@ end
 
 ---@return Spell?
 function rotation:AutoStealth()
-    if (self.InEncounter) then
+    if (self.InChallenge) then
         return spells.Stealth
     end
 end
@@ -417,10 +418,10 @@ function rotation:PistolShot()
 end
 
 function rotation:BetweenTheEyes()
+    local player = self.Player
     local buffs = self.Player.Buffs
-    local settings = self.Settings
     if (spells.Crackshot.Known) then
-        if (self.InStealthStance) then
+        if ((self.InStealthStance and (self.ShortBursting or player.Buffs:Applied(spells.Stealth.Buff1) or player.Buffs:Applied(spells.Stealth.Buff2))) or (self.InRaidFight and spells.Vanish:ReadyIn() > 45 and (not spells.ShadowDance.Known or spells.ShadowDance:ReadyIn() > 15))) then
             return spells.BetweenTheEyes
         end
         return nil
@@ -499,9 +500,7 @@ function rotation:RollTheBones()
         if (remains < (self.ShortBursting and 2 or 7)) then
             return true
         end
-        if (count >= desiredMin) then
-            return false
-        elseif ((count == desiredMin and not buffs:Applied(spells.LoadedDice.Buff)) or self.ShortBursting) then
+        if (count >= desiredMin or self.ShortBursting) then
             return false
         else
             return true
@@ -630,9 +629,16 @@ function rotation:StealthStance()
     return (stance and (stance == 1 or stance == 2))
 end
 
+local C_ChallengeMode, IsEncounterInProgress = C_ChallengeMode, IsEncounterInProgress
+local allowedInstTypes = addon.Helper.ToHashSet({ "raid" })
+function rotation:UpdateChallenge()
+    self.InChallenge = C_ChallengeMode.IsChallengeModeActive() or false
+    self.InRaidFight = (self.Player:InInstance(allowedInstTypes) and IsEncounterInProgress()) or false
+end
+
 local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
 
-local IsStealthed, C_ChallengeMode, IsEncounterInProgress = IsStealthed, C_ChallengeMode, IsEncounterInProgress
+local IsStealthed = IsStealthed
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -664,7 +670,6 @@ function rotation:Refresh()
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
     self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
     self.AmirSet4p = player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
-    self.InEncounter = C_ChallengeMode.IsChallengeModeActive() or IsEncounterInProgress() or false
 end
 
 function rotation:Dispose()
@@ -677,8 +682,9 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
-    tricksMacro:Update()
     self:SetLayout()
+    tricksMacro:Update()
+    self:UpdateChallenge()
 end
 
 function rotation:CreateLocalEventTracker()
@@ -741,16 +747,35 @@ function rotation:CreateLocalEventTracker()
 
     function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
         tricksMacro:Update()
+        self:UpdateChallenge()
     end
 
     function frameHandlers.CHALLENGE_MODE_START(event, ...)
-        tricksMacro:Update()
+        self.InChallenge = true
+    end
+
+    function frameHandlers.CHALLENGE_MODE_RESET(event, ...)
+        self.InChallenge = C_ChallengeMode.IsChallengeModeActive() or false
+    end
+
+    function frameHandlers.CHALLENGE_MODE_COMPLETED(event, ...)
+        self.InChallenge = false
     end
 
     function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
         if (tricksMacro.PendingUpdate) then
             tricksMacro:Update()
         end
+    end
+
+    local GetDifficultyInfo = GetDifficultyInfo
+    function frameHandlers.ENCOUNTER_START(event, encounterID, encounterName, difficultyID, groupSize)
+        local name, groupType, isHeroic, isChallengeMode, displayHeroic, displayMythic, toggleDifficultyID = GetDifficultyInfo(difficultyID)
+        self.InRaidFight = groupType == "raid";
+    end
+
+    function frameHandlers.ENCOUNTER_END(event, encounterID, encounterName, difficultyID, groupSize, success)
+        self.InRaidFight = false;
     end
 
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()

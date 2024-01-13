@@ -11,7 +11,7 @@ local addon = TopPriorityAction
 ---@field Pet Unit
 ---@field FullGCDTime fun(self:Player): number
 ---@field GCDReadyIn fun(self:Player): number
----@field InInstance fun(self:Player):boolean
+---@field InInstance fun(self:Player,types?:table<string|integer,string|integer>):boolean
 ---@field Jump fun(self:Player)
 
 ---@type Player
@@ -41,8 +41,9 @@ end
 
 local select, GetInstanceInfo, GetNumGroupMembers = select, GetInstanceInfo, GetNumGroupMembers
 local instanceTypes = addon.Helper.ToHashSet({ "raid", "party", "pvp", "arena", })
-function Player:InInstance()
-    return instanceTypes[(select(2, GetInstanceInfo()))] ~= nil and GetNumGroupMembers() > 0
+function Player:InInstance(types)
+    types = types or instanceTypes
+    return types[(select(2, GetInstanceInfo()))] ~= nil and GetNumGroupMembers() > 0
 end
 
 function Player:Jump()
