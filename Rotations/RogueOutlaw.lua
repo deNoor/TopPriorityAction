@@ -373,7 +373,7 @@ function rotation:AwaitedVanish(energy)
     if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
         return nil
     end
-    if (self.Energy >= energy and self.GcdReadyIn < self.ActionAdvanceWindow) then
+    if (self.Energy >= energy and self.GcdReadyIn < 0.05) then
         return spells.Vanish
     else
         return self.EmptyAction
@@ -381,7 +381,7 @@ function rotation:AwaitedVanish(energy)
 end
 
 function rotation:AwaitedShadowDance(energy)
-    if (self.Energy >= energy and self.GcdReadyIn < self.ActionAdvanceWindow) then
+    if (self.Energy >= energy and self.GcdReadyIn < 0.05) then
         return spells.ShadowDance
     else
         return self.EmptyAction
