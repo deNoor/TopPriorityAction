@@ -405,8 +405,7 @@ function rotation:PistolShot()
         if (self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
             return nil
         end
-        local stacks = self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) - self.FanTheHammerTicks
-        if (stacks > 0) then
+        if (self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) > 0) then
             return spells.PistolShot
         end
         return nil
@@ -497,7 +496,11 @@ function rotation:RollTheBones()
     local desiredMin = 2 + (self.AmirSet4p and 1 or 0);
 
     local reroll = function()
-        if (remains < (self.ShortBursting and 2 or 7)) then
+        if (remains < 2) then
+            return true
+        end
+        if (not self.ShortBursting and remains < 7 and self.Settings.Burst and
+                (spells.Vanish:ReadyIn() < remains or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < remains))) then
             return true
         end
         if (count >= desiredMin or self.ShortBursting) then
@@ -602,7 +605,7 @@ function rotation:Predictions()
     if (spells.ShadowDance:IsQueued()) then
         self:ExpectCombatStealth()
     end
-    if (spells.ShadowDance:IsQueued()) then
+    if (spells.Vanish:IsQueued()) then
         self:ExpectCombatStealth()
     end
     if (spells.FanTheHammer.Known and self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
@@ -724,7 +727,7 @@ function rotation:CreateLocalEventTracker()
         [spells.PistolShot.Id] = function()
             if (spells.FanTheHammer.Known) then
                 if (not self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
-                    self.CmdBus:Add(self.Cmds.PistolShot.Name, 0.4)
+                    self.CmdBus:Add(self.Cmds.PistolShot.Name, 0.7)
                     self.FanTheHammerTicks = min(self.Player.Buffs:Stacks(spells.PistolShot.Opportunity), 2)
                 elseif (self.FanTheHammerTicks > 0) then
                     self.FanTheHammerTicks = self.FanTheHammerTicks - 1

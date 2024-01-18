@@ -421,7 +421,7 @@ function rotation:Predictions()
     if (spells.ShadowDance:IsQueued()) then
         self:ExpectCombatStealth()
     end
-    if (spells.ShadowDance:IsQueued()) then
+    if (spells.Vanish:IsQueued()) then
         self:ExpectCombatStealth()
     end
 end
