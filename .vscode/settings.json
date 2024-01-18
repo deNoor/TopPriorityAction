@@ -13,7 +13,17 @@
         "HelpOpenWebTicketButton",
         "TicketStatusFrame",
         "ActionButton_ShowOverlayGlow",
-        "ActionButton_HideOverlayGlow"
+        "ActionButton_HideOverlayGlow",
+        "InterfaceOptionsFrame_OpenToCategory",
+        "UIDropDownMenu_SetText",
+        "InterfaceOptions_AddCategory",
+        "STANDARD_TEXT_FONT",
+        "UIDropDownMenu_SetWidth",
+        "UIDropDownMenu_Initialize",
+        "UIDropDownMenu_AddButton",
+        "GameTooltip_Hide",
+        "UIDropDownMenu_CreateInfo",
+        "GameTooltip_SetDefaultAnchor"
     ],
     "Lua.diagnostics.disable": [
         "invisible",
