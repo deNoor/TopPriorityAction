@@ -57,6 +57,7 @@ local function UpdateAuras(auras, unit, filter, timestamp)
     end)
 end
 
+local lagOffset = 0.1
 ---@param unitId UnitId
 ---@param filter string
 ---@return AuraCollection
@@ -78,7 +79,7 @@ local function NewAuraCollection(unitId, filter)
         end,
         Applied = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
-            return aura.Remains > (addon.SavedSettings.Instance.ActionAdvanceWindow + 0.1)
+            return aura.Remains > (addon.SavedSettings.Instance.ActionAdvanceWindow + lagOffset)
         end,
         Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
@@ -86,7 +87,7 @@ local function NewAuraCollection(unitId, filter)
         end,
         Stacks = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
-            return aura.Remains > addon.SavedSettings.Instance.ActionAdvanceWindow and aura.Stacks or 0
+            return (aura.Remains > (addon.SavedSettings.Instance.ActionAdvanceWindow + lagOffset)) and aura.Stacks or 0
         end,
         HasPurgeable = function(collection)
             local auras = collection.Auras
