@@ -134,6 +134,13 @@ function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
     end
 end
 
+function frameHandlers.CVAR_UPDATE(event, ...)
+    local name, value = ...
+    if (name == "SpellQueueWindow") then
+        addon.SavedSettings.Instance:UpdateAdvanceWindow(addon.SavedSettings.Instance.ActionAdvanceWindow * 1000)
+    end
+end
+
 local C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup = C_ChallengeMode, GetInstanceInfo, SendChatMessage, C_Timer, IsInGroup
 local encounterEndProcessing = false
 function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)

@@ -55,11 +55,8 @@ local cmdHandlers = {
         end
     end,
     aaw = function(arg, ...)
-        local ms = tonumber(arg) or 400
-        ms = max(0, min(ms, 400))
-        addon.SavedSettings.Instance.ActionAdvanceWindow = (ms / 1000)
-        addon.Helper.Print("action advance window", ms)
-        addon.Helper.Print("spell queue window", GetSpellQueueWindow())
+        local ms = tonumber(arg)
+        addon.SavedSettings.Instance:UpdateAdvanceWindow(ms)
     end,
     cmd = function(...)
         addon.CmdBus:Add(...)

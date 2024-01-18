@@ -14,21 +14,30 @@ local addon = TopPriorityAction
 ---@field AOE boolean
 ---@field Dispel boolean
 ---@field ActionAdvanceWindow integer
+---@field UpdateAdvanceWindow fun(self:Settings,newValue?:integer)
 
+---@type SavedSettings
 local SavedSettings = {
     Instance = {
         Enabled = false,
         Burst = false,
         AOE = false,
         Dispel = false,
-        ActionAdvanceWindow = 0.1,
+        ActionAdvanceWindow = 75 / 1000,
+        UpdateAdvanceWindow = function(self, ms)
+            local spellQueueWindow = GetSpellQueueWindow();
+            ms = ms or (self.ActionAdvanceWindow * 1000) or spellQueueWindow
+            self.ActionAdvanceWindow = max(1, min(ms, spellQueueWindow)) / 1000
+            addon.Helper.Print("action advance window", self.ActionAdvanceWindow * 1000)
+            addon.Helper.Print("spell queue window", spellQueueWindow)
+        end,
     }
 }
 function SavedSettings:Load()
     TopPriorityActionSettings = TopPriorityActionSettings -- saved variable from .toc file
         or self.Instance
-    TopPriorityActionSettings.ActionAdvanceWindow = TopPriorityActionSettings.ActionAdvanceWindow or (GetSpellQueueWindow() / 1000)
-    self.Instance = TopPriorityActionSettings
+    self.Instance = addon.Helper.AddVirtualMethods(TopPriorityActionSettings, self.Instance)
+    self.Instance:UpdateAdvanceWindow()
     self:RaiseSettingUpdate()
 end
 
