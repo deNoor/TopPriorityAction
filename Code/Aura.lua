@@ -57,7 +57,7 @@ local function UpdateAuras(auras, unit, filter, timestamp)
     end)
 end
 
-local lagOffset = 0.1
+local lagOffset = 0.15
 ---@param unitId UnitId
 ---@param filter string
 ---@return AuraCollection
@@ -83,7 +83,7 @@ local function NewAuraCollection(unitId, filter)
         end,
         Remains = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
-            return aura.Remains
+            return aura.Remains - (addon.SavedSettings.Instance.ActionAdvanceWindow + lagOffset)
         end,
         Stacks = function(collection, spellId)
             local aura = collection.Auras[spellId] or emptyAura
