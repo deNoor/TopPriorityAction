@@ -216,6 +216,7 @@ local rotation = {
     -- locals
     InStealth              = false,
     InStealthStance        = false,
+    StealthBuffs           = false,
     InRange                = false,
     InChallenge            = false,
     InRaidFight            = false,
@@ -419,7 +420,7 @@ function rotation:BetweenTheEyes()
     local player = self.Player
     local buffs = self.Player.Buffs
     if (spells.Crackshot.Known) then
-        if ((self.InStealthStance and (self.ShortBursting or player.Buffs:Applied(spells.Stealth.Buff1) or player.Buffs:Applied(spells.Stealth.Buff2))) or (self.InRaidFight and spells.Vanish:ReadyIn() > 45 and (not spells.ShadowDance.Known or spells.ShadowDance:ReadyIn() > 15))) then
+        if ((self.InStealthStance and (self.ShortBursting or self.StealthBuffs)) or (self.InRaidFight and spells.Vanish:ReadyIn() > 45 and (not spells.ShadowDance.Known or spells.ShadowDance:ReadyIn() > 15))) then
             return spells.BetweenTheEyes
         end
         return nil
@@ -482,7 +483,7 @@ function rotation:RollTheBones()
     for name, _ in pairs(dice) do
         local id = rtb[name] or addon.Helper.Print("RollTheBones buff id is missing for", name)
         local aura = buffs:Find(id)
-        if (aura and aura.FullDuration > 20 and aura.Remains > self.ActionAdvanceWindow) then
+        if (aura and aura.FullDuration > 20 and buffs:Applied(id)) then
             dice[name] = true
             count = count + 1
             inPandemic = inPandemic or aura.Remains < rtb.Pandemic
@@ -498,8 +499,8 @@ function rotation:RollTheBones()
         if (remains < 2) then
             return true
         end
-        if (not self.ShortBursting and remains < 7 and self.Settings.Burst and
-                (spells.Vanish:ReadyIn() < remains or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < remains))) then
+        if (not self.ShortBursting and remains < rtb.Pandemic and (self.StealthBuffs or (self.Settings.Burst and
+                (spells.Vanish:ReadyIn() < 2 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 2))))) then
             return true
         end
         if (count >= desiredMin or self.ShortBursting) then
@@ -664,6 +665,7 @@ function rotation:Refresh()
     self.WorthyTarget = player.Target:IsWorthy()
     self.InStealth = IsStealthed()
     self.InStealthStance = self:StealthStance()
+    self.StealthBuffs = player.Buffs:Applied(spells.Stealth.Buff1) or player.Buffs:Applied(spells.Stealth.Buff2)
     self:Predictions()
     self.NanoBursting = rotation:NanoBurstEffects()
     self.ShortBursting = self.NanoBursting or self:ShortBurstEffects()
