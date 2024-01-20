@@ -282,7 +282,7 @@ function rotation:StealthOpener()
     local target = self.Player.Target
     stealthOpenerList = stealthOpenerList or
         {
-            function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
+            function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
             function() if (self.AmirSet4p and spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
@@ -305,7 +305,7 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (spells.KeepItRolling.Known and settings.Burst) then return self:KeepItRolling() end end,
+            function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() return self:AwaitCombatStealth() end,
             function() if ((settings.AOE or spells.UnderhandedUpperHand.Known) and player.Buffs:Remains(spells.BladeFlurry.Buff) < 2) then return spells.BladeFlurry end end,
