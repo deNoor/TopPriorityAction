@@ -23,7 +23,8 @@
         "UIDropDownMenu_AddButton",
         "GameTooltip_Hide",
         "UIDropDownMenu_CreateInfo",
-        "GameTooltip_SetDefaultAnchor"
+        "GameTooltip_SetDefaultAnchor",
+        "RunNextFrame"
     ],
     "Lua.diagnostics.disable": [
         "invisible",
