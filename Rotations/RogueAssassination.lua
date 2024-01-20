@@ -584,8 +584,4 @@ function rotation:SetLayout()
     items.Healthstone.Key = "num9"
 end
 
-function test()
-    return rotation.Player.Target
-end
-
 addon:AddRotation("ROGUE", 1, rotation)
