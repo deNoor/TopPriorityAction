@@ -90,6 +90,8 @@ function Convenience:CreateTricksMacro(name, spell)
                                 if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
                                     self.CurrentTank = tankName
                                     addon.Helper.Print(spellName, "on", tankName)
+                                else
+                                    addon.Helper.Print("Failed to update", self.Name, "macro")
                                 end
                                 break;
                             end
