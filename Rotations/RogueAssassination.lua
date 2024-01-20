@@ -186,6 +186,9 @@ local rotation = {
     AmirSet4p              = false,
 }
 
+---@type TricksMacro
+local tricksMacro
+
 local UnitInVehicle = UnitInVehicle
 function rotation:SelectAction()
     self:Refresh()
@@ -442,8 +445,6 @@ function rotation:StealthStance()
     return (stance and (stance == 1 or stance == 2))
 end
 
-local tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
-
 local IsStealthed, C_ChallengeMode, IsEncounterInProgress = IsStealthed, C_ChallengeMode, IsEncounterInProgress
 function rotation:Refresh()
     local player = self.Player
@@ -492,6 +493,7 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
+    tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
     tricksMacro:Update()
     self:SetLayout()
 end
@@ -529,10 +531,6 @@ function rotation:CreateLocalEventTracker()
     end
 
     function frameHandlers.GROUP_ROSTER_UPDATE(event, ...)
-        tricksMacro:Update()
-    end
-
-    function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
         tricksMacro:Update()
     end
 

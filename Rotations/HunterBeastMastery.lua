@@ -72,6 +72,9 @@ local rotation = {
     CanDotTarget            = false,
 }
 
+---@type TricksMacro
+local tricksMacro
+
 function rotation:SelectAction()
     self:Refresh()
     local playerBuffs = self.Player.Buffs
@@ -148,8 +151,6 @@ function rotation:UseTrinket()
     end
 end
 
-local tricksMacro = addon.Convenience:CreateTricksMacro("MisdirectNamed", spells.Misdirection)
-
 function rotation:Refresh()
     local player = self.Player
     local timestamp = self.Timestamp
@@ -181,6 +182,7 @@ function rotation:Activate()
     self.CmdBus = addon.CmdBus
     self.EmptyAction = addon.Initializer.Empty.Action
     self.LocalEvents = self:CreateLocalEventTracker()
+    tricksMacro = addon.Convenience:CreateTricksMacro("MisdirectNamed", spells.Misdirection)
     tricksMacro:Update()
     self:SetLayout()
 end
