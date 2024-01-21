@@ -217,7 +217,7 @@ local rotation = {
     Items                  = items,
     Cmds                   = cmds,
     RangeChecker           = spells.SinisterStrike,
-    ComboFinisher          = 6,
+    ComboFinisher          = 5,
     ComboKidney            = 5,
     -- locals
     InStealth              = false,
@@ -316,11 +316,11 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and settings.Burst and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff) and not self.ComboHolding) then return spells.ThistleTea end end,
             function() if (target.Buffs:HasPurgeable() and not self.NanoBursting) then return spells.Shiv end end,
-            function() if (spells.GhostlyStrike.Known and settings.Burst and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
+            function() if (not self.ComboFinisherAllowed and spells.GhostlyStrike.Known and settings.Burst and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.MarkedForDeath.Known and self.ComboDeficit > 2 and not target:IsTotem() and not self.NanoBursting) then return spells.MarkedForDeath end end,
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
             function() if (not self.ComboFinisherAllowed and settings.AOE and spells.DeftManeuvers.Known) then return spells.BladeFlurry end end,
-            function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > 2) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > (self.Energy < 25 and 2 or 4)) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not settings.AOE and self.Energy < 30) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.FanTheHammer.Known and self.ShortBursting and self.Energy < 50) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
@@ -480,6 +480,7 @@ local dice = {
     BuriedTreasure = false,     -- energy regen
     GrandMelee = false,         -- damage and flurry damage
 }
+local kirMode = false
 ---@return Spell?
 function rotation:RollTheBones()
     if (self.NanoBursting) then
@@ -491,34 +492,31 @@ function rotation:RollTheBones()
 
     local rtb = spells.RollTheBones
     local buffs = self.Player.Buffs
+    local longestRemains = 0
     local totalCount = 0
     local rtbRemains = 0
     local rtbCount = 0
-    local kirCount = 0
-    local kirRemains = 0
     for name, _ in pairs(dice) do
         local id = rtb[name] or addon.Helper.Print("RollTheBones buff id is missing for", name)
         local aura = buffs:Find(id)
         if (aura and buffs:Applied(id)) then
             totalCount = totalCount + 1
+            longestRemains = max(longestRemains, aura.Remains)
+            dice[name] = true
             if (aura.FullDuration > 20) then
                 dice[name] = true
                 rtbCount = rtbCount + 1
                 rtbRemains = max(rtbRemains, aura.Remains)
-            else
-                dice[name] = false
             end
-            if (aura.FullDuration > 40) then
-                kirCount = kirCount + 1
-                kirRemains = max(kirRemains, aura.Remains)
-            end
+        else
+            dice[name] = false
         end
     end
 
     local possibleMin = 1 + ((self.AmirSet4p and totalCount > 0) and 1 or 0) + (buffs:Applied(spells.LoadedDice.Buff) and 1 or 0)
 
     local reroll = function()
-        if (rtbRemains < 2) then
+        if (longestRemains < 2) then
             return true
         end
         if (self.ShortBursting or totalCount > 4) then
@@ -527,11 +525,11 @@ function rotation:RollTheBones()
         if (possibleMin > totalCount) then
             return true
         end
-        if (not self.ShortBursting and rtbRemains < 8 and possibleMin >= rtbCount and (self.StealthBuffs or (self.Settings.Burst and
+        if (not self.ShortBursting and longestRemains < 8 and possibleMin >= totalCount and (self.StealthBuffs or (self.Settings.Burst and
                 (spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1))))) then
             return true
         end
-        if (spells.KeepItRolling.Known and rtbRemains < 39 and kirCount > 0 and possibleMin >= rtbCount) then
+        if (spells.KeepItRolling.Known and longestRemains < 39 and kirMode) then
             return true
         end
         return false
@@ -764,6 +762,12 @@ function rotation:CreateLocalEventTracker()
                     self.FanTheHammerTicks = self.FanTheHammerTicks - 1
                 end
             end
+        end,
+        [spells.KeepItRolling.Id] = function()
+            kirMode = true
+        end,
+        [spells.RollTheBones.Id] = function()
+            kirMode = false
         end,
     }
     function frameHandlers.UNIT_SPELLCAST_SUCCEEDED(event, unit, castGUID, spellID)
