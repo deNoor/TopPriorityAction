@@ -320,7 +320,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.MarkedForDeath.Known and self.ComboDeficit > 2 and not target:IsTotem() and not self.NanoBursting) then return spells.MarkedForDeath end end,
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
             function() if (not self.ComboFinisherAllowed and settings.AOE and spells.DeftManeuvers.Known) then return spells.BladeFlurry end end,
-            function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > (self.Energy < 25 and 2 or 4)) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > (self.Energy < 25 and 2 or 4)) and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not settings.AOE and self.Energy < 30) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.FanTheHammer.Known and self.ShortBursting and self.Energy < 50) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
