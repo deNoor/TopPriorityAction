@@ -36,7 +36,7 @@ local spells = {
     SliceAndDice = {
         Id = 315496,
         Buff = 315496,
-        Pandemic = 18 * 0.3
+        Pandemic = 18 * 0.3,
     },
     RollTheBones = {
         Id = 315508,
@@ -198,7 +198,10 @@ local cmds = {
     },
     RollTheBones = {
         Name = "rollthebones",
-    }
+    },
+    AdrenalineRush = {
+        Name = "adrenalinerush",
+    },
 }
 
 local setBonus = {
@@ -284,7 +287,7 @@ function rotation:StealthOpener()
         {
             function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
             function() if (self.AmirSet4p and spells.RollTheBones.Known) then return self:RollTheBones() end end,
-            function() if (settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (settings.Burst and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
@@ -320,8 +323,8 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.MarkedForDeath.Known and self.ComboDeficit > 2 and not target:IsTotem() and not self.NanoBursting) then return spells.MarkedForDeath end end,
             function() if (not self.ComboFinisherAllowed and settings.AOE and spells.DeftManeuvers.Known) then return spells.BladeFlurry end end,
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
-            function() if (not self.ComboFinisherAllowed and settings.Burst and (not spells.ImprovedAdrenalineRush.Known or self.ComboDeficit > (self.Energy < 25 and 2 or 4)) and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
-            function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not settings.AOE and self.Energy < 30) then return spells.BladeRush end end,
+            function() if (not self.ComboFinisherAllowed and settings.Burst and self.Combo < 3 and self.GcdReadyIn <= self.ActionAdvanceWindow and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.ShortBursting) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not player.Buffs:Applied(spells.PistolShot.Opportunity) and self.Energy < 30) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known and self.ShortBursting and player.Buffs:Applied(spells.RollTheBones.Broadside) and self.Combo < 2) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known) then return spells.Ambush end end,
@@ -522,10 +525,10 @@ function rotation:RollTheBones()
         if (self.ShortBursting or totalCount > 4) then
             return false
         end
-        if (not self.ShortBursting and possibleMin > totalCount) then
+        if (possibleMin > totalCount) then
             return true
         end
-        if (not self.ShortBursting and longestRemains < 8 and possibleMin >= totalCount and (self.StealthBuffs or (self.Settings.Burst and
+        if (longestRemains < 8 and possibleMin >= totalCount and (self.StealthBuffs or (self.Settings.Burst and
                 (spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1))))) then
             return true
         end
@@ -637,6 +640,11 @@ function rotation:Predictions()
         self.Combo = min(self.Combo + incCombo, maxCombo)
         self.ComboDeficit = maxCombo - self.Combo
     end
+    if (spells.ImprovedAdrenalineRush.Known and (spells.AdrenalineRush:IsQueued() or self.CmdBus:Find(self.Cmds.AdrenalineRush.Name))) then
+        local maxCombo = self.Combo + self.ComboDeficit
+        self.Combo = maxCombo
+        self.ComboDeficit = 0
+    end
 end
 
 function rotation:ShortBurstEffects()
@@ -734,6 +742,11 @@ function rotation:CreateLocalEventTracker()
         end,
         [spells.Stealth.Id] = function()
             self:ExpectCombatStealth()
+        end,
+        [spells.AdrenalineRush.Id] = function()
+            if (spells.ImprovedAdrenalineRush.Known) then
+                self.CmdBus:Add(self.Cmds.AdrenalineRush.Name, 0.2)
+            end
         end,
         [spells.KeepItRolling.Id] = function()
             self.CmdBus:Add(self.Cmds.KeepItRolling.Name, 0.2)
