@@ -312,8 +312,13 @@ function rotation:SingleTarget()
             function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() return self:AwaitCombatStealth() end,
-            function() if ((settings.AOE or spells.UnderhandedUpperHand.Known) and player.Buffs:Remains(spells.BladeFlurry.Buff) < 2) then return spells.BladeFlurry end end,
-            function() if (not self.ComboHolding) then return self:UseTrinket() end end,
+            function() if (settings.AOE and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
+            function()
+                if (spells.UnderhandedUpperHand.Known and not self.ShortBursting and (not player.Buffs:Applied(spells.BladeFlurry.Buff) or (settings.Burst and ((spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1)) and (player.Buffs:Remains(spells.BladeFlurry.Buff) + player.Buffs:Remains(spells.AdrenalineRush.Buff)) < 7)))) then
+                    return spells.BladeFlurry
+                end
+            end,
+            function() if (not self.ComboHolding and not self.StealthBuffs) then return self:UseTrinket() end end,
             function() if (spells.BladeRush.Known and settings.AOE and player.Buffs:Applied(spells.BladeFlurry.Buff) and not self.NanoBursting) then return spells.BladeRush end end,
             function() if (spells.KillingSpree.Known and settings.Burst and not self.ComboFinisherAllowed and not self.ComboHolding and not self.ShortBursting and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.Energy < 50)) then return spells.KillingSpree end end,
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
@@ -406,8 +411,8 @@ function rotation:AwaitCombatStealth()
 end
 
 function rotation:SliceAndDice()
-    if (self.Combo > 4 and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) <
-            (self.ShortBursting and 2 or (spells.UnderhandedUpperHand.Known and 12 or spells.SliceAndDice.Pandemic))) then
+    if (not self.ShortBursting and self.Combo > 4 and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) <
+            (spells.UnderhandedUpperHand.Known and 12 or spells.SliceAndDice.Pandemic)) then
         return spells.SliceAndDice
     end
     return nil
@@ -595,8 +600,13 @@ function rotation:FinisherAllowed()
     local comboMax = self.Combo + self.ComboDeficit
     local comboFinisher = max(5, min(self.ComboFinisher, comboMax))
     if (spells.Crackshot.Known) then
-        if (self.InStealthStance or self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) == 6) then
+        if (self.InStealthStance) then
             comboFinisher = 5
+        elseif (spells.HiddenOpportunity.Known) then
+            local buffs = self.Player.Buffs
+            if (buffs:Applied(spells.Ambush.Audacity) or buffs:Applied(spells.PistolShot.Opportunity)) then
+                comboFinisher = 5
+            end
         else
             comboFinisher = comboFinisher
         end
@@ -643,14 +653,19 @@ function rotation:Predictions()
     end
 end
 
+function rotation:BuffAppliedByGcdEnd(auraId)
+    local buffs = self.Player.Buffs
+    return buffs:Find(auraId).Remains > self.GcdReadyIn
+end
+
 function rotation:ShortBurstEffects()
     local player = self.Player
-    return player.Buffs:Applied(spells.ShadowDance.Buff) or player.Buffs:Applied(spells.Subterfuge.Buff)
+    return (player.Buffs:Applied(spells.ShadowDance.Buff) and rotation:BuffAppliedByGcdEnd(spells.ShadowDance.Buff)) or (player.Buffs:Applied(spells.Subterfuge.Buff) and rotation:BuffAppliedByGcdEnd(spells.Subterfuge.Buff))
 end
 
 function rotation:NanoBurstEffects()
     local player = self.Player
-    return player.Buffs:Applied(spells.Vanish.Buff)
+    return player.Buffs:Applied(spells.Vanish.Buff) and rotation:BuffAppliedByGcdEnd(spells.Vanish.Buff)
 end
 
 local GetShapeshiftForm = GetShapeshiftForm
