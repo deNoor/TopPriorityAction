@@ -325,7 +325,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
             function() if (not self.ComboFinisherAllowed and settings.Burst and self.Combo < 3 and self.GcdReadyIn <= self.ActionAdvanceWindow and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.ShortBursting) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not player.Buffs:Applied(spells.PistolShot.Opportunity) and self.Energy < 30) then return spells.BladeRush end end,
-            function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known and self.ShortBursting and player.Buffs:Applied(spells.RollTheBones.Broadside) and self.Combo < 2) then return self:PistolShot() end end,
+            function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known and self.ShortBursting and (self.Energy < 45 or (player.Buffs:Applied(spells.RollTheBones.Broadside) and self.Combo < 2))) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known) then return spells.Ambush end end,
             function() if (not self.ComboFinisherAllowed and (spells.HiddenOpportunity.Known or ((self.Combo < (player.Buffs:Applied(spells.RollTheBones.Broadside) and 2 or 4)) or player.Buffs:Stacks(spells.PistolShot.Opportunity) > 5))) then return self:PistolShot() end end,
@@ -528,7 +528,7 @@ function rotation:RollTheBones()
         if (possibleMin > totalCount) then
             return true
         end
-        if (longestRemains < 8 and possibleMin >= totalCount and (self.StealthBuffs or (self.Settings.Burst and
+        if (longestRemains < 8 and (self.StealthBuffs or (self.Settings.Burst and
                 (spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1))))) then
             return true
         end
