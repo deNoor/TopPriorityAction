@@ -559,7 +559,7 @@ function rotation:KeepItRolling()
             count = count + 1
         end
     end
-    local desiredMin = 3 + (self.AmirSet4p and 1 or 0);
+    local desiredMin = 2 + (self.AmirSet4p and 1 or 0);
     if (count >= desiredMin) then
         return spells.KeepItRolling
     end
@@ -594,11 +594,7 @@ function rotation:FinisherAllowed()
     end
     local comboMax = self.Combo + self.ComboDeficit
     local comboFinisher = max(5, min(self.ComboFinisher, comboMax))
-    if (spells.SummarilyDispatched.Known) then
-        comboFinisher = max(5, comboFinisher)
-    elseif (spells.GreenskinsWickers.Known and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn) then
-        comboFinisher = max(5, comboFinisher)
-    elseif (spells.Crackshot.Known) then
+    if (spells.Crackshot.Known) then
         if (self.InStealthStance or self.Player.Buffs:Stacks(spells.PistolShot.Opportunity) == 6) then
             comboFinisher = 5
         else
