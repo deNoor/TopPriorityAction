@@ -387,11 +387,7 @@ function rotation:ExpectCombatStealth()
 end
 
 function rotation:AwaitedVanish(energy)
-    local necroticPitch = addon.Common.Spells.NecroticPitch
-    if (self.Player.Debuffs:Applied(necroticPitch.Debuff)) then
-        return nil
-    end
-    if (self.Energy >= energy and self.GcdReadyIn < 0.05) then
+    if (self.Energy >= energy and self.GcdReadyIn < 0.05 and not self.InStealthStance) then
         return spells.Vanish
     else
         return self.EmptyAction
@@ -399,7 +395,7 @@ function rotation:AwaitedVanish(energy)
 end
 
 function rotation:AwaitedShadowDance(energy)
-    if (self.Energy >= energy and self.GcdReadyIn < 0.05) then
+    if (self.Energy >= energy and self.GcdReadyIn < 0.05 and not self.InStealthStance) then
         return spells.ShadowDance
     else
         return self.EmptyAction
