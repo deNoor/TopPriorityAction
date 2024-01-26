@@ -314,7 +314,7 @@ function rotation:SingleTarget()
             function() return self:AwaitCombatStealth() end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function()
-                if (spells.UnderhandedUpperHand.Known and not self.ShortBursting and (not player.Buffs:Applied(spells.BladeFlurry.Buff) or (settings.Burst and ((spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1)) and (player.Buffs:Remains(spells.BladeFlurry.Buff) + player.Buffs:Remains(spells.AdrenalineRush.Buff)) < 7)))) then
+                if (spells.UnderhandedUpperHand.Known and (not player.Buffs:Applied(spells.BladeFlurry.Buff) or (settings.Burst and not self.ShortBursting and ((spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1)) and (player.Buffs:Remains(spells.BladeFlurry.Buff) + player.Buffs:Remains(spells.AdrenalineRush.Buff)) < 8)))) then
                     return spells.BladeFlurry
                 end
             end,
@@ -338,9 +338,9 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance(80) end end,
             function() if (not self.ComboFinisherAllowed) then return spells.SinisterStrike end end,
 
+            function() if (self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(25) end end,
             function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance(25) end end,
-            function() if (self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -453,7 +453,7 @@ local aoeTrinkets = addon.Helper.ToHashSet({
     198451, -- 10y healing/damage aoe
 })
 local burstTrinkets = addon.Helper.ToHashSet({
-    133642, -- +stats
+    158319, -- Mydas, autoattacks more damage
 })
 
 ---@return EquipItem?
@@ -671,10 +671,11 @@ function rotation:StealthStance()
 end
 
 local C_ChallengeMode, IsEncounterInProgress = C_ChallengeMode, IsEncounterInProgress
-local allowedInstTypes = addon.Helper.ToHashSet({ "raid" })
+local raidInstTypes = addon.Helper.ToHashSet({ "raid" })
+local partyInstTypes = addon.Helper.ToHashSet({ "party" })
 function rotation:UpdateChallenge()
-    self.InChallenge = C_ChallengeMode.IsChallengeModeActive() or false
-    self.InRaidFight = (self.Player:InInstance(allowedInstTypes) and IsEncounterInProgress()) or false
+    self.InChallenge = (self.Player:InInstance(partyInstTypes) and C_ChallengeMode.IsChallengeModeActive()) or false
+    self.InRaidFight = (self.Player:InInstance(raidInstTypes) and IsEncounterInProgress()) or false
 end
 
 local IsStealthed = IsStealthed
@@ -686,6 +687,7 @@ function rotation:Refresh()
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
 
+    self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InRange = self.RangeChecker:IsInRange()
     self.Energy, self.EnergyDeficit = player:Resource(Enum.PowerType.Energy)
     self.Combo, self.ComboDeficit = player:Resource(Enum.PowerType.ComboPoints)
@@ -693,8 +695,8 @@ function rotation:Refresh()
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
-    self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
+    self:UpdateChallenge()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
@@ -725,7 +727,6 @@ function rotation:Activate()
     self:SetLayout()
     tricksMacro = addon.Convenience:CreateTricksMacro("TricksNamed", spells.TricksOfTheTrade)
     tricksMacro:Update()
-    self:UpdateChallenge()
 end
 
 function rotation:CreateLocalEventTracker()
@@ -803,32 +804,10 @@ function rotation:CreateLocalEventTracker()
         tricksMacro:Update()
     end
 
-    function frameHandlers.CHALLENGE_MODE_START(event, ...)
-        self.InChallenge = true
-    end
-
-    function frameHandlers.CHALLENGE_MODE_RESET(event, ...)
-        self.InChallenge = C_ChallengeMode.IsChallengeModeActive() or false
-    end
-
-    function frameHandlers.CHALLENGE_MODE_COMPLETED(event, ...)
-        self.InChallenge = false
-    end
-
     function frameHandlers.PLAYER_REGEN_ENABLED(event, ...)
         if (tricksMacro.PendingUpdate) then
             tricksMacro:Update()
         end
-    end
-
-    local GetDifficultyInfo = GetDifficultyInfo
-    function frameHandlers.ENCOUNTER_START(event, encounterID, encounterName, difficultyID, groupSize)
-        local name, groupType, isHeroic, isChallengeMode, displayHeroic, displayMythic, toggleDifficultyID = GetDifficultyInfo(difficultyID)
-        self.InRaidFight = groupType == "raid";
-    end
-
-    function frameHandlers.ENCOUNTER_END(event, encounterID, encounterName, difficultyID, groupSize, success)
-        self.InRaidFight = false;
     end
 
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
