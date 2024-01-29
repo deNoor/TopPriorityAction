@@ -66,7 +66,7 @@ end
 
 local max, GetItemCooldown = max, GetItemCooldown
 function Item:ReadyIn()
-    local now = addon.Rotation.Timestamp
+    local now = addon.Timestamp
     local start, duration, enabled = GetItemCooldown(self.Id)
     if start then
         return max(0, start + duration - now) -- seconds

@@ -37,7 +37,7 @@ end
 
 local GetSpellCooldown = GetSpellCooldown
 function Spell:ReadyIn()
-    local now = addon.Rotation.Timestamp
+    local now = addon.Timestamp
     local start, duration, enabled = GetSpellCooldown(self.Id)
     if start then
         return max(0, start + duration - now) -- seconds
@@ -127,7 +127,7 @@ end
 
 local GetSpellLossOfControlCooldown = GetSpellLossOfControlCooldown
 function Spell:CCUnlockIn()
-    local now = addon.Rotation.Timestamp
+    local now = addon.Timestamp
     local start, duration = GetSpellLossOfControlCooldown(self.Id)
     return start and max(0, start + duration - now) or 0
 end

@@ -51,7 +51,7 @@ local cmdHandlers = {
     pause = function(arg, ...)
         local seconds = tonumber(arg)
         if seconds then
-            addon.Rotation.PauseTimestamp = addon.Rotation.Timestamp + seconds
+            addon.Rotation.PauseTimestamp = addon.Timestamp + seconds
         end
     end,
     aaw = function(arg, ...)
@@ -199,6 +199,8 @@ local emptyRotation = {
     Spells = {},
     Items = {},
     RangeChecker = emptyAction,
+    AddedPauseOnKey = 0,
+    PauseTimestamp = 0,
     Pulse = function(_) return emptyAction end,
     SelectAction = function(_)
     end,

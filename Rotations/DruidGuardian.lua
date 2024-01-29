@@ -100,13 +100,13 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Druid-Guardian",
-    Spells = spells,
-    Items = items,
+    Name                   = "Druid-Guardian",
+    Spells                 = spells,
+    Items                  = items,
 
-    RangeChecker     = spells.Mangle,
-    ComboCap         = 4,
-    DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
+    RangeChecker           = spells.Mangle,
+    ComboCap               = 4,
+    DispellableTypes       = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     InRange                = false,
@@ -228,7 +228,7 @@ end
 
 function rotation:Refresh()
     local player = self.Player
-    local timestamp = self.Timestamp
+    local timestamp = addon.Timestamp
     player.Buffs:Refresh(timestamp)
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)

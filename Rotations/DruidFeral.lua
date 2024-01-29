@@ -112,13 +112,13 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name = "Druid-Feral",
-    Spells = spells,
-    Items = items,
+    Name                   = "Druid-Feral",
+    Spells                 = spells,
+    Items                  = items,
 
-    RangeChecker     = spells.Rake,
-    ComboCap         = 4,
-    DispellableTypes = addon.Helper.ToHashSet({ "Curse", "Poison", }),
+    RangeChecker           = spells.Rake,
+    ComboCap               = 4,
+    DispellableTypes       = addon.Helper.ToHashSet({ "Curse", "Poison", }),
 
     -- locals
     Stealhed               = IsStealthed(), -- UPDATE_STEALTH, IsStealthed()
@@ -263,7 +263,7 @@ end
 
 function rotation:Refresh()
     local player = self.Player
-    local timestamp = self.Timestamp
+    local timestamp = addon.Timestamp
     player.Buffs:Refresh(timestamp)
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
@@ -310,7 +310,7 @@ function rotation:CreateLocalEventTracker()
     function frameHandlers.UNIT_SPELLCAST_SENT(event, ...)
         local unit = ...
         if (unit == "player") then
-            self.LastCastSent = self.LocalEvents.EventTimestamp
+            self.LastCastSent = addon.Timestamp
         end
     end
 

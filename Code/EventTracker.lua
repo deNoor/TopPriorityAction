@@ -8,27 +8,26 @@ local addon = TopPriorityAction
 ---@class EventTracker
 ---@field FrameHandlers table<string, EventHandler>
 ---@field CustomHandlers table<string, EventHandler>
----@field EventTimestamp number
 ---@field private RegisterEvents fun(self:EventTracker):EventTracker
 ---@field UnRegisterEvent fun(self:EventTracker, event:string):EventTracker
 ---@field Dispose fun(self:EventTracker)
 
 ---@type EventTracker
 local EventTracker = {
-    EventTimestamp = 0
 }
 local EventRegistry, C_EventUtils = EventRegistry, C_EventUtils
 
-local addonCallbackRegistry = CreateFromMixins(CallbackRegistryMixin)
-addonCallbackRegistry:OnLoad()
-addonCallbackRegistry:SetUndefinedEventsAllowed(true)
+-- private event registry example not connected to global EventRegistry
+-- local addonCallbackRegistry = CreateFromMixins(CallbackRegistryMixin)
+-- addonCallbackRegistry:OnLoad()
+-- addonCallbackRegistry:SetUndefinedEventsAllowed(true)
 
 function EventTracker:RegisterEvents()
     local getTime = GetTime
     for event, handler in pairs(self.FrameHandlers) do
         if (C_EventUtils.IsEventValid(event)) then
             EventRegistry:RegisterFrameEventAndCallback(event, function(ownerId, ...)
-                self.EventTimestamp = getTime()
+                addon.Timestamp = getTime()
                 handler(event, ...)
             end, self)
         else
@@ -38,7 +37,7 @@ function EventTracker:RegisterEvents()
     for event, handler in pairs(self.CustomHandlers) do
         if (not C_EventUtils.IsEventValid(event)) then
             EventRegistry:RegisterCallback(event, function(ownerId, ...)
-                self.EventTimestamp = getTime()
+                addon.Timestamp = getTime()
                 handler(event, ...)
             end, self)
         else
@@ -72,7 +71,6 @@ local function NewEventTracker(frameHandlers, customHandlers)
     local eventTracker = {
         FrameHandlers = frameHandlers or {},
         CustomHandlers = customHandlers or {},
-        EventTimestamp = 0,
     }
     addon.Helper.AddVirtualMethods(eventTracker, EventTracker)
     eventTracker:RegisterEvents()
@@ -127,7 +125,7 @@ function frameHandlers.MODIFIER_STATE_CHANGED(event, ...)
         local rotation = addon.Rotation
         if (isPressed == 1) then
             rotation.IsPauseKeyDown = true
-            rotation.PauseTimestamp = EventTracker.EventTimestamp + rotation.AddedPauseOnKey
+            rotation.PauseTimestamp = addon.Timestamp + rotation.AddedPauseOnKey
         elseif (isPressed == 0) then
             rotation.IsPauseKeyDown = false
         end

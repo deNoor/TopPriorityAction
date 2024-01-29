@@ -56,7 +56,7 @@ function Unit:WithDebuffs(filter)
 end
 
 local function SecFromNow(endTimeMS)
-    return endTimeMS / 1000 - addon.Rotation.Timestamp;
+    return endTimeMS / 1000 - addon.Timestamp;
 end
 
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo

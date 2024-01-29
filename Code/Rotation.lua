@@ -7,7 +7,6 @@ local addon = TopPriorityAction
 ---@field Name string
 ---@field Spells table<string, Spell>
 ---@field Items table<string, Item>
----@field Timestamp number @updated by framework before Pulse call.
 ---@field Settings Settings @updated by framework on rotation load.
 ---@field WaitForResource boolean @set by custom rotation
 ---@field PauseTimestamp number @updated by eventTracker outside rotation.
@@ -57,7 +56,6 @@ function Rotation:VerifyAbstractsOverriden(class, spec)
 end
 
 function Rotation:SetDefaults()
-    self.Timestamp = 0
     self.PauseTimestamp = 0
     self.IsPauseKeyDown = false
     self.AddedPauseOnKey = 1
@@ -72,7 +70,7 @@ SpellIsTargeting, GetCursorInfo, IsMounted, UnitIsDeadOrGhost, UnitIsPossessed, 
 function Rotation:ShouldNotRun()
     return not self.Settings.Enabled
         or self.IsPauseKeyDown
-        or self.PauseTimestamp - self.Timestamp > 0
+        or self.PauseTimestamp - addon.Timestamp > 0
         or UnitIsDeadOrGhost("player")
         or UnitIsPossessed("player")
         or SpellIsTargeting()
@@ -273,9 +271,9 @@ function addon:DetectRotation()
             addon:UpdateEquipment()
             addon:UpdateKnownItems()
             addon:UpdateRotationResource()
-            knownRotation:Activate()
             knownRotation.IsPauseKeyDown = IsPauseKeyDown()
             knownRotation.Settings = addon.SavedSettings.Instance
+            knownRotation:Activate()
         end
     end
     lastSpec = specIndex

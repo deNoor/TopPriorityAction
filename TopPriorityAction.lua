@@ -16,6 +16,7 @@ local addon = TopPriorityAction
 ---@field SavedSettings SavedSettings
 ---@field WowClass WowClass
 ---@field Rotation Rotation
+---@field Timestamp number
 ---@field AddRotation fun(self:TopPriorityAction, class:string, spec:integer, rotation:Rotation)
 ---@field DetectRotation fun(self:TopPriorityAction)
 ---@field UpdateKnownSpells fun(self:TopPriorityAction)
@@ -40,8 +41,8 @@ function Program:RegisterActionUpdater()
         self.UpdateEverySec,
         function()
             local now = getTime()
+            addon.Timestamp = now
             local rotation = addon.Rotation
-            rotation.Timestamp = now
             local action = convenience:UserAction() or rotation:Pulse() or emptyAction
             if (action ~= currentAction) then
                 currentAction = action

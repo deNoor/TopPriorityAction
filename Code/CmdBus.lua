@@ -74,7 +74,7 @@ end
 
 function CmdBus:Find(name)
     local cmd = self.Commands[name]
-    if (cmd and cmd.Expiration > addon.Rotation.Timestamp) then
+    if (cmd and cmd.Expiration > addon.Timestamp) then
         return cmd
     else
         return nil

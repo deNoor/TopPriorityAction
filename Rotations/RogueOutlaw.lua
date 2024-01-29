@@ -681,7 +681,7 @@ end
 local IsStealthed = IsStealthed
 function rotation:Refresh()
     local player = self.Player
-    local timestamp = self.Timestamp
+    local timestamp = addon.Timestamp
     player.Buffs:Refresh(timestamp)
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
