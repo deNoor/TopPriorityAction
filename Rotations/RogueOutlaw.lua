@@ -292,8 +292,8 @@ function rotation:StealthOpener()
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
+            function() if (spells.Crackshot.Known) then return nil end end,
             function() if (player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
-            function() if (not spells.HiddenOpportunity.Known) then return nil end end,
             function() return spells.Ambush end,
             function() return self.EmptyAction end,
         }
