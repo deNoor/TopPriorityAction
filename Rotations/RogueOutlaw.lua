@@ -369,7 +369,7 @@ local autoAttackList
 function rotation:AutoAttack()
     autoAttackList = autoAttackList or
         {
-            function() if (self.GcdReadyIn > self.ActionAdvanceWindow and not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
+            function() if (not self.StealthBuffs and not self.CombatStealthSent and self.GcdReadyIn > self.ActionAdvanceWindow and not spells.AutoAttack:IsQueued()) then return spells.AutoAttack end end,
         }
     return rotation:RunPriorityList(autoAttackList)
 end
