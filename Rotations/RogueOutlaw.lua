@@ -292,10 +292,9 @@ function rotation:StealthOpener()
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
             function() if (spells.Crackshot.Known and self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
-            function() if (spells.Crackshot.Known) then return nil end end,
-            function() if (player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
-            function() return spells.Ambush end,
-            function() return self.EmptyAction end,
+            function() if (not spells.Crackshot.Known and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
+            function() if (not spells.Crackshot.Known) then return spells.Ambush end end,
+            function() if (not spells.Crackshot.Known) then return self.EmptyAction end end,
         }
     return rotation:RunPriorityList(stealthOpenerList)
 end
@@ -777,10 +776,14 @@ function rotation:CreateLocalEventTracker()
         [spells.PistolShot.Id] = function()
             if (spells.FanTheHammer.Known) then
                 if (not self.CmdBus:Find(self.Cmds.PistolShot.Name)) then
-                    self.CmdBus:Add(self.Cmds.PistolShot.Name, 0.7)
                     self.FanTheHammerTicks = min(self.Player.Buffs:Stacks(spells.PistolShot.Opportunity), 2)
-                elseif (self.FanTheHammerTicks > 0) then
-                    self.FanTheHammerTicks = self.FanTheHammerTicks - 1
+                    self.CmdBus:Add(self.Cmds.PistolShot.Name, 0.7)
+                else
+                    if (self.FanTheHammerTicks > 0) then
+                        self.FanTheHammerTicks = self.FanTheHammerTicks - 1
+                    else
+                        self.CmdBus:Remove(self.Cmds.PistolShot.Name)
+                    end
                 end
             end
         end,
