@@ -13,6 +13,7 @@ local addon = TopPriorityAction
 ---@field Burst boolean
 ---@field AOE boolean
 ---@field Dispel boolean
+---@field Stealth boolean
 ---@field ActionAdvanceWindow integer
 ---@field UpdateAdvanceWindow fun(self:Settings,newValue?:integer)
 
@@ -23,6 +24,7 @@ local SavedSettings = {
         Burst = false,
         AOE = false,
         Dispel = false,
+        Stealth = false,
         ActionAdvanceWindow = 75 / 1000,
         UpdateAdvanceWindow = function(self, ms)
             local spellQueueWindow = GetSpellQueueWindow();

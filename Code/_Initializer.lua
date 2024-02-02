@@ -48,6 +48,10 @@ local cmdHandlers = {
         addon.SavedSettings.Instance.Dispel = not addon.SavedSettings.Instance.Dispel
         addon.SavedSettings:RaiseSettingUpdate()
     end,
+    stealth = function(...)
+        addon.SavedSettings.Instance.Stealth = not addon.SavedSettings.Instance.Stealth
+        addon.SavedSettings:RaiseSettingUpdate()
+    end,
     pause = function(arg, ...)
         local seconds = tonumber(arg)
         if seconds then

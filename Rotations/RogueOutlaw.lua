@@ -376,7 +376,7 @@ end
 
 ---@return Spell?
 function rotation:AutoStealth()
-    if (self.InChallenge) then
+    if (self.InChallenge or self.Settings.Stealth) then
         return spells.Stealth
     end
 end
