@@ -354,7 +354,7 @@ function rotation:Utility()
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
-            function() if (self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
+            function() if (not self.ShortBursting and self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
             function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
@@ -559,7 +559,7 @@ function rotation:KeepItRolling()
             count = count + 1
         end
     end
-    local desiredMin = 2 + (self.AmirSet4p and 1 or 0);
+    local desiredMin = 3 + (self.AmirSet4p and 1 or 0);
     if (count >= desiredMin) then
         return spells.KeepItRolling
     end
