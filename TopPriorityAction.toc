@@ -1,4 +1,4 @@
-## Interface: 100205
+## Interface: 100206
 
 ## Author: deNoor
 ## Notes: Proposes the next action to use in combat. No gui, library code only.
