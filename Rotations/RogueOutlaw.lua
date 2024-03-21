@@ -287,7 +287,7 @@ function rotation:StealthOpener()
         {
             function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
             function() if (self.AmirSet4p and spells.RollTheBones.Known) then return self:RollTheBones() end end,
-            function() if (settings.Burst and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 3) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (settings.Burst and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 4) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
             function() return self:SliceAndDice() end,
@@ -327,7 +327,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.MarkedForDeath.Known and self.ComboDeficit > 2 and not target:IsTotem() and not self.NanoBursting) then return spells.MarkedForDeath end end,
             function() if (not self.ComboFinisherAllowed and settings.AOE and spells.DeftManeuvers.Known) then return spells.BladeFlurry end end,
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
-            function() if (not self.ComboFinisherAllowed and settings.Burst and self.Combo < 3 and self.GcdReadyIn <= self.ActionAdvanceWindow and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.ShortBursting) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
+            function() if (not self.ComboFinisherAllowed and settings.Burst and self.Combo < 4 and self.GcdReadyIn <= self.ActionAdvanceWindow and (not player.Buffs:Applied(spells.AdrenalineRush.Buff) or self.ShortBursting) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not player.Buffs:Applied(spells.PistolShot.Opportunity) and self.Energy < 40) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known and self.ShortBursting and (self.Energy < 45 or (player.Buffs:Applied(spells.RollTheBones.Broadside) and self.Combo < 2))) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
@@ -453,7 +453,15 @@ local aoeTrinkets = addon.Helper.ToHashSet({
 })
 local burstTrinkets = addon.Helper.ToHashSet({
     158319, -- Mydas, autoattacks more damage
+    198478, -- Dance Deck,
 })
+local danceTrinkets = {
+    [198478] = {
+        382860, -- Ace
+        382866, -- 7
+        382867, -- 8
+    }
+}
 
 ---@return EquipItem?
 function rotation:UseTrinket()
@@ -469,6 +477,14 @@ function rotation:UseTrinket()
     end
     local burstTrinket = trinketFrom(burstTrinkets)
     if (burstTrinket and self.Settings.Burst) then
+        if (danceTrinkets[burstTrinket.Id]) then
+            for index, buff in ipairs(danceTrinkets[burstTrinket.Id]) do
+                if (self.Player.Buffs:Applied(buff)) then
+                    return burstTrinket
+                end
+            end
+            return nil
+        end
         return burstTrinket
     end
     return nil
