@@ -9,6 +9,7 @@ local addon = TopPriorityAction
 ---@field UserAction fun(self:Convenience):PlayerAction?
 ---@field EnableAutoConfirmDelete fun(self:Convenience)
 ---@field EnableHiddenPendingTicket fun(self:Convenience)
+---@field FixChatChannelSettings fun(self:Convenience)
 
 ---@type Convenience
 local Convenience = {}
@@ -148,6 +149,26 @@ end
 function Convenience:EnableHiddenPendingTicket()
     HelpOpenWebTicketButton:HookScript("OnShow", function(frame) frame:Hide() end)
     TicketStatusFrame:HookScript("OnShow", function(frame) frame:Hide() end)
+end
+
+function Convenience:FixChatChannelSettings()
+    local knownChannels = { "General", "Trade", "LocalDefense", "LookingForGroup", "Services", }
+    local unwantedChannelsInChatWindow = {
+        ["General"] = { "Trade", "Services", },
+        ["Combat Log"] = knownChannels,
+        ["R"] = knownChannels,
+        ["G"] = knownChannels,
+        ["Trade"] = { "General", "LocalDefense", "LookingForGroup", "Services", }
+    }
+    for windowIndex = 1, NUM_CHAT_WINDOWS do
+        local windowName = GetChatWindowInfo(windowIndex)
+        local channelToRemove = unwantedChannelsInChatWindow[windowName]
+        if (channelToRemove) then
+            for index, channelName in ipairs(channelToRemove) do
+                ChatFrame_RemoveChannel(Chat_GetChatFrame(windowIndex), channelName);
+            end
+        end
+    end
 end
 
 -- attach to addon

@@ -91,6 +91,10 @@ function frameHandlers.ADDON_LOADED(event, ...)
     end
 end
 
+function frameHandlers.PLAYER_LOGIN(event, ...)
+    addon.Convenience:FixChatChannelSettings()
+end
+
 function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
     local initialLogin, reloadingUi = ... -- if not (initialLogin or reloadingUi) then entering an instance
     if (initialLogin or reloadingUi) then
