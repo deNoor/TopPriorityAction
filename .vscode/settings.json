@@ -24,7 +24,10 @@
         "GameTooltip_Hide",
         "UIDropDownMenu_CreateInfo",
         "GameTooltip_SetDefaultAnchor",
-        "RunNextFrame"
+        "RunNextFrame",
+        "NUM_CHAT_WINDOWS",
+        "ChatFrame_RemoveChannel",
+        "Chat_GetChatFrame"
     ],
     "Lua.diagnostics.disable": [
         "invisible",
