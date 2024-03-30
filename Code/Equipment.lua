@@ -71,7 +71,7 @@ function EquipItem:ReadyIn()
     end
 end
 
-local IsUsableItem = IsUsableItem
+local IsUsableItem = C_Item.IsUsableItem
 function EquipItem:IsUsableNow()
     local usable, noMana = IsUsableItem(self.Id)
     if (usable) then
@@ -81,13 +81,13 @@ function EquipItem:IsUsableNow()
     return usable, noMana
 end
 
-local IsItemInRange = IsItemInRange
+local IsItemInRange = C_Item.IsItemInRange
 function EquipItem:IsInRange(unit)
     unit = unit or "target"
     return IsItemInRange(self.Id, unit) ~= false
 end
 
-local IsCurrentItem = IsCurrentItem
+local IsCurrentItem = C_Item.IsCurrentItem
 function EquipItem:IsQueued()
     return IsCurrentItem(self.Id)
 end
@@ -101,7 +101,6 @@ local function SetDefaults(equipItem)
     equipItem.SpellName = ""
 end
 
-local GetInventoryItemID, GetItemSpell = GetInventoryItemID, GetItemSpell
 function addon:UpdateEquipment()
     local equipment = addon.Player.Equipment ---@type table<string,EquipItem>
     wipe(equipment.SetBonuses)
@@ -112,10 +111,10 @@ function addon:UpdateEquipment()
             local itemId = GetInventoryItemID("player", equipItem.SlotId)
             if (itemId and itemId > 0) then
                 equipItem.Id = itemId
-                local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID, bindType, expacID, setID = GetItemInfo(itemId)
+                local name, link, quality, level, minLevel, type, subType, stackCount, equipLoc, icon, sellPrice, classID, subclassID, bindType, expacID, setID = C_Item.GetItemInfo(itemId)
                 equipItem.Name = name
                 equipItem.Icon = icon
-                local spellName, spellId = GetItemSpell(itemId)
+                local spellName, spellId = C_Item.GetItemSpell(itemId)
                 if (spellId) then
                     equipItem.Active = true
                     equipItem.SpellId = spellId

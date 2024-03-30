@@ -27,7 +27,7 @@ local SavedSettings = {
         Stealth = false,
         ActionAdvanceWindow = 75 / 1000,
         UpdateAdvanceWindow = function(self, ms)
-            local spellQueueWindow = GetSpellQueueWindow();
+            local spellQueueWindow = C_Spell.GetSpellQueueWindow();
             ms = ms or (self.ActionAdvanceWindow * 1000) or spellQueueWindow
             self.ActionAdvanceWindow = max(1, min(ms, spellQueueWindow)) / 1000
             addon.Helper.Print("action advance window", self.ActionAdvanceWindow * 1000)
