@@ -86,17 +86,12 @@ function frameHandlers.ADDON_LOADED(event, ...)
     if name == addonName then
         addon.EventTracker:UnRegisterEvent(event)
         addon.SavedSettings:Load()
-        addon.Convenience:EnableAutoConfirmDelete()
-        addon.Convenience:EnableHiddenPendingTicket()
     end
 end
 
 function frameHandlers.PLAYER_LOGIN(event, ...)
-    addon.Convenience:FixChatChannelSettings()
-end
-
-function frameHandlers.CHANNEL_UI_UPDATE(event, ...)
-    addon.Convenience:FixChatChannelSettings()
+    addon.Convenience:EnableAutoConfirmDelete()
+    addon.Convenience:HidePendingTicket()
 end
 
 function frameHandlers.PLAYER_ENTERING_WORLD(event, ...)
