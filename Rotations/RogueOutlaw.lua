@@ -406,8 +406,8 @@ function rotation:AwaitCombatStealth()
 end
 
 function rotation:SliceAndDice()
-    if (not self.ShortBursting and self.Combo > 4 and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) <
-            (spells.UnderhandedUpperHand.Known and 12 or spells.SliceAndDice.Pandemic)) then
+    if (self.Combo > 4 and self.Player.Buffs:Remains(spells.SliceAndDice.Buff) <
+            (spells.UnderhandedUpperHand.Known and (not self.ShortBursting and 12 or 2) or spells.SliceAndDice.Pandemic)) then
         return spells.SliceAndDice
     end
     return nil
