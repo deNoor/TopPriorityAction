@@ -208,6 +208,9 @@ local setBonus = {
     DFAmir = {
         SetId = 1566,
     },
+    DFS4 = {
+        SetId = 1600,
+    },
 }
 
 ---@type table<string,Item>
@@ -253,7 +256,7 @@ local rotation = {
     NanoBursting           = false,
     ShortBursting          = false,
     CombatStealthSent      = false,
-    AmirSet4p              = false,
+    DFS4Set                = false,
 }
 
 ---@type TricksMacro
@@ -286,7 +289,7 @@ function rotation:StealthOpener()
     stealthOpenerList = stealthOpenerList or
         {
             function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
-            function() if (self.AmirSet4p and spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (self.DFS4Set and spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (settings.Burst and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and (not spells.ImprovedAdrenalineRush.Known or self.Combo < 4) and not self:KillingSpreeSoon()) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if (spells.MarkedForDeath.Known and self.Combo < 3 and not target:IsTotem() and not self.ShortBursting) then return spells.MarkedForDeath end end,
@@ -359,7 +362,7 @@ function rotation:Utility()
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealthStance) then return self:AutoStealth() end end,
-            function() if (self.AmirSet4p and (self.InChallenge or self.InRaidFight) and spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() if (self.DFS4Set and (self.InChallenge or self.InRaidFight) and spells.RollTheBones.Known) then return self:RollTheBones() end end,
             function() if ((self.InChallenge or self.InRaidFight) and player.Buffs:Remains(items.RaidRune.Buff) < 60 * 5) then return items.RaidRune end end,
         }
     return rotation:RunPriorityList(utilityList)
@@ -532,7 +535,7 @@ function rotation:RollTheBones()
         end
     end
 
-    local possibleMin = 1 + ((self.AmirSet4p and totalCount > 0) and 1 or 0) + (buffs:Applied(spells.LoadedDice.Buff) and 1 or 0)
+    local possibleMin = 1 + ((self.DFS4Set and totalCount > 0) and 1 or 0) + (buffs:Applied(spells.LoadedDice.Buff) and 1 or 0)
 
     local reroll = function()
         if (longestRemains < 2) then
@@ -575,7 +578,7 @@ function rotation:KeepItRolling()
             count = count + 1
         end
     end
-    local desiredMin = 3 + (self.AmirSet4p and 1 or 0);
+    local desiredMin = 3 + (self.DFS4Set and 1 or 0);
     if (count >= desiredMin) then
         return spells.KeepItRolling
     end
@@ -726,7 +729,7 @@ function rotation:Refresh()
     self.ComboFinisherAllowed = self:FinisherAllowed()
     spells.SliceAndDice.Pandemic = self:ComboPandemic(6)
     self.CombatStealthSent = self.CmdBus:Find(cmds.CombatStealth.Name) ~= nil
-    self.AmirSet4p = player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
+    self.DFS4Set = player.Equipment:ActiveSetBonus(setBonus.DFS4.SetId, 4) or player.Equipment:ActiveSetBonus(setBonus.DFAmir.SetId, 4)
 end
 
 function rotation:Dispose()
