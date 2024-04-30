@@ -538,7 +538,7 @@ function rotation:RollTheBones()
     local possibleMin = 1 + ((self.DFS4Set and totalCount > 0) and 1 or 0) + (buffs:Applied(spells.LoadedDice.Buff) and 1 or 0)
 
     local reroll = function()
-        if (longestRemains < 2) then
+        if (longestRemains < 2.5) then
             return true
         end
         if (self.ShortBursting or totalCount > 4) then
@@ -616,11 +616,11 @@ function rotation:FinisherAllowed()
     if (spells.Crackshot.Known) then
         if (self.InStealthStance) then
             comboFinisher = 5
-        elseif (spells.HiddenOpportunity.Known) then
+            --[[ elseif (spells.HiddenOpportunity.Known) then
             local buffs = self.Player.Buffs
             if (buffs:Applied(spells.Ambush.Audacity) or buffs:Applied(spells.PistolShot.Opportunity)) then
                 comboFinisher = 5
-            end
+            end ]]
         else
             comboFinisher = comboFinisher
         end
