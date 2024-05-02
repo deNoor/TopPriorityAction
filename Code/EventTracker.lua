@@ -153,7 +153,7 @@ function frameHandlers.ENCOUNTER_LOOT_RECEIVED(event, ...)
         if (difficultyID and difficultyID == 8) then -- Mythic Keystone
             local mapID, level, time, onTime, keystoneUpgradeLevels, practiceRun, oldDungeonScore, newDungeonScore, isAffixRecord, isMapRecord, primaryAffix, isEligibleForScore, upgradeMembers = C_ChallengeMode.GetCompletionInfo()
             if (level and level > 0 and not practiceRun) then
-                if (level > 16 and onTime and IsInGroup()) then
+                if (level > 9 and onTime and IsInGroup()) then
                     C_Timer.After(1, function() SendChatMessage("<(^-^)>", "PARTY") end)
                 end
                 addon.Convenience:ThanksBye(2)
