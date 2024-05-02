@@ -275,8 +275,8 @@ function rotation:SelectAction()
             self:StealthOpener()
         end
         if (self.CanAttackTarget and self.InRange) then
-            self:AutoAttack()
             self:SingleTarget()
+            self:AutoAttack()
         end
     end
 end
@@ -453,6 +453,7 @@ end
 
 local aoeTrinkets = addon.Helper.ToHashSet({
     198451, -- 10y healing/damage aoe
+    212683, -- Globe of Jagged Ice, stacks frost damage and explodes
 })
 local burstTrinkets = addon.Helper.ToHashSet({
     158319, -- Mydas, autoattacks more damage
@@ -616,11 +617,11 @@ function rotation:FinisherAllowed()
     if (spells.Crackshot.Known) then
         if (self.InStealthStance) then
             comboFinisher = 5
-            --[[ elseif (spells.HiddenOpportunity.Known) then
+        elseif (spells.HiddenOpportunity.Known) then
             local buffs = self.Player.Buffs
             if (buffs:Applied(spells.Ambush.Audacity) or buffs:Applied(spells.PistolShot.Opportunity)) then
                 comboFinisher = 5
-            end ]]
+            end
         else
             comboFinisher = comboFinisher
         end
