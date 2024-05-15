@@ -224,7 +224,8 @@ local rotation = {
     Cmds                   = cmds,
     RangeChecker           = spells.SinisterStrike,
     ComboFinisher          = 6,
-    ComboKidney            = 5,
+    ComboKidney            = 4,
+    ReducedComboWaste      = false,
     -- locals
     InStealth              = false,
     InStealthStance        = false,
@@ -453,11 +454,12 @@ end
 
 local aoeTrinkets = addon.Helper.ToHashSet({
     198451, -- 10y healing/damage aoe
-    212683, -- Globe of Jagged Ice, stacks frost damage and explodes
 })
 local burstTrinkets = addon.Helper.ToHashSet({
     158319, -- Mydas, autoattacks more damage
     198478, -- Dance Deck,
+    212683, -- Globe of Jagged Ice, stacks frost damage and explodes
+    202610, -- Bomb Dispenser, delayed damage.
 })
 local danceTrinkets = {
     [198478] = {
@@ -617,7 +619,7 @@ function rotation:FinisherAllowed()
     if (spells.Crackshot.Known) then
         if (self.InStealthStance) then
             comboFinisher = 5
-        elseif (spells.HiddenOpportunity.Known) then
+        elseif (self.ReducedComboWaste and spells.HiddenOpportunity.Known) then
             local buffs = self.Player.Buffs
             if (buffs:Applied(spells.Ambush.Audacity) or buffs:Applied(spells.PistolShot.Opportunity)) then
                 comboFinisher = 5
