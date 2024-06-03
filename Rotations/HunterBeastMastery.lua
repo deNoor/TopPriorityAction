@@ -6,6 +6,7 @@ local addon = TopPriorityAction
 ---@type table<string,Spell>
 local spells = {
     AutoShot = addon.Common.Spells.AutoShot,
+    AutoAttack = addon.Common.Spells.AutoAttack,
     MendPet = {
         Id = 136,
     },
@@ -82,8 +83,8 @@ function rotation:SelectAction()
     self:Utility()
     if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
-            -- self:AutoAttack()
             self:SingleTarget()
+            self:AutoAttack()
         end
     end
 end
@@ -101,7 +102,7 @@ function rotation:SingleTarget()
             function() if (self.FocusDeficit > 40) then return spells.BarbedShot end end,
             function() if (self.PetHealthPercent > 0) then return spells.KillCommand end end,
             function() if (not settings.AOE) then return spells.CobraShot else return spells.MultiShot end end,
-            function() return spells.AutoShot end,
+            -- function() return spells.AutoShot end,
         }
     return rotation:RunPriorityList(singleTargetList)
 end
@@ -203,25 +204,30 @@ function rotation:CreateLocalEventTracker()
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
+function test()
+    return addon.Helper.Print(spells.AutoShot:IsQueued(), spells.AutoAttack:IsQueued())
+end
+
 function rotation:SetLayout()
     local spells = self.Spells
-    spells.KillCommand.Key = "1"
-    spells.KillShot.Key = "2"
+    spells.KillShot.Key = "1"
+    spells.BarbedShot.Key = "2"
     spells.CobraShot.Key = "3"
-    spells.BarbedShot.Key = "4"
+    spells.KillCommand.Key = "4"
     spells.MultiShot.Key = "8"
 
-    spells.CounterShot.Key = "F7"
-    spells.MendPet.Key = "F10"
-    spells.Exhilaration.Key = "F11"
-    spells.AutoShot.Key = "F12"
+    -- spells.CounterShot.Key = "F7"
+    spells.MendPet.Key = "num6"
+    spells.Exhilaration.Key = "num7"
+    spells.AutoShot.Key = "num+"
 
     local equip = addon.Player.Equipment
     equip.Trinket14.Key = "num0"
     equip.Trinket13.Key = "num-"
 
     local items = self.Items
-    items.Healthstone.Key = "num+"
+    items.RaidRune.Key = "num8"
+    items.Healthstone.Key = "num9"
 end
 
 addon:AddRotation("HUNTER", 1, rotation)
