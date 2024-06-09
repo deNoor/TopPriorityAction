@@ -202,6 +202,9 @@ function Unit:IsWorthy(coefficient)
     local classification = UnitClassification(self.Id)
     if (goodUnitClassifications[classification]) then
         local player = addon.Player
+        if (self:IsBoss()) then
+            return true
+        end
         if (not player:InInstance()) then
             return (self:Health() + self:Absorb()) > UnitHealthMax("player") * 0.5 * coefficient
         end
