@@ -5,7 +5,6 @@ local addon = TopPriorityAction
 
 ---@type table<string,Spell>
 local spells = {
-    AutoAttack = addon.Common.Spells.AutoAttack,
     SinisterStrike = {
         Id = 1752,
     },
@@ -225,7 +224,7 @@ local rotation = {
     RangeChecker           = spells.SinisterStrike,
     ComboFinisher          = 6,
     ComboKidney            = 4,
-    ReducedComboWaste      = false,
+    ReducedComboWaste      = true,
     -- locals
     InStealth              = false,
     InStealthStance        = false,
@@ -312,12 +311,12 @@ function rotation:SingleTarget()
     singleTargetList = singleTargetList or
         {
             function() if (spells.KeepItRolling.Known) then return self:KeepItRolling() end end,
-            function() return self:AwaitCombatStealth() end,
             function() if (settings.Burst and not player.Buffs:Applied(spells.AdrenalineRush.Buff) and (not spells.ImprovedAdrenalineRush.Known or (self.Combo < 4 and self.GcdReadyIn <= 0.1))) then return spells.AdrenalineRush end end,
             function() if (spells.RollTheBones.Known) then return self:RollTheBones() end end,
+            function() return self:AwaitCombatStealth() end,
             function() if (settings.AOE and not player.Buffs:Applied(spells.BladeFlurry.Buff)) then return spells.BladeFlurry end end,
             function()
-                if (spells.UnderhandedUpperHand.Known and (not player.Buffs:Applied(spells.BladeFlurry.Buff) or (settings.Burst and not self.ShortBursting and ((spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1)) and (player.Buffs:Remains(spells.BladeFlurry.Buff) + player.Buffs:Remains(spells.AdrenalineRush.Buff)) < 8)))) then
+                if (spells.UnderhandedUpperHand.Known and not self.ShortBursting and (not player.Buffs:Applied(spells.BladeFlurry.Buff) or (settings.Burst and ((spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1)) and (player.Buffs:Remains(spells.BladeFlurry.Buff) + player.Buffs:Remains(spells.AdrenalineRush.Buff)) < 8)))) then
                     return spells.BladeFlurry
                 end
             end,
@@ -329,21 +328,21 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and spells.GhostlyStrike.Known and settings.Burst and self.WorthyTarget and not target.Debuffs:Applied(spells.GhostlyStrike.Debuff)) then return spells.GhostlyStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.MarkedForDeath.Known and self.Combo < 4 and not target:IsTotem() and not self.NanoBursting) then return spells.MarkedForDeath end end,
             function() if (not self.ComboFinisherAllowed and settings.AOE and spells.DeftManeuvers.Known) then return spells.BladeFlurry end end,
+            function() if (not self.ComboFinisherAllowed and spells.ImprovedAdrenalineRush.Known and settings.Burst and self.ShortBursting and self.Combo < 3 and self.GcdReadyIn < 0.2) then return spells.AdrenalineRush end end,
             function() if (not self.ComboFinisherAllowed and spells.EchoingReprimand.Known and settings.Burst) then return spells.EchoingReprimand end end,
-            function() if (not self.ComboFinisherAllowed and spells.ImprovedAdrenalineRush.Known and settings.Burst and self.ShortBursting and self.Combo < 4 and self.GcdReadyIn <= 0.1) then return spells.AdrenalineRush end end,
-            function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not player.Buffs:Applied(spells.PistolShot.Opportunity) and self.Energy < 40) then return spells.BladeRush end end,
+            function() if (not self.ComboFinisherAllowed and spells.BladeRush.Known and not player.Buffs:Applied(spells.PistolShot.Opportunity) and self.Energy < 45) then return spells.BladeRush end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known and self.ShortBursting and (self.Energy < 45 or (player.Buffs:Applied(spells.RollTheBones.Broadside) and self.Combo < 2))) then return self:PistolShot() end end,
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known) then return spells.Ambush end end,
             function() if (not self.ComboFinisherAllowed and (spells.HiddenOpportunity.Known or ((self.Combo < (player.Buffs:Applied(spells.RollTheBones.Broadside) and 2 or 4)) or player.Buffs:Stacks(spells.PistolShot.Opportunity) > 3))) then return self:PistolShot() end end,
-            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(80) end end,
-            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance(80) end end,
+            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(85) end end,
+            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and not self.ComboHolding and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and not self:KillingSpreeSoon()) then return self:AwaitedShadowDance(85) end end,
             function() if (not self.ComboFinisherAllowed) then return spells.SinisterStrike end end,
 
             function() if (spells.KillingSpree.Known and settings.Burst and self.ComboFinisherAllowed and not self.ShortBursting) then return spells.KillingSpree end end,
             function() if (self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
-            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(25) end end,
-            function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance(25) end end,
+            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(85) end end,
+            function() if (spells.Crackshot.Known and spells.ShadowDance.Known and settings.Burst and not self.ShortBursting and self.ComboFinisherAllowed and spells.ShadowDance:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedShadowDance(85) end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -357,9 +356,9 @@ function rotation:Utility()
     local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 78) then return items.Healthstone end end,
             function() if (not self.ShortBursting and self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
-            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 35 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
+            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 65 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealthStance) then return self:AutoStealth() end end,
@@ -459,7 +458,8 @@ local burstTrinkets = addon.Helper.ToHashSet({
     158319, -- Mydas, autoattacks more damage
     198478, -- Dance Deck,
     212683, -- Globe of Jagged Ice, stacks frost damage and explodes
-    202610, -- Bomb Dispenser, delayed damage.
+    202610, -- Bomb Dispenser, delayed fire damage.
+    194308, -- Grieftorch, channeled fire damage.
 })
 local danceTrinkets = {
     [198478] = {
@@ -472,10 +472,19 @@ local danceTrinkets = {
 ---@return EquipItem?
 function rotation:UseTrinket()
     local equip = self.Player.Equipment
+    ---@param trinket EquipItem
+    ---@return EquipItem|nil
+    local function AsReadyTrinket(trinket)
+        return trinket:IsAvailable() and trinket:ReadyIn() <= self.GcdReadyIn and trinket or nil
+    end
+    local usableTrinket = AsReadyTrinket(equip.Trinket13) or AsReadyTrinket(equip.Trinket14)
+    if not usableTrinket then
+        return nil
+    end
     ---@param ids integer[]
     ---@return EquipItem
     local trinketFrom = function(ids)
-        return (ids[equip.Trinket13.Id] and equip.Trinket13) or (ids[equip.Trinket14.Id] and equip.Trinket14)
+        return ids[usableTrinket.Id] and usableTrinket
     end
     local aoeTrinket = trinketFrom(aoeTrinkets)
     if (aoeTrinket and self.Settings.AOE) then
@@ -490,6 +499,11 @@ function rotation:UseTrinket()
                 end
             end
             return nil
+        end
+        if (burstTrinket.Id == 194308) then
+            if (self.ShortBursting or not self.WorthyTarget) then
+                return nil
+            end
         end
         return burstTrinket
     end
@@ -508,7 +522,7 @@ local dice = {
 local kirMode = false
 ---@return Spell?
 function rotation:RollTheBones()
-    if (self.NanoBursting) then
+    if (self.NanoBursting or self.CombatStealthSent) then
         return nil
     end
     if (self.CmdBus:Find(self.Cmds.KeepItRolling.Name)) then
@@ -541,8 +555,9 @@ function rotation:RollTheBones()
     local possibleMin = 1 + ((self.DFS4Set and totalCount > 0) and 1 or 0) + (buffs:Applied(spells.LoadedDice.Buff) and 1 or 0)
 
     local reroll = function()
-        local minDuration = 1.5
-        local refreshDuration = 2.5
+        local minDuration = 2
+        local refreshDuration = 3
+        local stealthCdIn = 2
         if (longestRemains < ((self.ShortBursting or self.CombatStealthSent) and refreshDuration or minDuration)) then
             return true
         end
@@ -552,8 +567,8 @@ function rotation:RollTheBones()
         if (possibleMin > totalCount) then
             return true
         end
-        if (longestRemains < refreshDuration + 7 and (self.StealthBuffs or (self.Settings.Burst and not self.CombatStealthSent and
-                (spells.Vanish:ReadyIn() < 1 or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < 1))))) then
+        if (longestRemains < refreshDuration + 6.3 and (self.StealthBuffs or (self.Settings.Burst and not self.CombatStealthSent and
+                (spells.Vanish:ReadyIn() < stealthCdIn or (spells.ShadowDance.Known and spells.ShadowDance:ReadyIn() < stealthCdIn))))) then
             return true
         end
         if (spells.KeepItRolling.Known and longestRemains < 39 and kirMode and (not spells.LoadedDice.Known or buffs:Applied(spells.LoadedDice.Buff))) then

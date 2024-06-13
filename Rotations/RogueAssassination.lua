@@ -5,7 +5,6 @@ local addon = TopPriorityAction
 
 ---@type table<string,Spell>
 local spells = {
-    AutoAttack = addon.Common.Spells.AutoAttack,
     SinisterStrike = {
         Id = 1752,
     },
@@ -46,6 +45,12 @@ local spells = {
     CausticSpatter = {
         Id = 421975,
         Debuff = 421976,
+    },
+    MasterAssassin = {
+        Id = 255989,
+    },
+    Nightstalker = {
+        Id = 14062,
     },
     Eviscerate = {
         Id = 196819,
@@ -236,7 +241,7 @@ function rotation:SingleTarget()
             function() if (not self.ComboHolding) then return self:SliceAndDice() end end,
             function() if (spells.ThistleTea.Known and spells.ThistleTea:ActiveCharges() > 2 and self.Energy < 50 and not player.Buffs:Applied(spells.ThistleTea.Buff)) then return spells.ThistleTea end end,
             function() if (spells.ThistleTea.Known and spells.Kingsbane.Known and target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Kingsbane.Debuff) < 6) then return spells.ThistleTea end end,
-            function() if (spells.Kingsbane.Known and settings.Dispel and target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Kingsbane.Debuff) < 3) then return spells.Vanish end end,
+            function() if (spells.Kingsbane.Known and settings.Dispel and (spells.MasterAssassin.Known or spells.Nightstalker.Known) and target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Kingsbane.Debuff) < 3) then return spells.Vanish end end,
             function() if (not self.ComboHolding and self.CanDotTarget) then return self:Rupture() end end,
             function() if (settings.Burst and target.Debuffs:Remains(spells.Rupture.Debuff) > 2 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Deathmark end end,
             function() if (spells.Kingsbane.Known and settings.Burst and not player.Buffs:Applied(spells.Subterfuge.Buff) and not player.Buffs:Applied(spells.Vanish.Buff) and (not spells.ShadowDance.Known or spells.ShadowDance:ReadyIn() <= spells.Kingsbane:ReadyIn())) then return spells.Kingsbane end end,
@@ -247,7 +252,7 @@ function rotation:SingleTarget()
             function() if (target.Debuffs:Applied(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Shiv.Debuff) < target.Debuffs:Remains(spells.Kingsbane.Debuff) and target.Debuffs:Remains(spells.Shiv.Debuff) < spells.Shiv.Pandemic) then return spells.Shiv end end,
             function() if (self.CanDotTarget and self.WorthyTarget and target.Debuffs:Remains(spells.Garrote.Debuff) < 3) then return spells.Garrote end end,
             function() if (self.CanDotTarget and self.WorthyTarget and self.ShortBursting and player.Buffs:Applied(spells.ImprovedGarrote.Buff) and target.Debuffs:Remains(spells.Garrote.Debuff) < 15) then return spells.Garrote end end,
-            -- function() if (spells.CausticSpatter.Known and settings.AOE and not target.Debuffs:Applied(spells.CausticSpatter.Debuff)) then return spells.Mutilate end end,
+            function() if (spells.CausticSpatter.Known and settings.AOE and target.Debuffs:Remains(spells.CausticSpatter.Debuff) < 3 and target.Debuffs:Remains(spells.Garrote.Debuff) > 2) then return spells.Mutilate end end,
             function() if (player.Buffs:Applied(spells.Blindside.Buff)) then return spells.Mutilate end end,
             function() if (self.Settings.AOE) then return spells.FanOfKnives end end,
             function() return spells.Ambush end,
@@ -264,9 +269,9 @@ function rotation:Utility()
     local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 79) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 78) then return items.Healthstone end end,
             function() if (not self.ShortBursting and self.CmdBus:Find(cmds.Feint.Name) and not player.Buffs:Applied(spells.Feint.Buff)) then return spells.Feint end end,
-            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 55 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
+            function() if (not self.ShortBursting and (self.MyHealthPercentDeficit > 65 or self.MyHealAbsorb > 0 or player.Debuffs:Applied(gashFrenzyId))) then return spells.CrimsonVial end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.Kick:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Kick:IsInRange("target") and target:CanKick()))) then return spells.Kick end end,
             function() if (self.CmdBus:Find(cmds.Kidney.Name) and not self.InStealth and not self.CombatStealthSent and ((self.CanAttackMouseover and spells.KidneyShot:IsInRange("mouseover")) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.KidneyShot:IsInRange("target")))) then return self:KidneyOnCommand() end end,
             function() if (not self.InStealthStance) then return self:AutoStealth() end end,
@@ -364,11 +369,21 @@ local danceTrinkets = {
 ---@return EquipItem?
 function rotation:UseTrinket()
     local equip = self.Player.Equipment
+    ---@param trinket EquipItem
+    ---@return EquipItem|nil
+    local function AsReadyTrinket(trinket)
+        return trinket:IsAvailable() and trinket:ReadyIn() <= self.GcdReadyIn and trinket or nil
+    end
+    local usableTrinket = AsReadyTrinket(equip.Trinket13) or AsReadyTrinket(equip.Trinket14)
+    if not usableTrinket then
+        return nil
+    end
     ---@param ids integer[]
     ---@return EquipItem
     local trinketFrom = function(ids)
-        return (ids[equip.Trinket13.Id] and equip.Trinket13) or (ids[equip.Trinket14.Id] and equip.Trinket14)
+        return ids[usableTrinket.Id] and usableTrinket
     end
+
     local aoeTrinket = trinketFrom(aoeTrinkets)
     if (aoeTrinket and self.Settings.AOE) then
         return aoeTrinket

@@ -26,6 +26,7 @@ local WowClass = {
 
 WowClass.InterruptUndesirable = addon.Helper.ToHashSet({
     323764, -- ConvokeTheSpirits
+    382135, -- Grieftorch trinket channel
 })
 
 addon.WowClass = WowClass
