@@ -25,7 +25,7 @@ local function NewPlayer()
     player.Talents = {}
     player.Target = addon.Initializer.NewUnit({ Id = "target", }):WithBuffs("HELPFUL"):WithDebuffs("PLAYER|HARMFUL")
     player.Mouseover = addon.Initializer.NewUnit({ Id = "mouseover", }):WithBuffs("HELPFUL"):WithDebuffs("RAID|HARMFUL")
-    player.Pet = addon.Initializer.NewUnit({ Id = "pet", })
+    player.Pet = addon.Initializer.NewUnit({ Id = "pet", }):WithBuffs("PLAYER|HELPFUL"):WithDebuffs("HARMFUL")
     addon.Player = player
     return player
 end
