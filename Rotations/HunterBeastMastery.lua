@@ -22,9 +22,18 @@ local spells = {
     BarbedShot = {
         Id = 217200,
         Buff = 246851,
+        Debuff = 217200,
+        PetBuff = 272790,
     },
     MultiShot = {
         Id = 2643,
+        Buff = 268877,
+    },
+    BestialWrath = {
+        Id = 19574,
+    },
+    DireBeast = {
+        Id = 120679,
     },
     KillShot = {
         Id = 53351,
@@ -32,8 +41,15 @@ local spells = {
     CounterShot = {
         Id = 147362,
     },
+    TranquilizingShot = {
+        Id = 19801,
+    },
     Misdirection = {
         Id = 34477,
+    },
+    HuntersMark = {
+        Id = 257284,
+        Debuff = 257284,
     },
 }
 
@@ -70,7 +86,9 @@ local rotation = {
     InInstance              = false,
     InCombatWithTarget      = false,
     CanAttackTarget         = false,
+    CanAttackMouseover      = false,
     CanDotTarget            = false,
+    WorthyTarget            = false,
 }
 
 ---@type TricksMacro
@@ -83,39 +101,47 @@ function rotation:SelectAction()
     self:Utility()
     if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
-            self:SingleTarget()
             self:AutoAttack()
+            self:SingleTarget()
         end
     end
 end
 
+local max = max
 local singleTargetList
 function rotation:SingleTarget()
     local settings = self.Settings
     local player = self.Player
+    local pet = player.Pet
     local target = self.Player.Target
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.CmdBus:Find(cmds.Kick.Name) and target:CanKick()) then return spells.CounterShot end end,
+            function() if (self.WorthyTarget and target:HealthPercent() > 80 and not target.Debuffs:Applied(spells.HuntersMark.Debuff)) then return spells.HuntersMark end end,
+            function() if (settings.Burst) then return spells.BestialWrath end end,
+            function() return spells.DireBeast end,
             function() return spells.KillShot end,
-            function() if (self.FocusDeficit > 40) then return spells.BarbedShot end end,
-            function() if (self.PetHealthPercent > 0) then return spells.KillCommand end end,
-            function() if (not settings.AOE) then return spells.CobraShot else return spells.MultiShot end end,
-            -- function() return spells.AutoShot end,
+            function() if (not target.Debuffs:Applied(spells.BarbedShot.Debuff) or self.FocusDeficit > 30) then return spells.BarbedShot end end,
+            function() if (self.Settings.AOE and player.Buffs:Remains(spells.MultiShot.Buff) < max(self.Player:FullGCDTime(), 0.75)) then return spells.MultiShot end end,
+            function() if (not self.CmdBus:Find(spells.KillCommand.Name) and self.PetHealthPercent > 0) then return spells.KillCommand end end,
+            function() return spells.CobraShot end,
         }
     return rotation:RunPriorityList(singleTargetList)
 end
 
 local utilityList
 function rotation:Utility()
+    local settings = self.Settings
     local player = self.Player
-    local grievousWoundId = addon.Common.Spells.GrievousWound.Debuff
+    local target = player.Target
+    local mouseover = player.Mouseover
     utilityList = utilityList or
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
-            function() if (self.HavePet and self.PetHealthPercentDeficit > 50) then return spells.MendPet end end,
+            function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.CounterShot:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.CounterShot:IsInRange("target") and target:CanKick()))) then return spells.CounterShot end end,
+            function() if (self.PetHealthPercent > 0 and self.PetHealthPercentDeficit > 40) then return spells.MendPet end end,
             function() if (self.MyHealthPercentDeficit > 65) then return spells.Exhilaration end end,
+            function() if (self.CanAttackMouseover and settings.Dispel and ((self.CanAttackMouseover and spells.TranquilizingShot:IsInRange("mouseover") and mouseover.Buffs:HasPurgeable()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TranquilizingShot:IsInRange("target") and target.Buffs:HasPurgeable()))) then return spells.TranquilizingShot end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -124,7 +150,7 @@ local autoAttackList
 function rotation:AutoAttack()
     autoAttackList = autoAttackList or
         {
-            function() if (not spells.AutoShot:IsQueued()) then return spells.AutoShot end end,
+            function() if (not spells.AutoShot:IsAutoRepeat()) then return spells.AutoShot end end,
         }
     return rotation:RunPriorityList(autoAttackList)
 end
@@ -157,8 +183,11 @@ function rotation:Refresh()
     local timestamp = addon.Timestamp
     player.Buffs:Refresh(timestamp)
     player.Debuffs:Refresh(timestamp)
+    -- player.Pet.Buffs:Refresh(timestamp)
+    -- player.Pet.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
+    player.Mouseover.Buffs:Refresh(timestamp)
 
     self.InRange = self.RangeChecker:IsInRange()
     self.Focus, self.FocusDeficit = player:Resource(Enum.PowerType.Focus)
@@ -168,8 +197,9 @@ function rotation:Refresh()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
+    self.WorthyTarget = player.Target:IsWorthy()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
-    self.CanAttackTarget = player.Target:CanAttack()
+    self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
 end
 
@@ -201,11 +231,24 @@ function rotation:CreateLocalEventTracker()
         end
     end
 
+    function frameHandlers.UNIT_SPELLCAST_FAILED(event, ...)
+        local unit, castGUID, spellID = ...
+        if (unit == "player") then
+            if (spellID == spells.KillCommand.Id) then
+                self.CmdBus:Add(spells.KillCommand.Name, 2)
+            end
+        end
+    end
+
+    function frameHandlers.UI_ERROR_MESSAGE(event, ...)
+        local errorType, message = ...
+    end
+
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
 function test()
-    return addon.Helper.Print(spells.AutoShot:IsQueued(), spells.AutoAttack:IsQueued())
+    return rotation.Player:FullGCDTime()
 end
 
 function rotation:SetLayout()
@@ -214,9 +257,14 @@ function rotation:SetLayout()
     spells.BarbedShot.Key = "2"
     spells.CobraShot.Key = "3"
     spells.KillCommand.Key = "4"
+    spells.DireBeast.Key = "6"
+    spells.BestialWrath.Key = "7"
     spells.MultiShot.Key = "8"
 
     -- spells.CounterShot.Key = "F7"
+    spells.HuntersMark.Key = "num1"
+    spells.CounterShot.Key = "num4"
+    spells.TranquilizingShot.Key = "num5"
     spells.MendPet.Key = "num6"
     spells.Exhilaration.Key = "num7"
     spells.AutoShot.Key = "num+"
