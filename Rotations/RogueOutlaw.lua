@@ -224,7 +224,7 @@ local rotation = {
     RangeChecker           = spells.SinisterStrike,
     ComboFinisher          = 6,
     ComboKidney            = 4,
-    ReducedComboWaste      = true,
+    ReducedComboWaste      = false,
     -- locals
     InStealth              = false,
     InStealthStance        = false,
@@ -455,11 +455,12 @@ local aoeTrinkets = addon.Helper.ToHashSet({
     198451, -- 10y healing/damage aoe
 })
 local burstTrinkets = addon.Helper.ToHashSet({
-    158319, -- Mydas, autoattacks more damage
-    198478, -- Dance Deck,
-    212683, -- Globe of Jagged Ice, stacks frost damage and explodes
+    158319, -- Mydas, autoattacks more damage.
+    198478, -- Dance Deck.
+    212683, -- Globe of Jagged Ice, stacks frost damage and explodes.
     202610, -- Bomb Dispenser, delayed fire damage.
     194308, -- Grieftorch, channeled fire damage.
+    207165, -- Bandolier, melee phys+shadowflame hit.
 })
 local danceTrinkets = {
     [198478] = {
