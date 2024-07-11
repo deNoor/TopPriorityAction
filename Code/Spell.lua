@@ -17,6 +17,7 @@ local addon = TopPriorityAction
 ---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field ActiveCharges fun(self:Spell):integer
+---@field IsAutoRepeat fun(self:Spell):boolean
 
 local max, pairs, ipairs = max, pairs, ipairs
 
@@ -140,6 +141,11 @@ function Spell:ActiveCharges()
     else
         return 0
     end
+end
+
+local IsAutoRepeatSpell = IsAutoRepeatSpell
+function Spell:IsAutoRepeat()
+    return IsAutoRepeatSpell(self.Id) or false
 end
 
 local emptySpell = addon.Initializer.Empty.Action
