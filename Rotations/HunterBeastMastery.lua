@@ -18,6 +18,7 @@ local spells = {
     },
     CobraShot = {
         Id = 193455,
+        CobraSting = 392296,
     },
     BarbedShot = {
         Id = 217200,
@@ -32,8 +33,8 @@ local spells = {
     BestialWrath = {
         Id = 19574,
     },
-    DireBeast = {
-        Id = 120679,
+    CallOfTheWild = {
+        Id = 359844,
     },
     KillShot = {
         Id = 53351,
@@ -51,12 +52,24 @@ local spells = {
         Id = 257284,
         Debuff = 257284,
     },
+    DireBeast = {
+        Id = 120679,
+    },
+    DeathChakram = {
+        Id = 375891,
+    },
+    Bloodshed = {
+        Id = 321530,
+    },
 }
 
 local cmds = {
     Kick = {
         Name = "kick",
-    }
+    },
+    PetFailed = {
+        Name = "petfailed",
+    },
 }
 
 ---@type table<string,Item>
@@ -80,6 +93,7 @@ local rotation = {
     MyHealthPercent         = 0,
     MyHealthPercentDeficit  = 0,
     MyHealAbsorb            = 0,
+    FullGCDTime             = 0,
     HavePet                 = false,
     PetHealthPercent        = 0,
     PetHealthPercentDeficit = 0,
@@ -99,7 +113,7 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
-    if (self.CanAttackTarget and (not self.InInstance or self.InCombatWithTarget)) then
+    if (self.CanAttackTarget and self.HavePet and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
             self:AutoAttack()
             self:SingleTarget()
@@ -107,7 +121,7 @@ function rotation:SelectAction()
     end
 end
 
-local max = max
+local GetAuraDataBySpellName, max = C_UnitAuras.GetAuraDataBySpellName, max
 local singleTargetList
 function rotation:SingleTarget()
     local settings = self.Settings
@@ -117,14 +131,21 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
-            function() if (self.WorthyTarget and target:HealthPercent() > 80 and not target.Debuffs:Applied(spells.HuntersMark.Debuff)) then return spells.HuntersMark end end,
+            function() if (self.WorthyTarget and target:HealthPercent() > 80 and not GetAuraDataBySpellName("target", spells.HuntersMark.Name, "HARMFUL")) then return spells.HuntersMark end end,
+            function() if (pet.Buffs:Remains(spells.BarbedShot.PetBuff) < max(self.FullGCDTime, 0.75)) then return spells.BarbedShot end end,
+            function() if (self.Settings.AOE and self.Focus >= 40 and player.Buffs:Remains(spells.MultiShot.Buff) < max(self.FullGCDTime, 0.75)) then return spells.MultiShot end end,
+            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting)) and spells.KillCommand:ActiveCharges() > 1) then return spells.KillCommand end end,
+            function() if (settings.Burst and not self.CmdBus:Find(cmds.PetFailed.Name)) then return spells.Bloodshed end end,
             function() if (settings.Burst) then return spells.BestialWrath end end,
+            function() if (settings.Burst) then return spells.CallOfTheWild end end,
+            function() if (settings.Burst) then return spells.DeathChakram end end,
             function() return spells.DireBeast end,
+            function() if (spells.BarbedShot:ActiveCharges() > 1) then return spells.BarbedShot end end,
+            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting))) then return spells.KillCommand end end,
+            function() return spells.BarbedShot end,
             function() return spells.KillShot end,
-            function() if (not target.Debuffs:Applied(spells.BarbedShot.Debuff) or self.FocusDeficit > 30) then return spells.BarbedShot end end,
-            function() if (self.Settings.AOE and player.Buffs:Remains(spells.MultiShot.Buff) < max(self.Player:FullGCDTime(), 0.75)) then return spells.MultiShot end end,
-            function() if (not self.CmdBus:Find(spells.KillCommand.Name) and self.PetHealthPercent > 0) then return spells.KillCommand end end,
-            function() return spells.CobraShot end,
+            function() if (not self.CmdBus:Find(cmds.PetFailed.Name)) then return spells.KillCommand end end,
+            function() if (spells.KillCommand:ReadyIn() > 1 and self.Focus > 50) then return spells.CobraShot end end,
         }
     return rotation:RunPriorityList(singleTargetList)
 end
@@ -139,9 +160,9 @@ function rotation:Utility()
         {
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.CounterShot:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.CounterShot:IsInRange("target") and target:CanKick()))) then return spells.CounterShot end end,
-            function() if (self.PetHealthPercent > 0 and self.PetHealthPercentDeficit > 40) then return spells.MendPet end end,
+            function() if (self.HavePet and self.PetHealthPercentDeficit > 40) then return spells.MendPet end end,
             function() if (self.MyHealthPercentDeficit > 65) then return spells.Exhilaration end end,
-            function() if (self.CanAttackMouseover and settings.Dispel and ((self.CanAttackMouseover and spells.TranquilizingShot:IsInRange("mouseover") and mouseover.Buffs:HasPurgeable()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TranquilizingShot:IsInRange("target") and target.Buffs:HasPurgeable()))) then return spells.TranquilizingShot end end,
+            function() if (settings.Dispel and ((self.CanAttackMouseover and spells.TranquilizingShot:IsInRange("mouseover") and mouseover.Buffs:HasPurgeable()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TranquilizingShot:IsInRange("target") and target.Buffs:HasPurgeable()))) then return spells.TranquilizingShot end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -183,7 +204,7 @@ function rotation:Refresh()
     local timestamp = addon.Timestamp
     player.Buffs:Refresh(timestamp)
     player.Debuffs:Refresh(timestamp)
-    -- player.Pet.Buffs:Refresh(timestamp)
+    player.Pet.Buffs:Refresh(timestamp)
     -- player.Pet.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
@@ -193,8 +214,10 @@ function rotation:Refresh()
     self.Focus, self.FocusDeficit = player:Resource(Enum.PowerType.Focus)
     self.MyHealthPercent, self.MyHealthPercentDeficit = player:HealthPercent()
     self.MyHealAbsorb = player:HealAbsorb()
+    self.HavePet = player.Pet:Exists()
     self.PetHealthPercent, self.PetHealthPercentDeficit = player.Pet:HealthPercent()
     self.NowCasting, self.CastingEndsIn = player:NowCasting()
+    self.FullGCDTime = player:FullGCDTime()
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InInstance = player:InInstance()
     self.WorthyTarget = player.Target:IsWorthy()
@@ -231,12 +254,14 @@ function rotation:CreateLocalEventTracker()
         end
     end
 
+    local petAbilities = addon.Helper.ToHashSet({
+        spells.KillCommand.Id,
+        spells.Bloodshed.Id,
+    })
     function frameHandlers.UNIT_SPELLCAST_FAILED(event, ...)
         local unit, castGUID, spellID = ...
-        if (unit == "player") then
-            if (spellID == spells.KillCommand.Id) then
-                self.CmdBus:Add(spells.KillCommand.Name, 2)
-            end
+        if (unit == "player" and petAbilities[spellID]) then
+            self.CmdBus:Add(cmds.PetFailed.Name, 2)
         end
     end
 
@@ -247,19 +272,18 @@ function rotation:CreateLocalEventTracker()
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
 end
 
-function test()
-    return rotation.Player:FullGCDTime()
-end
-
 function rotation:SetLayout()
     local spells = self.Spells
     spells.KillShot.Key = "1"
     spells.BarbedShot.Key = "2"
     spells.CobraShot.Key = "3"
     spells.KillCommand.Key = "4"
-    spells.DireBeast.Key = "6"
+    spells.DireBeast.Key = "5"
+    spells.CallOfTheWild.Key = "6"
     spells.BestialWrath.Key = "7"
     spells.MultiShot.Key = "8"
+    spells.DeathChakram.Key = "9"
+    spells.Bloodshed.Key = "0"
 
     -- spells.CounterShot.Key = "F7"
     spells.HuntersMark.Key = "num1"
