@@ -13,6 +13,10 @@ local spells = {
     Exhilaration = {
         Id = 109304,
     },
+    FeignDeath = {
+        Id = 5384,
+        Buff = 5384,
+    },
     KillCommand = {
         Id = 34026,
     },
@@ -113,7 +117,7 @@ function rotation:SelectAction()
     local playerBuffs = self.Player.Buffs
     local targetDebuffs = self.Player.Target.Debuffs
     self:Utility()
-    if (self.CanAttackTarget and self.HavePet and (not self.InInstance or self.InCombatWithTarget)) then
+    if (self.CanAttackTarget and self.HavePet and not playerBuffs:Applied(spells.FeignDeath.Buff) and (not self.InInstance or self.InCombatWithTarget)) then
         if (self.InRange) then
             self:AutoAttack()
             self:SingleTarget()
@@ -161,7 +165,7 @@ function rotation:Utility()
             function() if (self.MyHealthPercentDeficit > 55) then return items.Healthstone end end,
             function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.CounterShot:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.CounterShot:IsInRange("target") and target:CanKick()))) then return spells.CounterShot end end,
             function() if (self.HavePet and self.PetHealthPercentDeficit > 40) then return spells.MendPet end end,
-            function() if (self.MyHealthPercentDeficit > 65) then return spells.Exhilaration end end,
+            function() if (self.MyHealthPercentDeficit > 55) then return spells.Exhilaration end end,
             function() if (settings.Dispel and ((self.CanAttackMouseover and spells.TranquilizingShot:IsInRange("mouseover") and mouseover.Buffs:HasPurgeable()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.TranquilizingShot:IsInRange("target") and target.Buffs:HasPurgeable()))) then return spells.TranquilizingShot end end,
         }
     return rotation:RunPriorityList(utilityList)
