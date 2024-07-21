@@ -24,6 +24,7 @@ Code\Spell.lua
 Code\Unit.lua
 
 Rotations\_WowClass.lua
+Rotations\DeathKnightFrost.lua
 Rotations\DruidFeral.lua
 Rotations\DruidGuardian.lua
 Rotations\HunterBeastMastery.lua
