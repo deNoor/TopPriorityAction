@@ -93,10 +93,10 @@ function Rotation:RunPriorityList(priorityList)
         local action = func()
         if (action) then
             if (action:IsAvailable()) then
-                local usable, noMana = action:IsUsableNow()
+                local usable, insufficientPower = action:IsUsableNow()
                 if (self.WaitForResource and action.Type == "Spell") then
-                    if (usable or noMana) then
-                        self.SelectedAction = noMana and emptyAction or action
+                    if (usable or insufficientPower) then
+                        self.SelectedAction = insufficientPower and emptyAction or action
                         return self
                     end
                 else

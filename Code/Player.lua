@@ -52,10 +52,11 @@ function Player:Jump()
     addon.CmdBus:Add(customKeyCommand.Name, 0.5, jumpKey)
 end
 
-hooksecurefunc("JumpOrAscendStart", function(...)
-    local customKeyCommand = addon.Common.Commands.CustomKey
-    addon.CmdBus:Remove(customKeyCommand.Name)
-end)
+-- Was usefull for a dungeon with jump mechanics.
+-- hooksecurefunc("JumpOrAscendStart", function(...)
+--     local customKeyCommand = addon.Common.Commands.CustomKey
+--     addon.CmdBus:Remove(customKeyCommand.Name)
+-- end)
 
 -- attach to addon
 addon.Initializer.NewPlayer = NewPlayer
