@@ -87,7 +87,7 @@ function Convenience:CreateTricksMacro(name, spell)
                             local tankName = UnitNameUnmodified(unit)
                             if (tankName and tankName ~= UNKNOWNOBJECT and tankName ~= self.CurrentTank) then
                                 local spellName = self.Spell.Name
-                                local macroText = "#showtooltip " .. spellName .. "\n/cast [@focus,help][@" .. tankName .. "] " .. spellName
+                                local macroText = "#showtooltip " .. spellName .. "\n/cast [@focus,help][@pet,nogroup,exists,nodead][@" .. tankName .. "] " .. spellName
                                 if (pcall(EditMacro, self.Name, nil, nil, macroText)) then
                                     self.CurrentTank = tankName
                                     addon.Helper.Print(spellName, "on", tankName)
