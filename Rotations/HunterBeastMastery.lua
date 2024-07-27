@@ -30,6 +30,9 @@ local spells = {
         Debuff = 217200,
         PetBuff = 272790,
     },
+    ExplosiveShot = {
+        Id = 212431,
+    },
     MultiShot = {
         Id = 2643,
         Buff = 268877,
@@ -58,9 +61,6 @@ local spells = {
     },
     DireBeast = {
         Id = 120679,
-    },
-    DeathChakram = {
-        Id = 375891,
     },
     Bloodshed = {
         Id = 321530,
@@ -142,7 +142,7 @@ function rotation:SingleTarget()
             function() if (settings.Burst and not self.CmdBus:Find(cmds.PetFailed.Name)) then return spells.Bloodshed end end,
             function() if (settings.Burst) then return spells.BestialWrath end end,
             function() if (settings.Burst) then return spells.CallOfTheWild end end,
-            function() if (settings.Burst) then return spells.DeathChakram end end,
+            function() if ((settings.Burst or settings.AOE) and self.Focus >= 20) then return spells.ExplosiveShot end end,
             function() return spells.DireBeast end,
             function() if (spells.BarbedShot:ActiveCharges() > 1) then return spells.BarbedShot end end,
             function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting))) then return spells.KillCommand end end,
@@ -286,7 +286,7 @@ function rotation:SetLayout()
     spells.CallOfTheWild.Key = "6"
     spells.BestialWrath.Key = "7"
     spells.MultiShot.Key = "8"
-    spells.DeathChakram.Key = "9"
+    spells.ExplosiveShot.Key = "9"
     spells.Bloodshed.Key = "0"
 
     -- spells.CounterShot.Key = "F7"
