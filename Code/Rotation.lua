@@ -111,10 +111,24 @@ function Rotation:RunPriorityList(priorityList)
     return self
 end
 
+local castRules = {}
+castRules.InterruptUndesirable = addon.Helper.ToHashSet({
+    323764, -- ConvokeTheSpirits
+    382135, -- Grieftorch trinket channel
+})
+castRules.NonBlockingCast = addon.Helper.ToHashSet({
+
+})
+castRules.NoWaitCasting = addon.Helper.ToHashSet({
+    108853, -- FireBlast talented
+})
 function Rotation:ActionQueueAwailable()
-    local spellId, endsInSec = addon.Player:NowCasting()
+    if (castRules.NoWaitCasting[self.SelectedAction.Id]) then
+        return true
+    end
+    local spellId, endsInSec, elapsedSec, channeling = addon.Player:NowCasting()
     if (spellId > 0) then
-        return endsInSec <= self.Settings.ActionAdvanceWindow and not addon.WowClass.InterruptUndesirable[spellId]
+        return castRules.NonBlockingCast[spellId] or (not channeling and endsInSec <= self.Settings.ActionAdvanceWindow)
     end
     return true
 end
@@ -144,7 +158,7 @@ function Rotation:WaitForOpportunity()
             end,
             Spell = function()
                 local spell = self.SelectedAction ---@type Spell
-                if (spell:ReadyIn() > self.Settings.ActionAdvanceWindow) then
+                if (not self:ActionQueueAwailable() or spell:ReadyIn() > self.Settings.ActionAdvanceWindow) then
                     self.SelectedAction = emptyAction
                 end
             end,
@@ -183,9 +197,7 @@ function Rotation:Pulse()
     end
     self.SelectedAction = nil
     self.GcdReadyIn = addon.Player:GCDReadyIn()
-    if (self:ActionQueueAwailable()) then
-        self:SelectAction()
-    end
+    self:SelectAction()
     self:WaitForOpportunity():ReduceActionSpam()
     local action = self.SelectedAction or emptyAction
     if action ~= emptyAction then
