@@ -308,12 +308,12 @@ function rotation:SingleTarget()
             function() if (not self.ComboFinisherAllowed and player.Buffs:Applied(spells.Ambush.Audacity)) then return spells.SinisterStrike end end,
             function() if (not self.ComboFinisherAllowed and spells.HiddenOpportunity.Known) then return spells.Ambush end end,
             function() if (not self.ComboFinisherAllowed and (spells.HiddenOpportunity.Known or ((self.Combo < (player.Buffs:Applied(spells.RollTheBones.Broadside) and 2 or 4)) or player.Buffs:Stacks(spells.PistolShot.Opportunity) > 3))) then return self:PistolShot() end end,
-            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(85) end end,
+            function() if (not self.ComboFinisherAllowed and not spells.Crackshot.Known and spells.HiddenOpportunity.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and not self.ComboHolding and spells.Vanish:ReadyIn() <= self.GcdReadyIn) then return self:AwaitedVanish(85) end end,
             function() if (not self.ComboFinisherAllowed) then return spells.SinisterStrike end end,
 
             function() if (spells.KillingSpree.Known and settings.Burst and self.ComboFinisherAllowed and not self.ShortBursting) then return spells.KillingSpree end end,
             function() if (self.ComboFinisherAllowed) then return self:BetweenTheEyes() end end,
-            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff)) then return self:AwaitedVanish(85) end end,
+            function() if (spells.Crackshot.Known and settings.Burst and settings.Dispel and not self.ShortBursting --[[ and self.InInstance ]] and self.ComboFinisherAllowed and spells.Vanish:ReadyIn() <= self.GcdReadyIn and spells.BetweenTheEyes:ReadyIn() <= self.GcdReadyIn and player.Buffs:Applied(spells.SliceAndDice.Buff) and player.Buffs:Applied(spells.AdrenalineRush.Buff)) then return self:AwaitedVanish(85) end end,
             function() if (self.ComboFinisherAllowed) then return spells.Dispatch end end,
         }
     return rotation:RunPriorityList(singleTargetList)
@@ -403,7 +403,7 @@ function rotation:BetweenTheEyes()
         end
         return nil
     end
-    if (spells.GreenskinsWickers.Known or spells.ImprovedBetweenTheEyes.Known or (buffs:Remains(spells.BetweenTheEyes.Buff) < 3)) then
+    if (spells.GreenskinsWickers.Known or (spells.ImprovedBetweenTheEyes.Known and not spells.SummarilyDispatched.Known) or (buffs:Remains(spells.BetweenTheEyes.Buff) < 3)) then
         return spells.BetweenTheEyes
     end
     return nil

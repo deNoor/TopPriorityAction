@@ -80,7 +80,7 @@ local items = addon.Common.Items
 
 ---@type Rotation
 local rotation = {
-    Name                   = "Rogue-Outlaw",
+    Name                   = "DeathKnight-Frost",
     Spells                 = spells,
     Items                  = items,
     Cmds                   = cmds,
@@ -234,11 +234,6 @@ function rotation:UseTrinket()
         return burstTrinket
     end
     return nil
-end
-
-function rotation:BuffAppliedByGcdEnd(auraId)
-    local buffs = self.Player.Buffs
-    return buffs:Find(auraId).Remains > self.GcdReadyIn
 end
 
 local C_ChallengeMode, IsEncounterInProgress = C_ChallengeMode, IsEncounterInProgress

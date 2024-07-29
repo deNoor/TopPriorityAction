@@ -294,7 +294,6 @@ end
 function rotation:Activate()
     self.EmptyAction = addon.Initializer.Empty.Action
     self.Player = addon.Player
-    self.InterruptUndesirable = addon.WowClass.InterruptUndesirable
     self.LocalEvents = self:CreateLocalEventTracker()
     self:SetLayout()
 end
