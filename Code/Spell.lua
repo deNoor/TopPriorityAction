@@ -18,6 +18,7 @@ local addon = TopPriorityAction
 ---@field ProtectFromDoubleCast fun(self:Spell):Spell
 ---@field CCUnlockIn fun(self:Spell):number
 ---@field ActiveCharges fun(self:Spell):integer
+---@field CastCount fun(self:Spell):integer
 ---@field IsAutoRepeat fun(self:Spell):boolean
 
 local max, pairs, ipairs = max, pairs, ipairs
@@ -138,6 +139,11 @@ function Spell:ActiveCharges()
     else
         return 0
     end
+end
+
+local GetSpellCastCount = C_Spell.GetSpellCastCount
+function Spell:CastCount()
+    return GetSpellCastCount(self.Id)
 end
 
 local IsAutoRepeatSpell = C_Spell.IsAutoRepeatSpell
