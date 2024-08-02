@@ -17,6 +17,7 @@ local addon = TopPriorityAction
 ---@field InCombatWithMe fun(self:Unit):boolean
 ---@field CastingEndsIn fun(self:Unit):number
 ---@field NowCasting fun(self:Unit):integer,number,number,boolean,boolean @spellId, leftSec, elapsedSec, channeling, kickable
+---@field HastedSpellCastTime fun(self:Unit, defaultCastTime:number):number @modifiedCastTime
 ---@field CanKick fun(self:Unit, advanced:boolean?):boolean
 ---@field Resource fun(self:Unit, index:integer):number,number @current, deficit
 ---@field ResourcePercent fun(self:Unit, index:integer):number,number @current, deficit
@@ -87,6 +88,11 @@ end
 
 function Unit:NowCasting()
     return NowCasting(self.Id)
+end
+
+local UnitSpellHaste = UnitSpellHaste
+function Unit:HastedSpellCastTime(defaultCastTime)
+    return defaultCastTime * 100 / (100 + UnitSpellHaste(self.Id))
 end
 
 function Unit:CastingEndsIn()
