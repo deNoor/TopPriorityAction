@@ -28,8 +28,10 @@ Rotations\DeathKnightFrost.lua
 Rotations\DruidFeral.lua
 Rotations\DruidGuardian.lua
 Rotations\HunterBeastMastery.lua
+Rotations\MageFire.lua
 Rotations\RogueAssassination.lua
 Rotations\RogueOutlaw.lua
+Rotations\WarlockDemonology.lua
 Rotations\WarriorFury.lua
 Rotations\WarriorProtection.lua
 
