@@ -17,6 +17,8 @@ local addon = TopPriorityAction
 ---@field ActionAdvanceWindow integer
 ---@field UpdateAdvanceWindow fun(self:Settings,newValue?:integer)
 
+local C_Spell = C_Spell
+
 ---@type SavedSettings
 local SavedSettings = {
     Instance = {

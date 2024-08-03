@@ -9,7 +9,8 @@ local addon = TopPriorityAction
 ---@field Trinket13 EquipItem
 ---@field Trinket14 EquipItem
 
-local wipe, pairs, ipairs = wipe, pairs, ipairs
+local wipe, pairs, ipairs, max = wipe, pairs, ipairs, max
+local C_Item, C_Container = C_Item, C_Container
 
 local equipmentSlotIds = {
     Head = INVSLOT_HEAD,
@@ -62,18 +63,16 @@ function EquipItem:IsAvailable()
     return self.Active
 end
 
-local max, GetItemCooldown = max, C_Container.GetItemCooldown
 function EquipItem:ReadyIn()
     local now = addon.Timestamp
-    local start, duration, enabled = GetItemCooldown(self.Id)
+    local start, duration, enabled = C_Container.GetItemCooldown(self.Id)
     if start then
         return max(0, start + duration - now) -- seconds
     end
 end
 
-local IsUsableItem = C_Item.IsUsableItem
 function EquipItem:IsUsableNow()
-    local usable, noMana = IsUsableItem(self.Id)
+    local usable, noMana = C_Item.IsUsableItem(self.Id)
     if (usable) then
         local onCD = self:ReadyIn() > (addon.Rotation.GcdReadyIn + 0.1)
         usable = not onCD
@@ -81,15 +80,13 @@ function EquipItem:IsUsableNow()
     return usable, noMana
 end
 
-local IsItemInRange = C_Item.IsItemInRange
 function EquipItem:IsInRange(unit)
     unit = unit or "target"
-    return IsItemInRange(self.Id, unit) ~= false
+    return C_Item.IsItemInRange(self.Id, unit) ~= false
 end
 
-local IsCurrentItem = C_Item.IsCurrentItem
 function EquipItem:IsQueued()
-    return IsCurrentItem(self.Id)
+    return C_Item.IsCurrentItem(self.Id)
 end
 
 local function SetDefaults(equipItem)
@@ -101,6 +98,7 @@ local function SetDefaults(equipItem)
     equipItem.SpellName = ""
 end
 
+local GetInventoryItemID = GetInventoryItemID
 function addon:UpdateEquipment()
     local equipment = addon.Player.Equipment ---@type table<string,EquipItem>
     wipe(equipment.SetBonuses)

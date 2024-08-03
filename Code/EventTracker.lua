@@ -12,6 +12,8 @@ local addon = TopPriorityAction
 ---@field UnRegisterEvent fun(self:EventTracker, event:string):EventTracker
 ---@field Dispose fun(self:EventTracker)
 
+local pairs, ipairs, max = pairs, ipairs, max
+
 ---@type EventTracker
 local EventTracker = {
 }

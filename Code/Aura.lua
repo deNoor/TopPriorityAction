@@ -20,7 +20,8 @@ local addon = TopPriorityAction
 ---@field HasPurgeable fun(self:AuraCollection):boolean
 ---@field HasDispelable fun(self:AuraCollection, dispelTypes:table<string,any>):boolean
 
-local getTime, pairs, ipairs = GetTime, pairs, ipairs
+local GetTime, pairs, ipairs = GetTime, pairs, ipairs
+local AuraUtil = AuraUtil
 local emptyAura = {
     Remains = -1,
     Stacks = 0,
@@ -32,7 +33,7 @@ local emptyAura = {
 local auraCache = {}
 local function UpdateAuras(auras, unit, filter, timestamp)
     AuraUtil.ForEachAura(unit, filter, nil, function(name, icon, stacks, dispelType, duration, expirationTimestamp, unitCaster, canStealOrPurge, nameplateShowPersonal, spellId, canApplyAura, isBossDebuff, castByPlayer, nameplateShowAll, timeMod, ...)
-        local now = timestamp or getTime()
+        local now = timestamp or GetTime()
         local aura = auras[spellId]
         if (not aura) then
             aura = auraCache[spellId]

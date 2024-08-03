@@ -2,6 +2,7 @@ local addonName, TopPriorityAction = ...
 local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
+local pairs, ipairs = pairs, ipairs
 
 ---@type table<string,Spell>
 local spells = {

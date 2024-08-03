@@ -16,7 +16,7 @@ local addon = TopPriorityAction
 ---@field Arg2 any
 ---@field Arg3 any
 
-local getTime = GetTime
+local GetTime, type = GetTime, type
 
 ---@type CmdBus
 local CmdBus = {
@@ -64,7 +64,7 @@ function CmdBus:Add(nameRaw, durationRaw, ...)
         warn("duration must be between", default.Command.SecMin, "and", default.Command.SecMax)
     end
     local cmd = GetCached(name)
-    cmd.Expiration = getTime() + duration
+    cmd.Expiration = GetTime() + duration
     local arg1, arg2, arg3 = ...
     cmd.Arg1 = arg1
     cmd.Arg2 = arg2

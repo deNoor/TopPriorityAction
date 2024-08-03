@@ -22,6 +22,7 @@ local addon = TopPriorityAction
 ---@field IsAutoRepeat fun(self:Spell):boolean
 
 local max, pairs, ipairs = max, pairs, ipairs
+local C_Spell, C_SpellBook = C_Spell, C_SpellBook
 
 ---@type Spell
 local Spell = {}
@@ -38,43 +39,42 @@ local function NewSpell(spell)
     return spell
 end
 
-local GetSpellCooldown = C_Spell.GetSpellCooldown
 function Spell:ReadyIn()
     local now = addon.Timestamp
-    local spellCooldownInfo = GetSpellCooldown(self.Id)
+    local spellCooldownInfo = C_Spell.GetSpellCooldown(self.Id)
     if spellCooldownInfo then
         return max(0, spellCooldownInfo.startTime + spellCooldownInfo.duration - now) -- seconds
     end
     addon.Helper.Throw("Spell returned no cooldown", self.Id, self.Name)
 end
 
-local GetSpellInfo, IsPlayerSpell, GetSpellBaseCooldown, GetSpellCharges, IsSpellPassive, GetOverrideSpell, FindSpellBookSlotForSpell = C_Spell.GetSpellInfo, IsPlayerSpell, GetSpellBaseCooldown, C_Spell.GetSpellCharges, C_Spell.IsSpellPassive, C_Spell.GetOverrideSpell, C_SpellBook.FindSpellBookSlotForSpell
+local IsPlayerSpell, GetSpellBaseCooldown = IsPlayerSpell, GetSpellBaseCooldown
 function addon:UpdateKnownSpells()
     ---@param key string
     ---@param spell Spell
     ---@return fun()
     local function MakeSpellUpdater(key, spell)
         return function()
-            local overrideId = GetOverrideSpell(spell.Id)
+            local overrideId = C_Spell.GetOverrideSpell(spell.Id)
             if (overrideId ~= spell.Id) then
                 spell.Id = overrideId
                 addon.DataQuery.OnSpellLoaded(spell.Id, MakeSpellUpdater(key, spell))
                 return
             end
-            local spellInfo = GetSpellInfo(spell.Id)
+            local spellInfo = C_Spell.GetSpellInfo(spell.Id)
             if (not spellInfo) then
                 addon.Helper.Throw(key, "GetSpellInfo failed")
             end
             spell.Name = spellInfo.name
             spell.Icon = spellInfo.iconID
             spell.HardCast = spellInfo.castTime > 0
-            spell.IsPassive = IsSpellPassive(spell.Id)
-            spell.SpellBookSlot, spell.SpellBookType = FindSpellBookSlotForSpell(spell.Id)
+            spell.IsPassive = C_Spell.IsSpellPassive(spell.Id)
+            spell.SpellBookSlot, spell.SpellBookType = C_SpellBook.FindSpellBookSlotForSpell(spell.Id)
             spell.Known = spell.IsPassive and IsPlayerSpell(spell.Id) or spell.SpellBookSlot ~= nil
             local cooldownMS, gcdMS = GetSpellBaseCooldown(spell.Id)
             spell.NoGCD = gcdMS == 0
             spell.HasCD = cooldownMS > 0
-            spell.ChargesBased = GetSpellCharges(spell.Id) ~= nil
+            spell.ChargesBased = C_Spell.GetSpellCharges(spell.Id) ~= nil
         end
     end
 
@@ -92,13 +92,12 @@ function Spell:IsAvailable()
     return self.Known
 end
 
-local IsUsableSpell = C_Spell.IsSpellUsable
 function Spell:IsUsableNow()
     local actionAdvanceWindow = addon.Rotation.Settings.ActionAdvanceWindow
     if (self:CCUnlockIn() > actionAdvanceWindow) then
         return false, false
     end
-    local usable, insufficientPower = IsUsableSpell(self.Id)
+    local usable, insufficientPower = C_Spell.IsSpellUsable(self.Id)
     if (usable == nil) then
         return false, false
     end
@@ -109,46 +108,40 @@ function Spell:IsUsableNow()
     return usable, insufficientPower
 end
 
-local IsSpellInRange = C_Spell.IsSpellInRange
 function Spell:IsInRange(unit)
     unit = unit or "target"
     if (self.Known) then
-        return IsSpellInRange(self.Id, unit) or false
+        return C_Spell.IsSpellInRange(self.Id, unit) or false
     else
         return false
     end
 end
 
-local IsCurrentSpell = C_Spell.IsCurrentSpell
 function Spell:IsQueued()
-    return IsCurrentSpell(self.Id)
+    return C_Spell.IsCurrentSpell(self.Id)
 end
 
-local GetSpellLossOfControlCooldown = C_Spell.GetSpellLossOfControlCooldown
 function Spell:CCUnlockIn()
     local now = addon.Timestamp
-    local start, duration = GetSpellLossOfControlCooldown(self.Id)
+    local start, duration = C_Spell.GetSpellLossOfControlCooldown(self.Id)
     return start and max(0, start + duration - now) or 0
 end
 
-local GetSpellCharges = C_Spell.GetSpellCharges
 function Spell:ActiveCharges()
     if (self.ChargesBased) then
-        local spellChargeInfo = GetSpellCharges(self.Id)
+        local spellChargeInfo = C_Spell.GetSpellCharges(self.Id)
         return spellChargeInfo.currentCharges
     else
         return 0
     end
 end
 
-local GetSpellCastCount = C_Spell.GetSpellCastCount
 function Spell:CastCount()
-    return GetSpellCastCount(self.Id)
+    return C_Spell.GetSpellCastCount(self.Id)
 end
 
-local IsAutoRepeatSpell = C_Spell.IsAutoRepeatSpell
 function Spell:IsAutoRepeat()
-    return IsAutoRepeatSpell(self.Id) or false
+    return C_Spell.IsAutoRepeatSpell(self.Id) or false
 end
 
 local emptySpell = addon.Initializer.Empty.Action

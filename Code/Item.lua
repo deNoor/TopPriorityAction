@@ -8,7 +8,8 @@ local addon = TopPriorityAction
 ---@field SpellId integer
 ---@field SpellName string
 
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, max = pairs, ipairs, max
+local C_Item = C_Item
 
 ---@type Item
 local Item = {}
@@ -63,19 +64,17 @@ function Item:IsAvailable()
     return self.Active
 end
 
-local max, GetItemCooldown = max, C_Item.GetItemCooldown
 function Item:ReadyIn()
     local now = addon.Timestamp
-    local start, duration, enabled = GetItemCooldown(self.Id)
+    local start, duration, enabled = C_Item.GetItemCooldown(self.Id)
     if start then
         return max(0, start + duration - now) -- seconds
     end
     addon.Helper.Throw("Item returned no cooldown", self.Id, self.Name)
 end
 
-local IsUsableItem = C_Item.IsUsableItem
 function Item:IsUsableNow()
-    local usable, noMana = IsUsableItem(self.Id)
+    local usable, noMana = C_Item.IsUsableItem(self.Id)
     if (usable) then
         local onCD = self:ReadyIn() > (addon.Rotation.GcdReadyIn + 0.1)
         usable = not onCD
@@ -83,15 +82,13 @@ function Item:IsUsableNow()
     return usable, noMana
 end
 
-local IsItemInRange = C_Item.IsItemInRange
 function Item:IsInRange(unit)
     unit = unit or "target"
-    return IsItemInRange(self.Id, unit) ~= false
+    return C_Item.IsItemInRange(self.Id, unit) ~= false
 end
 
-local IsCurrentItem = C_Item.IsCurrentItem
 function Item:IsQueued()
-    return IsCurrentItem(self.Id)
+    return C_Item.IsCurrentItem(self.Id)
 end
 
 -- attach to addon
