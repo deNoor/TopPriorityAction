@@ -35,6 +35,14 @@ local spells = {
     ShiftingPower = {
         Id = 382440,
     },
+    Combustion = {
+        Id = 190319,
+        Buff = 190319,
+    },
+    IceFloes = {
+        Id = 108839,
+        Buff = 108839,
+    },
     BlazingBarrier = {
         Id = 235313,
         Buff = 235313,
@@ -47,6 +55,13 @@ local spells = {
     HeatShimmer = {
         Id = 457735,
         Buff = 458964,
+    },
+    FlameAccelerant = {
+        Id = 453282,
+        Buff = 453283,
+    },
+    Firestarter = {
+        Id = 205026,
     },
 }
 
@@ -126,12 +141,14 @@ function rotation:SingleTarget()
     local equip = player.Equipment
     singleTargetList = singleTargetList or
         {
+            function() if (player.Buffs:Applied(spells.HotStreak.Semi)) then return spells.FireBlast end end,
+            function() if (settings.Burst and spells.PhoenixFlames:ActiveCharges() < 1) then return spells.Combustion end end,
             function() if (not settings.AOE and player.Buffs:Applied(spells.HotStreak.Full)) then return spells.Pyroblast end end,
             function() if (settings.AOE and player.Buffs:Applied(spells.HotStreak.Full) and self.CanAttackMouseover and self.RangeChecker:IsInRange("mouseover")) then return spells.Flamestrike end end,
-            function() if (player.Buffs:Applied(spells.HotStreak.Semi)) then return spells.FireBlast end end,
-            -- function() if (settings.Burst and not player.IsMoving) then return spells.ShiftingPower end end,
-            function() if (not player.Buffs:Applied(spells.BlazingBarrier.Buff)) then return spells.BlazingBarrier end end,
             function() return spells.PhoenixFlames end,
+            -- function() if (settings.Burst and (spells.ShiftingPower:ReadyIn() > 20 or spells.IceFloes:ActiveCharges() > 1) and not player.Buffs:Applied(spells.IceFloes.Buff) and not player.Buffs:Applied(spells.FlameAccelerant.Buff)) then return spells.IceFloes end end,
+            function() if (not player.Buffs:Applied(spells.BlazingBarrier.Buff)) then return spells.BlazingBarrier end end,
+            function() if (settings.Burst and not player.IsMoving and (spells.Combustion.Known and spells.Combustion:ReadyIn() > 12) and (not spells.IceFloes.Known or spells.IceFloes:ReadyIn() <= spells.ShiftingPower:ReadyIn())) then return spells.ShiftingPower end end,
             function() if (self.TargetHealthPercent <= 30 or player.Buffs:Applied(spells.HeatShimmer.Buff)) then return spells.Scorch end end,
             function() if (not player.IsMoving) then return spells.Fireball end end,
             function() return spells.Scorch end,
@@ -250,7 +267,7 @@ function rotation:Refresh()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
     self.WorthyTarget = player.Target:IsWorthy()
-    self.Player.IsMoving = IsPlayerMoving() or self.CmdBus:Find(cmds.StoppedMoving.Name) ~= nil
+    self.Player.IsMoving = not player.Buffs:Applied(spells.IceFloes.Buff) and (IsPlayerMoving() or self.CmdBus:Find(cmds.StoppedMoving.Name) ~= nil)
 end
 
 function rotation:Dispose()
@@ -283,8 +300,10 @@ function rotation:SetLayout()
     spells.Scorch.Key = "3"
     spells.Pyroblast.Key = "4"
     spells.PhoenixFlames.Key = "5"
+    spells.ShiftingPower.Key = "6"
+    spells.Combustion.Key = "7"
     spells.Flamestrike.Key = "8"
-    spells.ShiftingPower.Key = "9"
+    spells.IceFloes.Key = "="
 
     spells.Counterspell.Key = "num4"
     spells.BlazingBarrier.Key = "num7"

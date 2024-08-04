@@ -121,6 +121,7 @@ castRules.NonBlockingCast = addon.Helper.ToHashSet({
 })
 castRules.NoWaitCasting = addon.Helper.ToHashSet({
     108853, -- FireBlast talented
+    108839, -- IceFloes
 })
 function Rotation:ActionQueueAwailable()
     if (castRules.NoWaitCasting[self.SelectedAction.Id]) then
