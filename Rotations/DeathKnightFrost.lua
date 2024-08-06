@@ -84,7 +84,7 @@ local rotation = {
     Spells                 = spells,
     Items                  = items,
     Cmds                   = cmds,
-    RangeChecker           = spells.DeathStrike,
+    RangeChecker           = spells.FrostStrike,
     -- locals
     InRange                = false,
     InChallenge            = false,
