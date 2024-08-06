@@ -21,6 +21,7 @@ Code\Rotation.lua
 Code\SavedSettings.lua
 Code\SharedData.lua
 Code\Spell.lua
+Code\Totem.lua
 Code\Unit.lua
 
 Rotations\_WowClass.lua

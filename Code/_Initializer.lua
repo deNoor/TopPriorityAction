@@ -220,6 +220,7 @@ local emptyRotation = {
 ---@field NewSpell fun(spell:Spell):Spell
 ---@field NewItem fun(spell:Item):Item
 ---@field NewAuraCollection fun(unitId:UnitId,filter:string):AuraCollection
+---@field NewTotemCollection fun():TotemCollection
 ---@field NewEventTracker fun(frameHandlers:table<string, EventHandler>, customHandlers:table<string, EventHandler>?):EventTracker
 ---@field NewPlayer fun():Player
 ---@field NewEquipment fun():Equipment
@@ -234,6 +235,7 @@ local Initializer = {
     NewSpell = nil,
     NewItem = nil,
     NewAuraCollection = nil,
+    NewTotemCollection = nil,
     NewEventTracker = nil,
     NewEquipment = nil,
     NewUnit = nil,
