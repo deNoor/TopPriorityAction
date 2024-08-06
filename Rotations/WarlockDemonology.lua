@@ -2,7 +2,7 @@ local addonName, TopPriorityAction = ...
 local _G = _G
 ---@type TopPriorityAction
 local addon = TopPriorityAction
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, min, max = pairs, ipairs, min, max
 
 ---@type table<string,Spell>
 local spells = {
@@ -60,6 +60,9 @@ local spells = {
     HealthFunnel = {
         Id = 755,
     },
+    PactOfGluttony = {
+        Id = 386689,
+    },
 }
 
 local cmds = {
@@ -68,6 +71,9 @@ local cmds = {
     },
     PetFailed = {
         Name = "petfailed",
+    },
+    ImpFailed = {
+        Name = "impfailed",
     },
     StoppedMoving = {
         Name = "stroppedmoving",
@@ -85,6 +91,9 @@ local setBonus = {
 
 ---@type table<string,Item>
 local items = addon.Common.Items
+items.DemonicHealthstone = {
+    Id = 224464,
+}
 
 ---@type Rotation
 local rotation = {
@@ -119,6 +128,8 @@ local rotation = {
     CanDotTarget            = false,
     WorthyTarget            = false,
     HavePet                 = false,
+    PetIsJammed             = false,
+    ImpIsJammed             = false,
     Imps                    = 0,
     TwoSecCastTime          = 2.0,
 }
@@ -138,7 +149,6 @@ function rotation:SelectAction()
     end
 end
 
-local max = max
 local singleTargetList
 function rotation:SingleTarget()
     local settings = self.Settings
@@ -146,16 +156,17 @@ function rotation:SingleTarget()
     local target = self.Player.Target
     local mouseover = player.Mouseover
     local equip = player.Equipment
+    local totems = player.Totems
     singleTargetList = singleTargetList or
         {
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and settings.AOE and self.Imps >= 6) then return spells.Implosion end end,
-            function() if (settings.Burst) then return spells.GrimoireFelguard end end,
-            function() if (not player.IsMoving) then return spells.SummonVilefiend end end,
-            function() if (not player.IsMoving or player.Buffs:Applied(spells.DemonicCalling.Buff)) then return spells.CallDreadstalkers end end,
             function() if (not player.IsMoving and settings.Burst) then return self:SummonDemonicTyrant() end end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and settings.Burst) then return spells.DemonicStrength end end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and settings.Burst) then return spells.Guillotine end end,
-            function() if (self.Imps >= 2 and player.Buffs:Stacks(spells.DemonicCore.Buff) <= 2) then return spells.PowerSiphon end end,
+            function() if (settings.Burst and (not spells.SummonVilefiend.Known or (totems:Active(spells.SummonVilefiend.Icon) or self.NowCasting == spells.SummonVilefiend.Id))) then return spells.GrimoireFelguard end end,
+            function() if (not player.IsMoving and settings.Burst) then return spells.SummonVilefiend end end,
+            function() if ((not player.IsMoving or player.Buffs:Applied(spells.DemonicCalling.Buff)) and settings.Burst) then return spells.CallDreadstalkers end end,
+            function() if (not self.PetIsJammed and settings.Burst) then return spells.DemonicStrength end end,
+            function() if (not self.PetIsJammed and settings.Burst) then return spells.Guillotine end end,
+            function() if (not self.ImpIsJammed and self.Imps >= 2 and player.Buffs:Stacks(spells.DemonicCore.Buff) <= 2) then return spells.PowerSiphon end end,
+            function() if (not self.ImpIsJammed and settings.AOE and self.Imps >= 6) then return spells.Implosion end end,
             function() if (not player.IsMoving and self.Shards >= 3) then return spells.HandOfGuldan end end,
             function() if (self.ShardsDeficit >= 2 and player.Buffs:Applied(spells.DemonicCore.Buff)) then return spells.Demonbolt end end,
             function() if (not player.IsMoving and self.ShardsDeficit >= 1) then return spells.ShadowBolt end end,
@@ -172,9 +183,9 @@ function rotation:Utility()
     local gashFrenzyId = addon.Common.Spells.GashFrenzy.Debuff
     utilityList = utilityList or
         {
-            function() if (self.MyHealthPercentDeficit > 78) then return items.Healthstone end end,
+            function() if (self.MyHealthPercentDeficit > 78) then return spells.PactOfGluttony.Known and items.DemonicHealthstone or items.Healthstone end end,
             -- function() if (self.CmdBus:Find(cmds.Kick.Name) and ((self.CanAttackMouseover and spells.Conterspell:IsInRange("mouseover") and mouseover:CanKick()) or (not self.CanAttackMouseover and self.CanAttackTarget and spells.Conterspell:IsInRange("target") and target:CanKick()))) then return spells.Conterspell end end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and not player.IsMoving and self.HavePet and self.PetHealthPercent > 0 and self.PetHealthPercentDeficit > 40) then return spells.HealthFunnel end end,
+            function() if (not self.PetIsJammed and not player.IsMoving and self.HavePet and self.PetHealthPercent > 0 and self.PetHealthPercentDeficit > 40) then return spells.HealthFunnel end end,
         }
     return rotation:RunPriorityList(utilityList)
 end
@@ -239,21 +250,61 @@ function rotation:UseTrinket()
     return nil
 end
 
-local MAX_TOTEMS, GetTotemTimeLeft, min, max = MAX_TOTEMS, GetTotemTimeLeft, min, max
 function rotation:SummonDemonicTyrant()
+    local totems = self.Player.Totems
     local minDesiredTime = self.TwoSecCastTime + 0.3
-    local largestTotemTime = 0
-    for i = 1, MAX_TOTEMS do
-        local totemTimeLeft = GetTotemTimeLeft(i) or 0
-        if (totemTimeLeft >= minDesiredTime) then
-            largestTotemTime = max(largestTotemTime, totemTimeLeft)
+    local totemCallTime = self.FullGCDTime * 2 + minDesiredTime
+
+    local vilefiendLeft = self.NowCasting == spells.SummonVilefiend.Id and 15 or totems:Remains(spells.SummonVilefiend.Icon)
+    local dreadstalkersLeft = self.NowCasting == spells.CallDreadstalkers.Id and 12 or totems:Remains(spells.CallDreadstalkers.Icon)
+    local grimoireLeft = totems:Remains(spells.GrimoireFelguard.Icon)
+
+    if (spells.SummonVilefiend.Known) then
+        if (vilefiendLeft < minDesiredTime) then
+            return nil
         end
+        local maxWaitLeft = (grimoireLeft >= minDesiredTime and min(vilefiendLeft, grimoireLeft) or vilefiendLeft) - totemCallTime
+        local grimoireSoon = spells.GrimoireFelguard.Known and grimoireLeft < minDesiredTime and spells.GrimoireFelguard:ReadyIn() <= maxWaitLeft
+        local dreadstalkersSoon = spells.CallDreadstalkers.Known and dreadstalkersLeft < minDesiredTime and spells.CallDreadstalkers:ReadyIn() <= maxWaitLeft
+        local summonTyrant = vilefiendLeft < 4 or not (grimoireSoon or dreadstalkersSoon)
+        if (summonTyrant) then
+            return spells.SummonDemonicTyrant
+        end
+        return nil
+    elseif (spells.SummonFelguard.Known) then
+        local skipGrimoire = spells.GrimoireFelguard:ReadyIn() > 60
+        if (skipGrimoire) then
+            if (dreadstalkersLeft >= minDesiredTime) then
+                return spells.SummonDemonicTyrant
+            end
+            return nil
+        else
+            if (grimoireLeft < minDesiredTime) then
+                return nil
+            end
+            local maxWaitLeft = grimoireLeft - totemCallTime
+            local dreadstalkersSoon = spells.CallDreadstalkers.Known and dreadstalkersLeft < minDesiredTime and spells.CallDreadstalkers:ReadyIn() <= maxWaitLeft
+            local summonTyrant = grimoireLeft < 4 or not dreadstalkersSoon
+            if (summonTyrant) then
+                return spells.SummonDemonicTyrant
+            end
+            return nil
+        end
+    elseif (spells.CallDreadstalkers.Known) then
+        if (dreadstalkersLeft < minDesiredTime) then
+            return nil
+        end
+        local summonTyrant = (self.Imps > 6 and not self.Settings.AOE) or dreadstalkersLeft < 4
+        if (summonTyrant) then
+            return spells.SummonDemonicTyrant
+        end
+        return nil
+    elseif (self.Imps > 6 and not self.Settings.AOE) then
+        return spells.SummonDemonicTyrant
     end
-    local readyForTyrant = largestTotemTime >= minDesiredTime and (not spells.CallDreadstalkers.Known or spells.CallDreadstalkers:ReadyIn() > 2) and (not spells.SummonVilefiend.Known or spells.SummonVilefiend:ReadyIn() > 3) and (not spells.GrimoireFelguard.Known or spells.GrimoireFelguard:ReadyIn() > 3)
-    return readyForTyrant and spells.SummonDemonicTyrant or nil
+    return nil
 end
 
-local max, min = max, min
 function rotation:Predictions()
     local castingSpellId = self.NowCasting
     ---@param amount integer
@@ -295,7 +346,7 @@ function rotation:UpdateChallenge()
     self.InRaidFight = (self.Player:InInstance(raidInstTypes) and IsEncounterInProgress()) or false
 end
 
-local IsPlayerMoving, GetTotemTimeLeft = IsPlayerMoving, GetTotemTimeLeft
+local IsPlayerMoving = IsPlayerMoving
 function rotation:Refresh()
     local player = self.Player
     local timestamp = addon.Timestamp
@@ -303,6 +354,7 @@ function rotation:Refresh()
     player.Debuffs:Refresh(timestamp)
     player.Target.Buffs:Refresh(timestamp)
     player.Target.Debuffs:Refresh(timestamp)
+    player.Totems:Refresh(timestamp)
 
     self.ActionAdvanceWindow = self.Settings.ActionAdvanceWindow
     self.InRange = self.RangeChecker:IsInRange()
@@ -322,7 +374,8 @@ function rotation:Refresh()
     self.HavePet = player.Pet:Exists()
     self.PetHealthPercent, self.PetHealthPercentDeficit = player.Pet:HealthPercent()
     self.Player.IsMoving = IsPlayerMoving() or self.CmdBus:Find(cmds.StoppedMoving.Name) ~= nil
-    spells.CallDreadstalkers.TimeLeft = GetTotemTimeLeft(1) or 0.0
+    self.PetIsJammed = self.CmdBus:Find(cmds.PetFailed.Name) ~= nil
+    self.ImpIsJammed = self.CmdBus:Find(cmds.ImpFailed.Name) ~= nil
     self.Imps = spells.Implosion:CastCount()
     self.TwoSecCastTime = player:HastedSpellCastTime(2)
     self:Predictions()
@@ -350,23 +403,26 @@ function rotation:CreateLocalEventTracker()
 
     local petAbilities = addon.Helper.ToHashSet({
         spells.DemonicStrength.Id,
-        spells.Implosion.Id,
         spells.HealthFunnel.Id,
         spells.Guillotine.Id,
+    })
+    local impAbilities = addon.Helper.ToHashSet({
+        spells.Implosion.Id,
         spells.PowerSiphon.Id,
     })
     function frameHandlers.UNIT_SPELLCAST_FAILED(event, ...)
         local unit, castGUID, spellID = ...
-        if (unit == "player" and petAbilities[spellID]) then
-            self.CmdBus:Add(cmds.PetFailed.Name, 2)
+        if (unit == "player") then
+            if (petAbilities[spellID]) then
+                self.CmdBus:Add(cmds.PetFailed.Name, 2)
+            end
+            if (impAbilities[spellID]) then
+                self.CmdBus:Add(cmds.ImpFailed.Name, 2)
+            end
         end
     end
 
     return addon.Initializer.NewEventTracker(frameHandlers):RegisterEvents()
-end
-
-function test()
-    return spells.SummonDemonicTyrant
 end
 
 function rotation:SetLayout()
@@ -382,7 +438,6 @@ function rotation:SetLayout()
 
     spells.PowerSiphon.Key = "num1"
     spells.GrimoireFelguard.Key = "num2"
-    spells.Guillotine.Key = "num3"
     spells.HealthFunnel.Key = "num6"
 
     local equip = addon.Player.Equipment
@@ -391,6 +446,7 @@ function rotation:SetLayout()
 
     local items = self.Items
     items.Healthstone.Key = "num9"
+    items.DemonicHealthstone.Key = items.Healthstone.Key
 end
 
 addon:AddRotation("WARLOCK", 2, rotation)
