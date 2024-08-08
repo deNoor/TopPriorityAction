@@ -40,6 +40,7 @@ local spells = {
     },
     BestialWrath = {
         Id = 19574,
+        Buff = 19578,
     },
     CallOfTheWild = {
         Id = 359844,
@@ -65,6 +66,16 @@ local spells = {
     },
     Bloodshed = {
         Id = 321530,
+    },
+    VenomsBite = {
+        Id = 459565,
+        Debuff = 271788,
+    },
+    KillerCobra = {
+        Id = 199532,
+    },
+    Savagery = {
+        Id = 424557,
     },
 }
 
@@ -108,6 +119,7 @@ local rotation = {
     CanAttackMouseover      = false,
     CanDotTarget            = false,
     WorthyTarget            = false,
+    PetIsJammed             = false,
 }
 
 ---@type TricksMacro
@@ -142,18 +154,21 @@ function rotation:SingleTarget()
             function() if (self.WorthyTarget and target:HealthPercent() > 80 and not GetAuraDataBySpellName("target", spells.HuntersMark.Name, "HARMFUL")) then return spells.HuntersMark end end,
             function() if (pet.Buffs:Remains(spells.BarbedShot.PetBuff) < max(self.FullGCDTime, 0.75)) then return spells.BarbedShot end end,
             function() if (self.Settings.AOE and self.Focus >= 40 and player.Buffs:Remains(spells.MultiShot.Buff) < max(self.FullGCDTime, 0.75)) then return spells.MultiShot end end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting)) and spells.KillCommand:ActiveCharges() > 1) then return spells.KillCommand end end,
-            function() if (settings.Burst and not self.CmdBus:Find(cmds.PetFailed.Name)) then return spells.Bloodshed end end,
+            function() if (pet.Buffs:Stacks(spells.BarbedShot.PetBuff) < 3) then return spells.BarbedShot end end,
             function() if (settings.Burst) then return spells.BestialWrath end end,
-            function() if (settings.Burst) then return spells.CallOfTheWild end end,
-            function() if ((settings.Burst or settings.AOE) and self.Focus >= 20) then return spells.ExplosiveShot end end,
+            function() if (not self.PetIsJammed and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting)) and spells.KillCommand:ActiveCharges() > 1) then return spells.KillCommand end end,
             function() return spells.DireBeast end,
-            function() if (spells.BarbedShot:ActiveCharges() > 1) then return spells.BarbedShot end end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name) and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting))) then return spells.KillCommand end end,
+            function() if (not settings.AOE and spells.VenomsBite.Known and target.Debuffs:Remains(spells.VenomsBite.Debuff) < 3 and self.WorthyTarget) then return spells.KillShot end end,
+            function() if (settings.Burst and spells.KillCommand:ActiveCharges() < 1) then return spells.CallOfTheWild end end,
+            function() if (settings.Burst and not self.PetIsJammed) then return spells.Bloodshed end end,
+            function() if (not self.PetIsJammed and (self.Focus >= 30 or player.Buffs:Applied(spells.CobraShot.CobraSting))) then return spells.KillCommand end end,
+            function() if (settings.AOE and self.Focus >= 20) then return spells.ExplosiveShot end end,
             function() return spells.BarbedShot end,
+            function() if (settings.Burst and self.Focus >= 20 and (not spells.KillerCobra.Known or not player.Buffs:Applied(spells.BestialWrath.Buff))) then return spells.ExplosiveShot end end,
+            function() if (spells.KillerCobra.Known and player.Buffs:Applied(spells.BestialWrath.Buff)) then return spells.CobraShot end end,
             function() return spells.KillShot end,
-            function() if (not self.CmdBus:Find(cmds.PetFailed.Name)) then return spells.KillCommand end end,
-            function() if (spells.KillCommand:ReadyIn() > 1 and self.Focus > 50) then return spells.CobraShot end end,
+            function() if (spells.KillCommand:ReadyIn() > self.FullGCDTime and self.Focus > (settings.AOE and 80 or 40)) then return spells.CobraShot end end,
+            function() if (not self.PetIsJammed) then return spells.KillCommand end end,
         }
     return rotation:RunPriorityList(singleTargetList)
 end
@@ -232,6 +247,7 @@ function rotation:Refresh()
     self.InCombatWithTarget = player.Target:InCombatWithMe()
     self.CanAttackTarget, self.CanAttackMouseover = player.Target:CanAttack(), player.Mouseover:CanAttack()
     self.CanDotTarget = player.Target:CanDot()
+    self.PetIsJammed = self.CmdBus:Find(cmds.PetFailed.Name) ~= nil
 end
 
 function rotation:Dispose()
